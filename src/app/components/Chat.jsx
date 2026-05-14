@@ -292,6 +292,31 @@ export default function Chat() {
     return () => document.removeEventListener("keydown", handler);
   }, [isMobileSidebarOpen, isProfileOpen, activeMobilePanel]);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      if (isMod && e.key === "Enter") {
+        e.preventDefault();
+        if (code.trim()) performAutoAnalysisRef.current?.(code);
+      }
+      if (isMod && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        try {
+          localStorage.setItem(
+            "semplycode:draft:v1",
+            JSON.stringify({ code, language: detectedLang, savedAt: Date.now() }),
+          );
+          setOutput('Bozza salvata localmente.');
+        } catch (err) {
+          setOutput('Impossibile salvare.');
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [code, detectedLang]);
+
   const loadChatHistory = async () => {
     if (!user?.email) return;
     try {
