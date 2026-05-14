@@ -233,6 +233,19 @@ export default function Chat() {
     }
   }, [user]);
 
+  // Restore autosaved draft from localStorage
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(localStorage.getItem("semplycode:draft:v1") || "null");
+      if (draft?.code) {
+        setCode(draft.code);
+        setDetectedLang(draft.language || "javascript");
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
   // Global ESC handling to close overlays / mobile panels
   useEffect(() => {
     const handler = (e) => {
@@ -534,6 +547,18 @@ ${needsLineRefs ? 'IMPORTANTE: Per codici oltre 50 righe, cita SEMPRE le righe s
     }, 1200),
   );
 
+  // Autosave draft after a pause in typing
+  const autosaveRef = useRef(
+    debounce((nextCode, lang) => {
+      try {
+        localStorage.setItem(
+          "semplycode:draft:v1",
+          JSON.stringify({ code: nextCode, language: lang, savedAt: Date.now() }),
+        );
+      } catch (e) {}
+    }, 1500),
+  );
+
   // Cleanup on unmount
   useEffect(() => {
     return () => debouncedRef.current?.cancel();
@@ -554,6 +579,8 @@ ${needsLineRefs ? 'IMPORTANTE: Per codici oltre 50 righe, cita SEMPRE le righe s
     if (newCode.trim().length > 5) {
       debouncedRef.current(newCode);
     }
+
+    autosaveRef.current(newCode, detectLanguage(newCode));
   };
 
   const handleLineClick = (lineNumber) => {
@@ -862,6 +889,24 @@ ${needsLineRefs ? 'IMPORTANTE: Per codici oltre 50 righe, cita SEMPRE le righe s
                 title="Save Chat"
               >
                 <Sparkles size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem(
+                      "semplycode:draft:v1",
+                      JSON.stringify({ code, language: detectedLang, savedAt: Date.now() }),
+                    );
+                    // small UI feedback
+                    setOutput("Bozza salvata localmente.");
+                  } catch (e) {
+                    setOutput("Impossibile salvare la bozza.");
+                  }
+                }}
+                className="p-2 hover:bg-emerald-900/20 rounded-lg text-gray-500 hover:text-primary transition-colors"
+                title="Save Draft"
+              >
+                <RotateCcw size={16} />
               </button>
               <button
                 onClick={() => {
