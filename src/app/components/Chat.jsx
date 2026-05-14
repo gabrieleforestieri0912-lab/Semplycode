@@ -233,6 +233,20 @@ export default function Chat() {
     }
   }, [user]);
 
+  // Global ESC handling to close overlays / mobile panels
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") {
+        if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
+        if (isProfileOpen) setIsProfileOpen(false);
+        if (activeMobilePanel === "log") setActiveMobilePanel("editor");
+        setIsOutputSidebarOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isMobileSidebarOpen, isProfileOpen, activeMobilePanel]);
+
   const loadChatHistory = async () => {
     if (!user?.email) return;
     try {
@@ -877,7 +891,7 @@ ${needsLineRefs ? 'IMPORTANTE: Per codici oltre 50 righe, cita SEMPRE le righe s
           </div>
         </section>
 
-        <section className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}>
+        <section aria-hidden={activeMobilePanel !== "insights"} className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}>
           <div className="h-16 border-b border-emerald-900/20 flex items-center gap-2 px-6 bg-[#0d1117]/50 md:flex hidden">
             <Brain size={18} className="text-primary" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
