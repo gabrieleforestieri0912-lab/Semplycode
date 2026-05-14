@@ -874,22 +874,47 @@ ${needsLineRefs ? 'IMPORTANTE: Per codici oltre 50 righe, cita SEMPRE le righe s
                 {detectedLang} Editor
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => code.trim() && performAutoAnalysis(code)}
-                disabled={!code.trim() || isLoading}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Brain size={14} />
-                Analizza
-              </button>
-              <button
-                onClick={saveChat}
-                className="p-2 hover:bg-emerald-900/20 rounded-lg text-gray-500 hover:text-primary transition-colors"
-                title="Save Chat"
-              >
-                <Sparkles size={16} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => code.trim() && performAutoAnalysis(code)}
+                  disabled={!code.trim() || isLoading}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Brain size={14} />
+                  Analizza
+                </button>
+                <button
+                  onClick={saveChat}
+                  className="p-2 hover:bg-emerald-900/20 rounded-lg text-gray-500 hover:text-primary transition-colors"
+                  title="Save Chat"
+                >
+                  <Sparkles size={16} />
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/share', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payload: { code, messages }, days: 7, userId: user?.id }),
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        await navigator.clipboard.writeText(data.url);
+                        setOutput('Link di condivisione copiato negli appunti.');
+                      } else {
+                        setOutput('Impossibile generare il link.');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      setOutput('Impossibile generare il link.');
+                    }
+                  }}
+                  className="p-2 hover:bg-emerald-900/20 rounded-lg text-gray-500 hover:text-primary transition-colors"
+                  title="Share"
+                >
+                  <BarChart3 size={16} />
+                </button>
               <button
                 onClick={() => {
                   try {
