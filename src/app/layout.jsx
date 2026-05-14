@@ -4,6 +4,8 @@ import StyledJsxRegistry from "./registry";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { AuthProvider } from "@/lib/auth";
 import Analytics from "@/app/components/Analytics";
+import dynamic from "next/dynamic";
+const QuotaBadge = dynamic(() => import("@/app/components/QuotaBadge"), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -99,6 +101,7 @@ export default function RootLayout({ children }) {
                 <header className="site-header" role="banner" aria-label="Site header">
                   <a href="/" className="site-brand" aria-label="Semplycode home">Semplycode</a>
                   <div className="site-actions" aria-hidden>
+                    <QuotaBadge />
                     <a href="/profile" className="header-link">Account</a>
                   </div>
                 </header>
