@@ -34,7 +34,7 @@ import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const FormattedAIResponse = ({ content, onLineClick }) => {
+  const FormattedAIResponse = ({ content, onLineClick }) => {
   const [displayedContent, setDisplayedContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -150,6 +150,22 @@ const FormattedAIResponse = ({ content, onLineClick }) => {
                     <code className="text-[11px] font-mono leading-relaxed text-gray-200">
                       {children}
                     </code>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        type="button"
+                        className="text-xs px-2 py-1 bg-emerald-600/20 text-emerald-300 rounded"
+                        onClick={() => {
+                          // Extract raw code from children array
+                          const raw = Array.isArray(children) ? children.join('') : String(children);
+                          if (confirm('Applicare questo suggerimento e sovrascrivere l\'editor?')) {
+                            // callback on parent
+                            window.dispatchEvent(new CustomEvent('semplycode:applySuggestion', { detail: { code: raw } }));
+                          }
+                        }}
+                      >
+                        Applica
+                      </button>
+                    </div>
                   </pre>
                 </div>
               ) : (
@@ -232,6 +248,22 @@ export default function Chat() {
       loadChatHistory();
     }
   }, [user]);
+
+  // Listen for apply suggestion events from rendered markdown
+  useEffect(() => {
+    const handler = (e) => {
+      const { code: suggested } = e.detail || {};
+      if (!suggested) return;
+      // Simple replacement mode: confirm then overwrite editor content
+      setCode(suggested);
+      setDetectedLang(detectLanguage(suggested));
+      setOutput('Suggerimento applicato all\'editor.');
+      // trigger analysis on the new code
+      performAutoAnalysisRef.current?.(suggested);
+    };
+    window.addEventListener('semplycode:applySuggestion', handler);
+    return () => window.removeEventListener('semplycode:applySuggestion', handler);
+  }, []);
 
   // Restore autosaved draft from localStorage
   useEffect(() => {
