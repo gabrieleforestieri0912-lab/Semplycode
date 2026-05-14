@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Semplycode AI",
+  "version": "2.0",
+  "description": "Analizza e ottimizza il tuo codice con l'intelligenza artificiale di Semplycode",
+  "permissions": ["sidePanel", "storage", "clipboardRead"],
+  "host_permissions": ["http://localhost:3000/*", "http://localhost:3001/*"],
+  
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "action": {
+    "default_title": "Semplycode AI",
+    "default_icon": "icons/semplycode.png"
+  },
+  "icons": {
+    "16": "icons/semplycode.png",
+    "48": "icons/semplycode.png",
+    "128": "icons/semplycode.png"
+  }
+}
