@@ -1,4 +1,56 @@
-const API_BASE = "http://localhost:3000/api";
+// Storage helpers that normalize chrome.storage.local (callback API) to Promises
+function storageGet(keys) {
+  return new Promise((resolve) => {
+    try {
+      chrome.storage.local.get(Array.isArray(keys) ? keys : [keys], (items) => {
+        resolve(items || {});
+      });
+    } catch (e) {
+      resolve({});
+    }
+  });
+}
+
+function storageSet(obj) {
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.storage.local.set(obj, () => {
+        if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+        resolve();
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+function storageRemove(keys) {
+  return new Promise((resolve, reject) => {
+    try {
+      chrome.storage.local.remove(Array.isArray(keys) ? keys : [keys], () => {
+        if (chrome.runtime.lastError) return reject(chrome.runtime.lastError);
+        resolve();
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// Configurable API base: default to localhost for development but allow override
+const DEFAULT_API_BASE = (window && window.__SEMPLYCODE_API_BASE) || "http://localhost:3000/api";
+let API_BASE = DEFAULT_API_BASE;
+
+// Try to read configured API base from storage (non-blocking)
+(async () => {
+  try {
+    const s = await storageGet(['apiBase']);
+    if (s && s.apiBase) API_BASE = s.apiBase;
+  } catch (e) {
+    // ignore and keep default
+  }
+})();
+
 const EXTENSION_LOGIN_FLOW = true;
 
 // ============================================
@@ -144,7 +196,6 @@ loginForm.addEventListener("submit", async (e) => {
   hideMessages();
 
   const email = loginEmail.value.trim();
-  const password = loginPassword.value;
 
   if (EXTENSION_LOGIN_FLOW) {
     // New flow: request a one-time code sent to email (modal UI)
@@ -163,10 +214,10 @@ loginForm.addEventListener("submit", async (e) => {
       // Persist rate limit info so modal can show remaining/reset even after reopen
       try {
         if (data?.reset) {
-          chrome.storage.local.set({ resendCooldownReset: data.reset });
+          storageSet({ resendCooldownReset: data.reset }).catch(() => {});
         }
         if (typeof data?.remaining !== 'undefined') {
-          chrome.storage.local.set({ resendRemaining: data.remaining });
+          storageSet({ resendRemaining: data.remaining }).catch(() => {});
         }
       } catch (e) {
         console.warn('Could not persist rate limit info:', e);
@@ -195,7 +246,7 @@ loginForm.addEventListener("submit", async (e) => {
           const verify = await apiCall('/auth/verify-login-code', { email, code });
           if (!verify.ok) throw new Error(verify.data.error || 'Verifica fallita');
 
-          await chrome.storage.local.set({ token: verify.data.token, user: verify.data.user });
+          await storageSet({ token: verify.data.token, user: verify.data.user });
           chrome.runtime.sendMessage({ type: 'AUTH_STATE_CHANGED', payload: { authenticated: true, user: verify.data.user } });
           codeModal.classList.add('hidden');
           showApp(verify.data.user);
@@ -232,7 +283,7 @@ loginForm.addEventListener("submit", async (e) => {
         resendCodeBtn.textContent = `Invia di nuovo (${resendCooldown}s)`;
         // persist cooldown end time
         const resetAt = Date.now() + resendCooldown * 1000;
-        chrome.storage.local.set({ resendCooldownReset: resetAt });
+        storageSet({ resendCooldownReset: resetAt }).catch(() => {});
         // show attempts + human friendly reset
         const updateAttemptsText = (secsLeft, rem) => {
           const timeText = formatMsToMMSS(secsLeft * 1000);
@@ -253,7 +304,7 @@ loginForm.addEventListener("submit", async (e) => {
             resendCodeBtn.disabled = false;
             resendCodeBtn.textContent = 'Invia di nuovo';
             attemptsInfo.textContent = '';
-            chrome.storage.local.remove('resendCooldownReset');
+            storageRemove('resendCooldownReset').catch(() => {});
           } else {
             resendCodeBtn.textContent = `Invia di nuovo (${resendCooldown}s)`;
             updateAttemptsText(resendCooldown, remaining);
@@ -273,8 +324,8 @@ loginForm.addEventListener("submit", async (e) => {
             // Persist remaining/reset if present in error response
             const errRem = again.data?.remaining;
             const errReset = again.data?.reset;
-            if (errReset) chrome.storage.local.set({ resendCooldownReset: errReset });
-            if (typeof errRem !== 'undefined') chrome.storage.local.set({ resendRemaining: errRem });
+            if (errReset) storageSet({ resendCooldownReset: errReset }).catch(() => {});
+            if (typeof errRem !== 'undefined') storageSet({ resendRemaining: errRem }).catch(() => {});
             throw new Error(again.data.error || 'Impossibile inviare codice');
           }
 
@@ -283,10 +334,10 @@ loginForm.addEventListener("submit", async (e) => {
           const reset = again.data?.reset;
           try {
             if (reset) {
-              chrome.storage.local.set({ resendCooldownReset: reset });
+              storageSet({ resendCooldownReset: reset }).catch(() => {});
             }
             if (typeof remaining !== 'undefined') {
-              chrome.storage.local.set({ resendRemaining: remaining });
+              storageSet({ resendRemaining: remaining }).catch(() => {});
             }
           } catch (e) {
             console.warn('Could not persist rate limit info on resend:', e);
@@ -307,7 +358,8 @@ loginForm.addEventListener("submit", async (e) => {
       };
 
       // On modal open, check persisted cooldown
-      chrome.storage.local.get(['resendCooldownReset', 'resendRemaining'], (items) => {
+      (async () => {
+        const items = await storageGet(['resendCooldownReset', 'resendRemaining']);
         const resetAt = items?.resendCooldownReset;
         const rem = typeof items?.resendRemaining !== 'undefined' ? items.resendRemaining : null;
         if (resetAt) {
@@ -315,10 +367,10 @@ loginForm.addEventListener("submit", async (e) => {
           if (msLeft > 0) {
             startResendCooldown(Math.ceil(msLeft / 1000), rem);
           } else {
-            chrome.storage.local.remove(['resendCooldownReset', 'resendRemaining']);
+            storageRemove(['resendCooldownReset', 'resendRemaining']).catch(() => {});
           }
         }
-      });
+      })();
 
     } catch (err) {
       showError(loginError, err.message);
@@ -398,13 +450,13 @@ registerForm.addEventListener("submit", async (e) => {
 // ============================================
 
 logoutBtn.addEventListener("click", async () => {
-  await chrome.storage.local.remove(["token", "user"]);
+  await storageRemove(["token", "user"]).catch(() => {});
   showAuth();
 });
 
 if (logoutBtnPricing) {
   logoutBtnPricing.addEventListener("click", async () => {
-    await chrome.storage.local.remove(["token", "user"]);
+    await storageRemove(["token", "user"]).catch(() => {});
     showAuth();
   });
 }
@@ -582,7 +634,7 @@ async function analyzeCode() {
     return;
   }
 
-  const { token } = await chrome.storage.local.get("token");
+  const { token } = await storageGet('token');
 
   if (!token) {
     analysisContent.innerHTML =
@@ -605,6 +657,7 @@ async function analyzeCode() {
       },
       body: JSON.stringify({
         model: 'llama3',
+        stream: false,
         messages: [
           {
             role: "system",
@@ -623,7 +676,7 @@ async function analyzeCode() {
 
     if (!response.ok) {
       if (response.status === 401) {
-        await chrome.storage.local.remove(["token", "user"]);
+        await storageRemove(["token", "user"]).catch(() => {});
         showAuth();
         throw new Error("Sessione scaduta. Effettua nuovamente il login.");
       }
@@ -704,7 +757,7 @@ function showAuth() {
   hideMessages();
   
   // Clear stored token to force fresh login
-  chrome.storage.local.remove(["token", "user"]);
+  storageRemove(["token", "user"]).catch(() => {});
 }
 
 function showApp(user) {
@@ -740,17 +793,11 @@ function isTokenExpired(token) {
 
 async function init() {
   try {
-    // Check for pending OAuth result first
-    const { token, user: storedUser } = await chrome.storage.local.get(['token', 'user']);
-
-    if (token && storedUser && !isTokenExpired(token)) {
-      showApp(storedUser);
-    } else {
-      if (token) {
-        await chrome.storage.local.remove(['token', 'user']);
-      }
-      showAuth();
-    }
+    // Always show auth screen first to force login on every extension opening
+    showAuth();
+    
+    // Clear any existing token to force fresh login
+    await storageRemove(['token', 'user']).catch(() => {});
   } catch {
     showAuth();
   }

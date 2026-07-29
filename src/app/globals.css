@@ -2,10 +2,18 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #111827;
-  --primary: #064e3b;
+  --foreground: #1e293b;
+  --primary: #059669;
   --primary-foreground: #ffffff;
-  --accent: #ecfdf5;
+  --accent: #d1fae5;
+}
+
+.dark {
+  --background: #080d14;
+  --foreground: #f1f5f9;
+  --primary: #10b981;
+  --primary-foreground: #ffffff;
+  --accent: #064e3b;
 }
 
 @theme inline {
@@ -18,23 +26,51 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #022c22;
-    --foreground: #f9fafb;
-    --primary: #10b981;
-    --primary-foreground: #022c22;
-    --accent: #064e3b;
-  }
+html,
+body {
+  font-family: var(--font-geist-sans);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
   scrollbar-width: thin;
   scrollbar-color: var(--primary) transparent;
+  transition: background 0.2s ease, color 0.2s ease;
 }
+
+/* Dark mode overrides for hardcoded arbitrary values */
+html.dark [class*="bg-[#ffffff]"]:not(nav):not(footer):not(section[id="demo"]) { background: #080d14 !important; }
+html.dark nav[class*="bg-[#ffffff]"] { background: #080d14 !important; }
+html.dark [class*="bg-[#f8fafc]"] { background: #080d14 !important; }
+html.dark [class*="bg-white"]:not(nav):not(footer):not(section[id="demo"]) { background: #0a0c10 !important; }
+html.dark [class*="bg-[#e2e8f0]"] { background: #111827 !important; }
+html.dark [class*="bg-[#cbd5e1]"] { background: #161b22 !important; }
+
+/* Text colors */
+html.dark [class*="text-[#0f172a]"] { color: #f1f5f9 !important; }
+html.dark [class*="text-[#475569]"] { color: #94a3b8 !important; }
+html.dark [class*="text-[#64748b]"] { color: #64748b !important; }
+
+/* Border colors */
+html.dark [class*="border-[#e2e8f0]"] { border-color: #1e293b !important; }
+html.dark [class*="border-[#cbd5e1]"] { border-color: #263141 !important; }
+
+/* Emerald backgrounds used for cards */
+html.dark [class*="bg-emerald-50"] { background: #064e3b !important; }
+html.dark [class*="border-emerald-200"] { border-color: #065f46 !important; }
+html.dark [class*="text-emerald-600"] { color: #10b981 !important; }
+html.dark [class*="text-emerald-700"] { color: #34d399 !important; }
+html.dark [class*="from-emerald-50"] { background: #064e3b !important; }
+
+/* Dropdown / overlay */
+html.dark [class*="bg-black/"] { background: rgba(0,0,0,0.5) !important; }
+
+/* Navbar specific */
+html.dark nav { border-bottom-color: #1e293b !important; }
+
+/* Gradient buttons - keep original */
+html.dark [class*="from-emerald-500"] { background: #10b981 !important; }
 
 /* Global Custom Scrollbar (WebKit) */
 ::-webkit-scrollbar {
@@ -65,38 +101,23 @@ body {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #cbd5e1;
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #94a3b8;
 }
 
 /* Effects */
 .text-shadow-glow {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
-/* Mobile-first app shell styles (Fase 1)
-   - header at top, compact
-   - bottom navigation visible on small screens
-   - main content has safe spacing for bottom nav
-*/
+/* App shell */
 .app-shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-}
-
-.site-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  padding: 0 12px;
-  background: linear-gradient(90deg, rgba(6,78,59,0.95), rgba(16,185,129,0.95));
-  color: var(--primary-foreground);
-  font-weight: 600;
 }
 
 .site-brand {
@@ -106,58 +127,46 @@ body {
 }
 
 .site-actions .header-link {
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   text-decoration: none;
   font-size: 14px;
 }
 
-.content {
-  flex: 1 1 auto;
-  padding: 16px 12px 84px; /* bottom padding to avoid bottom nav overlap */
-  width: 100%;
-  box-sizing: border-box;
+/* Selection color */
+::selection {
+  background: rgba(16, 185, 129, 0.25);
+  color: #f1f5f9;
 }
 
-.bottom-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  background: rgba(255,255,255,0.98);
-  border-top: 1px solid rgba(0,0,0,0.06);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 -6px 18px rgba(2,6,23,0.06);
+/* ========================================
+   Focus styles - match hover for accessibility
+   ======================================== */
+
+/* Base focus ring using primary emerald color */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
-.bottom-nav .nav-item {
-  color: var(--foreground);
-  text-decoration: none;
-  font-size: 13px;
-  padding: 8px 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* Links: focus behaves like hover (color + underline) */
+a:focus-visible {
+  color: var(--primary);
+  text-decoration: underline;
 }
 
-/* Desktop: move nav to side as unobtrusive horizontal bar */
-@media (min-width: 900px) {
-  .bottom-nav {
-    position: static;
-    height: 48px;
-    margin-top: 8px;
-    background: transparent;
-    border-top: none;
-    box-shadow: none;
-    justify-content: flex-end;
-  }
+/* Buttons and interactive elements */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+}
 
-  .content {
-    padding-bottom: 24px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
+/* Remove default browser outline when we have custom focus */
+a:focus,
+button:focus {
+  outline: none;
 }

@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="https://cdn.tailwindcss.com" />
+    <!-- NOTE: avoid loading remote CSS/JS from CDN in extensions (CSP & supply-chain). -->
+    <!-- Build Tailwind locally and include the generated CSS here as sidebar.css -->
+    <!-- Example dev flow: npx tailwindcss -i ./src/entry.css -o ./chrome-extension/sidebar.css --minify -->
     <link rel="stylesheet" href="sidebar.css" />
     <title>Semplycode AI</title>
   </head>
@@ -21,46 +23,30 @@
           <button class="auth-tab" data-tab="register">Registrati</button>
         </div>
 
-        <!-- Login Form -->
-        <form id="loginForm" class="auth-form">
-          <div class="form-group">
-            <label for="loginEmail">Email</label>
-            <input type="email" id="loginEmail" placeholder="nome@esempio.com" required />
-          </div>
-          <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <div class="password-wrapper">
-              <input type="password" id="loginPassword" placeholder="La tua password" required />
-              <button type="button" class="toggle-password" data-target="loginPassword" title="Mostra/nascondi password">
-                <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg class="eye-off-icon hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div id="loginError" class="error-msg hidden"></div>
-          <!-- Code input modal (hidden by default) -->
-          <div id="codeModal" class="code-modal hidden">
-            <div class="code-modal-inner">
-              <h3>Inserisci codice</h3>
-              <p>Abbiamo inviato un codice all'email inserita. Inseriscilo qui sotto.</p>
-              <input type="text" id="codeInputModal" placeholder="Codice a 6 cifre" />
-              <div class="code-actions-modal">
-                <button type="button" id="verifyCodeBtn" class="btn-primary">Verifica</button>
-                <button type="button" id="resendCodeBtn" class="btn-secondary">Invia di nuovo</button>
-              </div>
-              <div id="codeError" class="error-msg hidden"></div>
-            </div>
-          </div>
-          <button type="submit" id="loginBtn" class="btn-primary">Accedi</button>
-          
-          <div class="divider"></div>
-        </form>
+         <!-- Login Form -->
+         <form id="loginForm" class="auth-form">
+           <div class="form-group">
+             <label for="loginEmail">Email</label>
+             <input type="email" id="loginEmail" placeholder="nome@esempio.com" required />
+           </div>
+           <div id="loginError" class="error-msg hidden"></div>
+           <!-- Code input modal (hidden by default) -->
+           <div id="codeModal" class="code-modal hidden">
+             <div class="code-modal-inner">
+               <h3>Inserisci codice</h3>
+               <p>Abbiamo inviato un codice all'email inserita. Inseriscilo qui sotto.</p>
+               <input type="text" id="codeInputModal" placeholder="Codice a 6 cifre" />
+               <div class="code-actions-modal">
+                 <button type="button" id="verifyCodeBtn" class="btn-primary">Verifica</button>
+                 <button type="button" id="resendCodeBtn" class="btn-secondary">Invia di nuovo</button>
+               </div>
+               <div id="codeError" class="error-msg hidden"></div>
+             </div>
+           </div>
+           <button type="submit" id="loginBtn" class="btn-primary">Accedi</button>
+           
+           <div class="divider"></div>
+         </form>
 
         <!-- Register Form -->
         <form id="registerForm" class="auth-form hidden">
@@ -369,7 +355,7 @@
           <div class="plan-card-mini mb-3">
             <span class="badge-free">Attuale</span>
             <h4>Gratis</h4>
-            <p class="price">€0<span>/mese</span></p>
+            <p class="price">€19.99<span>/mese</span></p>
             <ul class="features">
               <li>10 analisi/giorno</li>
               <li>Motore Standard</li>
@@ -380,7 +366,7 @@
           <div class="plan-card-mini popular mb-3">
             <span class="badge-popular">Popolare</span>
             <h4>Pro</h4>
-            <p class="price">€19<span>/mese</span></p>
+            <p class="price">€19.99<span>/mese</span></p>
             <ul class="features">
               <li>Analisi illimitate</li>
               <li>Advanced Neural Core</li>
@@ -392,7 +378,7 @@
           </div>
           <div class="plan-card-mini mb-3">
             <h4>Enterprise</h4>
-            <p class="price">€49<span>/mese</span></p>
+            <p class="price">€49.99<span>/mese</span></p>
             <ul class="features">
               <li>Training AI Personalizzato</li>
               <li>Collaborazione Team</li>

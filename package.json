@@ -4,11 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run build:extension",
+    "build:extension": "node scripts/build-extension.js",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest --runInBand"
   },
   "dependencies": {
+    "@babel/preset-env": "^7.29.5",
     "@codemirror/lang-css": "^6.3.1",
     "@codemirror/lang-go": "^6.0.1",
     "@codemirror/lang-html": "^6.4.11",
@@ -18,16 +21,24 @@
     "@codemirror/lang-python": "^6.2.1",
     "@codemirror/lang-rust": "^6.0.2",
     "@codemirror/lang-sql": "^6.10.0",
+    "@codemirror/legacy-modes": "^6.5.3",
+    "@codemirror/stream-parser": "^0.19.9",
+    "@fortawesome/fontawesome-svg-core": "^7.2.0",
+    "@fortawesome/free-brands-svg-icons": "^7.2.0",
+    "@fortawesome/react-fontawesome": "^3.3.1",
     "@stripe/stripe-js": "^8.10.0",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.108.2",
     "@uiw/react-codemirror": "^4.25.9",
+    "babel-jest": "^30.4.1",
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
+    "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
+    "jszip": "^3.10.1",
     "lodash": "^4.17.23",
     "lucide-react": "^0.577.0",
-    "mongoose": "^9.3.1",
     "next": "16.1.6",
-    "next-auth": "^5.0.0-beta.30",
     "nodemailer": "^6.9.3",
     "prismjs": "^1.30.0",
     "react": "19.2.3",
@@ -35,13 +46,26 @@
     "react-markdown": "^10.1.0",
     "react-simple-code-editor": "^0.14.1",
     "remark-gfm": "^4.0.1",
-    "stripe": "^20.4.1"
+    "resend": "^6.12.3",
+    "stripe": "^20.4.1",
+    "swr": "^2.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^29.5.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.24",
+    "@types/node": "^25.9.2",
+    "@types/nodemailer": "^8.0.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "1.0.0",
+    "esbuild": "^0.28.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4"
+    "jest": "^29.7.0",
+    "tailwindcss": "^4",
+    "typescript": "^6.0.3"
   }
 }

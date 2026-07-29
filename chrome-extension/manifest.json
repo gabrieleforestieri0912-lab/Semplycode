@@ -1,25 +1,39 @@
 {
   "manifest_version": 3,
-  "name": "Semplycode AI",
-  "version": "2.0",
-  "description": "Analizza e ottimizza il tuo codice con l'intelligenza artificiale di Semplycode",
-  "permissions": ["sidePanel", "storage", "clipboardRead"],
-  "host_permissions": ["http://localhost:3000/*", "http://localhost:3001/*"],
-  
+  "name": "Semplycode AI Co-Pilot",
+  "version": "1.0.0",
+  "description": "Seleziona ed evidenzia codice su qualsiasi pagina web e analizzalo con Semplycode AI nel pannello laterale.",
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "sidePanel",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://semplycode.com/*"
+  ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "css": ["content-styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "side_panel": {
-    "default_path": "sidebar.html"
+    "default_path": "sidepanel.html"
   },
   "action": {
-    "default_title": "Semplycode AI",
-    "default_icon": "icons/semplycode.png"
+    "default_title": "Semplycode Co-Pilot"
   },
   "icons": {
-    "16": "icons/semplycode.png",
-    "48": "icons/semplycode.png",
-    "128": "icons/semplycode.png"
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
   }
 }
