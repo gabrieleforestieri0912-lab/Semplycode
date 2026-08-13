@@ -20,7 +20,7 @@ import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "./ThemeToggle";
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 const Navbar = () => {
   const router = useRouter();
@@ -94,10 +94,10 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { href: "#demo", label: "Demo" },
-    { href: "#funzionalita", label: "Funzionalità" },
-    { href: "#estensione", label: "Estensione" },
-    { href: "#prezzi", label: "Prezzi" },
+    { href: "/#demo", label: "Demo" },
+    { href: "/#funzionalita", label: "Funzionalità" },
+    { href: "/#estensione", label: "Estensione" },
+    { href: "/#prezzi", label: "Prezzi" },
   ];
 
   const navLinkClass = `relative font-medium transition-all duration-200 text-[#475569] hover:text-[#0f172a] text-sm`;

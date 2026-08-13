@@ -11,7 +11,7 @@ import {
   Sparkles,
   ArrowRight,
   Lock,
-
+  Coins,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { loadStripe } from "@stripe/stripe-js";
@@ -31,6 +31,8 @@ interface PlanStyle {
   featureCheck: string;
   headerBg: string;
   headerText: string;
+  nameText: string;
+  tokensBadge: string;
 }
 
 interface Plan {
@@ -40,6 +42,8 @@ interface Plan {
   tagline: string;
   priceId?: string;
   features: string[];
+  tokensLabel: string;
+  tokensNote: string;
   icon: React.ReactElement;
   popular?: boolean;
 }
@@ -52,6 +56,8 @@ interface SectionTranslation {
   popular: string;
   free: string;
   secure: string;
+  tokensTitle: string;
+  tokensPerMonth: string;
   plans: Plan[];
 }
 
@@ -66,7 +72,9 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
       "bg-[#0f172a] hover:bg-[#1e293b] text-white",
     featureCheck: "text-emerald-600 bg-emerald-100",
     headerBg: "bg-slate-50",
-    headerText: "text-slate-600",
+    headerText: "text-slate-500",
+    nameText: "text-slate-800",
+    tokensBadge: "bg-slate-100 text-slate-700 border-slate-200",
   },
   starter: {
     gradient: "from-blue-900 via-blue-800 to-indigo-900",
@@ -75,10 +83,12 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
     badge: null,
     iconBg: "bg-blue-100",
     btnClass:
-      "bg-[#0f172a] hover:bg-[#1e293b] text-white",
+      "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25",
     featureCheck: "text-blue-600 bg-blue-100",
     headerBg: "bg-blue-50",
-    headerText: "text-blue-600",
+    headerText: "text-blue-200",
+    nameText: "text-white",
+    tokensBadge: "bg-blue-50 text-blue-700 border-blue-200",
   },
   pro: {
     gradient: "from-emerald-900 via-emerald-800 to-teal-900",
@@ -87,10 +97,12 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
     badge: true,
     iconBg: "bg-emerald-100",
     btnClass:
-      "bg-[#0f172a] hover:bg-[#1e293b] text-white",
+      "bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-white shadow-lg shadow-emerald-500/25",
     featureCheck: "text-emerald-600 bg-emerald-100",
     headerBg: "bg-emerald-50",
-    headerText: "text-emerald-600",
+    headerText: "text-emerald-200",
+    nameText: "text-white",
+    tokensBadge: "bg-emerald-50 text-emerald-700 border-emerald-200",
   },
   enterprise: {
     gradient: "from-violet-900 via-purple-900 to-indigo-900",
@@ -99,10 +111,12 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
     badge: null,
     iconBg: "bg-violet-100",
     btnClass:
-      "bg-[#0f172a] hover:bg-[#1e293b] text-white",
+      "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25",
     featureCheck: "text-violet-600 bg-violet-100",
     headerBg: "bg-violet-50",
-    headerText: "text-violet-600",
+    headerText: "text-violet-200",
+    nameText: "text-white",
+    tokensBadge: "bg-violet-50 text-violet-700 border-violet-200",
   },
 };
 
@@ -120,14 +134,18 @@ const Pricing = () => {
       popular: "Most Popular",
       free: "Always free",
       secure: "Secure payments via Stripe · Cancel anytime",
+      tokensTitle: "AI tokens",
+      tokensPerMonth: "tokens/month",
       plans: [
         {
           id: "free",
           name: "Free",
           price: "0",
           tagline: "Start building for free",
+          tokensLabel: "100K",
+          tokensNote: "tokens/month",
           features: [
-            "10 AI Analyses per day",
+            "100K AI tokens per month",
             "Standard Neural Engine",
             "Web Editor access",
             "Basic error detection",
@@ -142,8 +160,10 @@ const Pricing = () => {
           price: "9.99",
           tagline: "For growing developers",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
+          tokensLabel: "1.5M",
+          tokensNote: "tokens/month",
           features: [
-            "100 AI Analyses per day",
+            "1.5M AI tokens per month",
             "Deep Code Reviews",
             "File upload (.py, .js, .ts…)",
             "Export reports (PDF)",
@@ -158,8 +178,10 @@ const Pricing = () => {
           price: "19.99",
           tagline: "For serious developers",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
+          tokensLabel: "3M",
+          tokensNote: "tokens/month",
           features: [
-            "Unlimited AI Analyses",
+            "3M AI tokens per month",
             "All analysis types (security, performance…)",
             "ZIP / multi-file upload",
             "Real-time collaboration",
@@ -176,7 +198,10 @@ const Pricing = () => {
           price: "49.99",
           tagline: "Scale your entire team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
+          tokensLabel: "∞",
+          tokensNote: "unlimited tokens",
           features: [
+            "Unlimited AI tokens",
             "Custom AI Training",
             "Team Collaboration",
             "Full API Access",
@@ -197,14 +222,18 @@ const Pricing = () => {
       popular: "Più Popolare",
       free: "Sempre gratis",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
+      tokensTitle: "Token AI",
+      tokensPerMonth: "token/mese",
       plans: [
         {
           id: "free",
           name: "Gratis",
           price: "0",
           tagline: "Inizia a costruire gratis",
+          tokensLabel: "100K",
+          tokensNote: "token/mese",
           features: [
-            "10 Analisi AI al giorno",
+            "100K token AI al mese",
             "Motore Neurale Standard",
             "Accesso Web Editor",
             "Rilevamento errori base",
@@ -219,8 +248,10 @@ const Pricing = () => {
           price: "9.99",
           tagline: "Per sviluppatori in crescita",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
+          tokensLabel: "1,5M",
+          tokensNote: "token/mese",
           features: [
-            "100 Analisi AI al giorno",
+            "1,5M token AI al mese",
             "Review codice approfondite",
             "Upload file (.py, .js, .ts…)",
             "Export report (PDF)",
@@ -235,8 +266,10 @@ const Pricing = () => {
           price: "19.99",
           tagline: "Per sviluppatori seri",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
+          tokensLabel: "3M",
+          tokensNote: "token/mese",
           features: [
-            "Analisi AI illimitate",
+            "3M token AI al mese",
             "Tutti i tipi di analisi",
             "Upload ZIP e multi-file",
             "Collaborazione in tempo reale",
@@ -253,7 +286,10 @@ const Pricing = () => {
           price: "49.99",
           tagline: "Scala l'intero team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
+          tokensLabel: "∞",
+          tokensNote: "token illimitati",
           features: [
+            "Token AI illimitati",
             "Training AI Personalizzato",
             "Collaborazione Team",
             "Accesso completo alle API",
@@ -372,17 +408,26 @@ const Pricing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
-                whileHover={{ y: -4 }}
-                className={`relative flex flex-col rounded-2xl h-full border transition-all duration-300 bg-white ${
+                whileHover={{ y: -6 }}
+                className={`relative flex flex-col rounded-3xl h-full border overflow-hidden transition-all duration-300 bg-white ${
                   plan.popular
-                    ? "border-emerald-500 shadow-lg shadow-emerald-500/15 ring-1 ring-emerald-500/20"
-                    : "border-[#e2e8f0] hover:border-[#cbd5e1] shadow-sm hover:shadow-md"
+                    ? "border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/30 lg:-mt-4 lg:mb-4"
+                    : "border-[#e2e8f0] hover:border-[#cbd5e1] shadow-sm hover:shadow-lg"
                 }`}
               >
-                {/* Body */}
-                <div className="flex flex-col h-full p-6">
-                  {/* Header: icon + name + badge */}
-                  <div className="flex items-start justify-between mb-5">
+                {/* Header con gradiente per piano */}
+                <div
+                  className={`relative px-6 pt-6 pb-5 bg-gradient-to-br ${style.gradient} ${
+                    plan.popular ? "" : "opacity-[0.97]"
+                  }`}
+                >
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: `radial-gradient(circle at 80% -20%, ${style.glow} 0%, transparent 60%)`,
+                    }}
+                  />
+                  <div className="relative flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${style.iconBg}`}
@@ -391,37 +436,54 @@ const Pricing = () => {
                         {React.cloneElement(plan.icon as React.ReactElement<{ size?: number }>, { size: 18 })}
                       </div>
                       <div>
-                        <p className="font-bold text-[#0f172a]">
+                        <p className={`font-bold ${style.nameText}`}>
                           {plan.name}
                         </p>
-                        <p className="text-xs text-[#64748b] mt-0.5">
+                        <p className={`text-xs mt-0.5 ${style.headerText}`}>
                           {plan.tagline}
                         </p>
                       </div>
                     </div>
                     {plan.popular && (
-                      <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                      <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-600 shadow">
                         <Sparkles size={9} />
                         {current.popular}
                       </span>
                     )}
                   </div>
+                </div>
 
+                {/* Body */}
+                <div className="flex flex-col h-full p-6 pt-5">
                   {/* Price */}
-                  <div className="mb-5">
-                    <div className="flex items-end gap-1">
-                      <span className="text-3xl font-extrabold tracking-tight text-[#0f172a]">
-                        {`€${plan.price}`}
+                  <div className="flex items-end gap-1 mb-4">
+                    <span className="text-3xl font-extrabold tracking-tight text-[#0f172a]">
+                      {`€${plan.price}`}
+                    </span>
+                    {plan.price !== "0" && (
+                      <span className="mb-1 text-sm text-[#64748b]">
+                        {current.monthly}
                       </span>
-                      {plan.price !== "0" && (
-                        <span className="mb-1 text-sm text-[#64748b]">
-                          {current.monthly}
-                        </span>
-                      )}
-                     </div>
-                   </div>
+                    )}
+                  </div>
 
-                  <div className="mb-5 h-px w-full bg-[#e2e8f0]" />
+                  {/* Token highlight */}
+                  <div
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 mb-4 ${style.tokensBadge}`}
+                  >
+                    <span className="flex items-center gap-1.5 text-xs font-semibold">
+                      <Coins size={14} />
+                      {current.tokensTitle}
+                    </span>
+                    <span className="text-sm font-extrabold">
+                      {plan.tokensLabel}
+                      <span className="ml-1 text-[10px] font-semibold opacity-70">
+                        {plan.tokensNote}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="mb-4 h-px w-full bg-[#e2e8f0]" />
 
                   {/* Features */}
                   <ul className="space-y-2.5 grow mb-6">

@@ -50,6 +50,90 @@ export async function once(key: string, windowMs: number, max: number): Promise<
   return { allowed, remaining: Math.max(0, max - rec.count), reset: rec.reset };
 }
 
+/**
+ * Accumula `amount` token sulla finestra. Ritorna lo stato dopo l'incremento:
+ * `allowed` è false se il totale supera `max` (la richiesta va rifiutata).
+ * Il totale viene comunque registrato (non viene decrementato su rifiuto).
+ */
+export async function addTokens(
+  key: string,
+  windowMs: number,
+  max: number,
+  amount: number,
+): Promise<RateLimitResult> {
+  const now = Date.now();
+  if (redisClient) {
+    try {
+      const redisKey = `rl:${key}`;
+      const ttlSeconds = Math.ceil(windowMs / 1000);
+      const count = await redisClient.incrby(redisKey, amount);
+      if (count === amount) {
+        await redisClient.expire(redisKey, ttlSeconds);
+      }
+      const ttl = await redisClient.ttl(redisKey);
+      return {
+        allowed: count <= max,
+        remaining: Math.max(0, max - count),
+        reset: now + ttl * 1000,
+        count,
+      };
+    } catch (err) {
+      console.error('Redis addTokens failed, falling back to in-memory:', err);
+    }
+  }
+
+  const rec = localMap.get(key) || { count: 0, reset: now + windowMs };
+  if (now > rec.reset) {
+    rec.count = amount;
+    rec.reset = now + windowMs;
+  } else {
+    rec.count += amount;
+  }
+  localMap.set(key, rec);
+  return {
+    allowed: rec.count <= max,
+    remaining: Math.max(0, max - rec.count),
+    reset: rec.reset,
+    count: rec.count,
+  };
+}
+
+export async function peekTokens(
+  key: string,
+  windowMs: number,
+  max: number,
+): Promise<RateLimitResult> {
+  const now = Date.now();
+  if (redisClient) {
+    try {
+      const redisKey = `rl:${key}`;
+      const raw = await redisClient.get(redisKey);
+      const count = raw ? parseInt(raw, 10) : 0;
+      const ttl = await redisClient.ttl(redisKey);
+      const reset = ttl > 0 ? now + ttl * 1000 : now + windowMs;
+      return {
+        allowed: count < max,
+        remaining: Math.max(0, max - count),
+        reset,
+        count,
+      };
+    } catch (err) {
+      console.error('Redis peekTokens failed:', err);
+    }
+  }
+
+  const rec = localMap.get(key) || { count: 0, reset: now + windowMs };
+  if (now > rec.reset) {
+    return { allowed: true, remaining: max, reset: now + windowMs, count: 0 };
+  }
+  return {
+    allowed: rec.count < max,
+    remaining: Math.max(0, max - rec.count),
+    reset: rec.reset,
+    count: rec.count,
+  };
+}
+
 export async function peek(key: string, windowMs: number, max: number): Promise<RateLimitResult> {
   const now = Date.now();
   if (redisClient) {

@@ -157,8 +157,12 @@ export default function SettingsPage() {
             <p className="text-emerald-400 font-medium">{planLabel}</p>
             <p className="text-sm text-[#64748b]">
               {user.plan === "free"
-                ? "10 analisi AI al giorno"
-                : "Analisi AI illimitate"}
+                ? "100K token AI al mese"
+                : user.plan === "starter"
+                  ? "1,5M token AI al mese"
+                  : user.plan === "pro"
+                    ? "3M token AI al mese"
+                    : "Token AI illimitati"}
             </p>
           </motion.div>
 
@@ -200,8 +204,12 @@ export default function SettingsPage() {
               <p className="text-emerald-600 font-medium">{planLabel}</p>
               <p className="text-sm text-[#64748b]">
                 {user.plan === "free"
-                  ? "10 analisi AI al giorno"
-                  : "Analisi AI illimitate"}
+                  ? "100K token AI al mese"
+                  : user.plan === "starter"
+                    ? "1,5M token AI al mese"
+                    : user.plan === "pro"
+                      ? "3M token AI al mese"
+                      : "Token AI illimitati"}
               </p>
             </div>
           </motion.div>

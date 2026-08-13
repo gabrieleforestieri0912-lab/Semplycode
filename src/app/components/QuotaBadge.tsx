@@ -2,6 +2,7 @@
 
 import useSWR from "swr";
 import Link from "next/link";
+import { formatTokens } from "@/lib/tokenBudget";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -27,16 +28,20 @@ export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
     );
   }
 
-  const remaining = stats.remainingAnalyses == null ? "∞" : stats.remainingAnalyses;
-  const limit = stats.dailyLimit ?? "∞";
+  const remaining = stats.remainingTokens == null ? "∞" : formatTokens(stats.remainingTokens);
+  const limit = stats.tokenLimit == null ? "∞" : formatTokens(stats.tokenLimit);
   const planLabel =
     stats.plan === "pro"
       ? "Pro"
       : stats.plan === "enterprise"
         ? "Enterprise"
-        : stats.plan === "guest"
-          ? "Ospite"
-          : "Gratuito";
+        : stats.plan === "starter"
+          ? "Starter"
+          : stats.plan === "guest"
+            ? "Ospite"
+            : "Gratuito";
+
+  const exhausted = stats.remainingTokens === 0;
 
   return (
     <div
@@ -44,9 +49,9 @@ export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
     >
       <span className="text-gray-500">{planLabel}</span>
       <span className="text-primary">
-        {remaining}/{limit} oggi
+        {remaining}/{limit} {stats.plan === "guest" ? "oggi" : "al mese"}
       </span>
-      {stats.plan === "guest" && stats.remainingAnalyses === 0 && (
+      {stats.plan === "guest" && exhausted && (
         <Link
           href="/register"
           className="text-primary underline normal-case tracking-normal"
@@ -54,7 +59,7 @@ export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
           Registrati
         </Link>
       )}
-      {stats.plan === "free" && stats.remainingAnalyses === 0 && (
+      {stats.plan !== "guest" && stats.plan !== "enterprise" && exhausted && (
         <Link
           href="/#pricing"
           className="text-primary underline normal-case tracking-normal"

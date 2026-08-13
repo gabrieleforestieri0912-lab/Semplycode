@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { peek } from '@/lib/rateLimiter';
-import {
-  GUEST_DAILY_LIMIT,
-  FREE_DAILY_LIMIT,
-  isPreviousDay,
-} from '@/lib/usageLimits';
+import { peekTokens } from '@/lib/rateLimiter';
 import { GUEST_COOKIE, generateGuestId } from '@/lib/guestSession';
 import { getAuthUser } from '@/lib/api-auth';
 import { findUserByEmail, updateUser, countChatsByUserId } from '@/lib/supabase/db';
+import {
+  GUEST_DAILY_TOKEN_BUDGET,
+  getPlanTokenBudget,
+  isNewMonth,
+} from '@/lib/tokenBudget';
 
 const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -23,25 +23,30 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Utente non trovato.' }, { status: 404 });
       }
 
-      const lastReset = user.daily_analyses_last_reset ? new Date(user.daily_analyses_last_reset) : new Date(0);
-      if (isPreviousDay(lastReset)) {
-        await updateUser(email, { daily_analyses_count: 0, daily_analyses_last_reset: new Date().toISOString() });
+      const plan = user.plan || 'free';
+      const budget = getPlanTokenBudget(plan);
+
+      // Reset mensile
+      let tokensUsed = user.tokens_used_month || 0;
+      if (isNewMonth(user.tokens_period_start)) {
+        tokensUsed = 0;
+        await updateUser(email, {
+          tokens_used_month: 0,
+          tokens_period_start: new Date().toISOString(),
+        }).catch(() => {});
       }
 
       const chats = await countChatsByUserId(user.email);
-      const plan = user.plan || 'free';
-      const analyses = user.daily_analyses_count || 0;
-      const dailyLimit = plan === 'free' ? FREE_DAILY_LIMIT : null;
-      const remainingAnalyses =
-        plan === 'free' ? Math.max(FREE_DAILY_LIMIT - analyses, 0) : null;
+      const remainingTokens = budget === null ? null : Math.max(0, budget - tokensUsed);
 
       return NextResponse.json({
         authenticated: true,
         plan,
         chats,
-        analyses,
-        remainingAnalyses,
-        dailyLimit,
+        tokensUsed,
+        tokenLimit: budget,
+        remainingTokens,
+        periodStart: user.tokens_period_start || new Date().toISOString(),
       });
     }
 
@@ -51,9 +56,9 @@ export async function GET(req: NextRequest) {
       authenticated: false,
       plan: 'guest' as const,
       chats: 0,
-      analyses: 0,
-      remainingAnalyses: GUEST_DAILY_LIMIT,
-      dailyLimit: GUEST_DAILY_LIMIT,
+      tokensUsed: 0,
+      tokenLimit: GUEST_DAILY_TOKEN_BUDGET,
+      remainingTokens: GUEST_DAILY_TOKEN_BUDGET,
     };
 
     if (!guestId) {
@@ -68,13 +73,13 @@ export async function GET(req: NextRequest) {
       return res;
     }
 
-    const rl = await peek(`guest-usage:${guestId}`, GUEST_WINDOW_MS, GUEST_DAILY_LIMIT);
-    const used = rl.count ?? GUEST_DAILY_LIMIT - rl.remaining;
+    const rl = await peekTokens(`guest-tokens:${guestId}`, GUEST_WINDOW_MS, GUEST_DAILY_TOKEN_BUDGET);
+    const used = rl.count ?? 0;
 
     const res = NextResponse.json({
       ...responseBody,
-      analyses: used,
-      remainingAnalyses: rl.remaining,
+      tokensUsed: used,
+      remainingTokens: rl.remaining,
     });
 
     if (!cookieStore.get(GUEST_COOKIE)?.value) {

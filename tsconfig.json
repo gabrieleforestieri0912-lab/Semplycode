@@ -39,7 +39,6 @@
   "exclude": [
     "chrome-extension",
     "scripts",
-    "tests",
     "node_modules"
   ]
 }

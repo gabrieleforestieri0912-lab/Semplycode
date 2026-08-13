@@ -41,17 +41,17 @@ const Footer = () => {
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <Link href="#funzionalita" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                  <Link href="/#funzionalita" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Funzionalità
                   </Link>
                 </li>
                 <li>
-                  <Link href="#prezzi" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                  <Link href="/#prezzi" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Prezzi
                   </Link>
                 </li>
                 <li>
-                  <Link href="#estensione" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                  <Link href="/#estensione" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Estensione Chrome
                   </Link>
                 </li>
@@ -71,12 +71,12 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#come-funziona" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                  <Link href="/#come-funziona" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Come Funziona
                   </Link>
                 </li>
                 <li>
-                  <Link href="#demo" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                  <Link href="/#demo" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Demo Live
                   </Link>
                 </li>

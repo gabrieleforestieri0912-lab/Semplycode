@@ -15,6 +15,8 @@ export interface User {
   subscription_end_date?: string | null;
   daily_analyses_count: number;
   daily_analyses_last_reset: string;
+  tokens_used_month: number;
+  tokens_period_start?: string | null;
   reset_token?: string | null;
   reset_token_expiry?: string | null;
   login_code?: string | null;

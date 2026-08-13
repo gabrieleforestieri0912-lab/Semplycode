@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Code2, Zap, GraduationCap, ArrowRight, Sparkles, LucideIcon } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-const MotionLink = motion(Link);
+const MotionLink = motion.create(Link);
 
 interface Step {
   step: string;

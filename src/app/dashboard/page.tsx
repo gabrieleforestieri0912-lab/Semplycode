@@ -10,6 +10,7 @@ import { BarChart3, MessageSquare, Code2, CreditCard, Zap, Loader2, Sparkles, Tr
 import Link from 'next/link';
 import Navbar from '@/app/components/Navbar';
 import Footer from '@/app/components/Footer';
+import { formatTokens } from '@/lib/tokenBudget';
 import { SkeletonCard, SkeletonList, SkeletonChart, SkeletonPage } from '@/app/components/Skeleton';
 
 interface UserInfo {
@@ -19,11 +20,11 @@ interface UserInfo {
 }
 
 interface Stats {
-  analyses: number;
+  tokensUsed: number;
   chats: number;
-  remainingAnalyses: number | null;
+  remainingTokens: number | null;
+  tokenLimit: number | null;
   plan: string;
-  dailyLimit?: number;
 }
 
 interface ChatItem {
@@ -68,9 +69,9 @@ export default function DashboardPage() {
     return null;
   }
 
-  const resolvedStats = stats || { analyses: 0, chats: 0, remainingAnalyses: 10, plan: 'free' };
-  const planLabel = resolvedStats.plan === 'enterprise' ? 'Enterprise' : resolvedStats.plan === 'pro' ? 'Pro' : 'Gratuito';
-  const remainingLabel = resolvedStats.remainingAnalyses === null ? '∞' : resolvedStats.remainingAnalyses ?? '?';
+  const resolvedStats = stats || { tokensUsed: 0, chats: 0, remainingTokens: 100000, tokenLimit: 100000, plan: 'free' };
+  const planLabel = resolvedStats.plan === 'enterprise' ? 'Enterprise' : resolvedStats.plan === 'pro' ? 'Pro' : resolvedStats.plan === 'starter' ? 'Starter' : 'Gratuito';
+  const remainingLabel = resolvedStats.remainingTokens === null ? '∞' : formatTokens(resolvedStats.remainingTokens ?? 0);
 
   if (status === 'loading' || !user) {
     return (
@@ -136,10 +137,12 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-emerald-500" />
-                      <span className="font-medium text-sm text-emerald-600">Analisi Rimanenti</span>
+                      <span className="font-medium text-sm text-emerald-600">Token Rimanenti</span>
                     </div>
                     <p className="text-5xl font-black tracking-tighter leading-none">{remainingLabel}</p>
-                    <p className="text-xs text-[#64748b] mt-1">{resolvedStats.dailyLimit ? 'al giorno' : 'illimitate'}</p>
+                    <p className="text-xs text-[#64748b] mt-1">
+                      {resolvedStats.tokenLimit == null ? 'illimitati' : `${formatTokens(resolvedStats.tokenLimit)} al mese`}
+                    </p>
                   </div>
                   <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
                     <TrendingUp className="w-6 h-6 text-emerald-500" />
@@ -155,11 +158,11 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Code2 className="w-4 h-4 text-violet-500" />
-                      <span className="font-medium text-sm text-[#64748b]">Analisi Totali</span>
+                      <span className="font-medium text-sm text-[#64748b]">Token Usati</span>
                     </div>
-                    <p className="text-5xl font-black text-[#0f172a] tracking-tighter leading-none">{resolvedStats.analyses}</p>
+                    <p className="text-5xl font-black text-[#0f172a] tracking-tighter leading-none">{formatTokens(resolvedStats.tokensUsed)}</p>
                     <p className="text-xs text-violet-500 mt-1.5 font-medium flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> Questa settimana
+                      <TrendingUp className="w-3 h-3" /> Questo mese
                     </p>
                   </div>
                   <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center">
@@ -322,7 +325,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <p className="text-xs text-[#64748b] text-center mt-4">Analisi eseguite per giorno (ultimi 7 giorni)</p>
+            <p className="text-xs text-[#64748b] text-center mt-4">Attività della settimana</p>
           </div>
         </motion.div>
 
@@ -339,24 +342,28 @@ export default function DashboardPage() {
                   <div className="px-3 py-1 text-xs bg-emerald-50 text-emerald-600 rounded-full font-medium">ATTIVO</div>
                 </div>
                 <p className="text-sm text-[#64748b] mt-1">
-                  {resolvedStats.plan === 'free' ? '10 analisi al giorno' : 'Analisi illimitate'}
+                  {resolvedStats.tokenLimit == null
+                    ? 'Token illimitati'
+                    : `${formatTokens(resolvedStats.tokenLimit)} token al mese`}
                 </p>
               </div>
 
               <div className="flex-1 max-w-md">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-[#64748b]">Utilizzo oggi</span>
+                  <span className="text-[#64748b]">Utilizzo del mese</span>
                   <span className="font-medium text-[#0f172a]">
-                    {resolvedStats.remainingAnalyses !== null ? `${10 - resolvedStats.remainingAnalyses}/10` : 'Illimitato'}
+                    {resolvedStats.tokenLimit != null
+                      ? `${formatTokens(resolvedStats.tokensUsed)} / ${formatTokens(resolvedStats.tokenLimit)}`
+                      : 'Illimitato'}
                   </span>
                 </div>
                 <div className="h-3 bg-[#f1f5f9] rounded-full overflow-hidden">
                   <div
                     className="h-full bg-linear-to-r from-primary to-emerald-400 rounded-full transition-all"
                     style={{
-                      width: resolvedStats.remainingAnalyses !== null
-                        ? `${((10 - resolvedStats.remainingAnalyses) / 10) * 100}%`
-                        : '100%'
+                      width: resolvedStats.tokenLimit != null
+                        ? `${Math.min(100, (resolvedStats.tokensUsed / resolvedStats.tokenLimit) * 100)}%`
+                        : '0%'
                     }}
                   />
                 </div>
@@ -390,7 +397,7 @@ export default function DashboardPage() {
             <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 group cursor-pointer transition-all shadow-sm" onClick={() => router.push('/pricing')}>
               <Target className="w-6 h-6 text-amber-500 mb-3" />
               <h4 className="font-semibold text-[#0f172a] mb-1 group-hover:text-amber-500 transition-colors">Passa a Pro</h4>
-              <p className="text-sm text-[#64748b]">Sblocca analisi illimitate e modelli più potenti.</p>
+              <p className="text-sm text-[#64748b]">Sblocca più token al mese e modelli più potenti.</p>
             </div>
           </div>
         </motion.div>

@@ -6,7 +6,7 @@ export interface ChatMessage {
 export interface ApiError extends Error {
   status?: number;
   code?: string;
-  remainingAnalyses?: number;
+  remainingTokens?: number;
 }
 
 export async function postChat(messages: ChatMessage[]): Promise<Record<string, unknown>> {
@@ -22,7 +22,7 @@ export async function postChat(messages: ChatMessage[]): Promise<Record<string, 
     const err = new Error(data.error || 'Errore API') as ApiError;
     err.status = response.status;
     err.code = data.code;
-    err.remainingAnalyses = data.remainingAnalyses;
+    err.remainingTokens = data.remainingTokens;
     throw err;
   }
 
