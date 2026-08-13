@@ -34,39 +34,22 @@ export async function generateChatTitleWithAI(firstMessage: string): Promise<str
   const fallback = fallbackChatTitle(firstMessage);
   if (!firstMessage?.trim()) return fallback;
 
-  const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
-  const model = process.env.OLLAMA_MODEL || 'llama3';
-
   try {
-    const response = await fetch(`${ollamaUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [
-          {
-            role: 'system',
-            content:
-              "Sei un assistente che crea titoli per conversazioni. Dato il primo messaggio dell'utente, rispondi SOLO con un titolo breve in italiano (massimo 6 parole) che riassuma l'argomento. Niente virgolette, niente spiegazioni.",
-          },
-          {
-            role: 'user',
-            content: firstMessage.trim().slice(0, 600),
-          },
-        ],
-        stream: false,
-      }),
+    const { chatWithAI } = await import('@/lib/ai-provider');
+    const result = await chatWithAI({
+      messages: [
+        {
+          role: 'system',
+          content:
+            "Sei un assistente che crea titoli per conversazioni. Dato il primo messaggio dell'utente, rispondi SOLO con un titolo breve in italiano (massimo 6 parole) che riassuma l'argomento. Niente virgolette, niente spiegazioni.",
+        },
+        {
+          role: 'user',
+          content: firstMessage.trim().slice(0, 600),
+        },
+      ],
     });
-
-    if (!response.ok) return fallback;
-
-    const data = await response.json();
-    let raw = '';
-    if (typeof data?.message === 'string') raw = data.message;
-    else if (data?.message?.content) raw = data.message.content;
-    else if (data?.response) raw = data.response;
-
-    return normalizeAiTitle(raw) || fallback;
+    return normalizeAiTitle(result.content) || fallback;
   } catch {
     return fallback;
   }

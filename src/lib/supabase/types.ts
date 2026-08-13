@@ -45,3 +45,69 @@ export interface ShareLink {
   created_at: string;
   expires_at: string;
 }
+
+// ─── CASSETTO DELLE NOTE ─────────────────────────────────
+
+export interface Note {
+  id: string;
+  user_id: string;
+  title: string;
+  snippet_code: string;
+  explanation: string;
+  language: string;
+  source_type: 'webapp' | 'extension';
+  source_url: string | null;
+  source_ref: string | null;
+  status: 'pending' | 'ready';
+  leitner_box: number;
+  next_review_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Category {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+}
+
+export interface NoteCategory {
+  note_id: string;
+  category_id: string;
+}
+
+export interface LearningPath {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+}
+
+export interface LearningPathNote {
+  path_id: string;
+  note_id: string;
+  position: number;
+}
+
+/** Nota arricchita con categorie, percorsi e note correlate (per la UI). */
+export interface NoteWithRelations extends Note {
+  categories: Category[];
+  paths: LearningPath[];
+  related?: NoteSummary[];
+  due?: boolean;
+}
+
+/** Versione compatta della nota per liste e suggerimenti. */
+export interface NoteSummary {
+  id: string;
+  title: string;
+  language: string;
+  source_type: Note['source_type'];
+  status: Note['status'];
+  leitner_box: number;
+  next_review_at: string | null;
+  created_at: string;
+  snippet_excerpt: string;
+  categories: Category[];
+}

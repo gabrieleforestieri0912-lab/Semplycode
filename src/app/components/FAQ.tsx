@@ -2,123 +2,115 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
-const faqs: FAQItem[] = [
-  {
-    question: "Come funziona Semplycode?",
-    answer:
-      "Apri Chat AI, incolla codice o carica file. L'AI produce un report con errori, spiegazioni, suggerimenti e codice corretto. Puoi anche chattare sul codice, esportare il report o condividere un link.",
-  },
-  {
-    question: "Devo registrarmi subito?",
-    answer:
-      "No. Puoi provare Chat AI come ospite con 3 analisi al giorno. Con un account gratuito hai 10 analisi giornaliere, cronologia chat e dashboard.",
-  },
-  {
-    question: "Quali linguaggi sono supportati?",
-    answer:
-      "JavaScript, TypeScript, Python, Java, C/C++, Go, Rust, PHP, SQL, CSS, HTML, JSON e altri. Il linguaggio viene rilevato automaticamente.",
-  },
-  {
-    question: "Come vengono trattati i miei dati?",
-    answer:
-      "Il codice viene inviato al motore AI per l'analisi. Se sei registrato, le chat possono essere salvate nel tuo account. Non vendiamo il tuo codice. Leggi la privacy policy per i dettagli.",
-  },
-  {
-    question: "Posso caricare più file o uno ZIP?",
-    answer:
-      "Sì, fino a 5 file (100KB ciascuno) o un archivio ZIP in Chat AI. Puoi anche importare un singolo file da GitHub incollando l'URL.",
-  },
-  {
-    question: "Qual è la differenza tra i piani?",
-    answer:
-      "Gratuito: 10 analisi al giorno. Pro: analisi illimitate e funzionalità avanzate. Enterprise: per team con esigenze dedicate.",
-  },
-  {
-    question: "L'estensione Chrome è disponibile?",
-    answer:
-      "L'estensione è in arrivo. Nel frattempo usa Chat AI sul web e il caricamento file per analizzare il tuo codice.",
-  },
-  {
-    question: "Serve connessione internet?",
-    answer:
-      "Sì, l'analisi AI richiede connessione. Puoi scrivere codice nell'editor offline e analizzare quando sei online.",
-  },
-];
+import { ChevronDown, Sparkles } from "lucide-react";
+import { faqs } from "@/lib/faq";
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <section id="faq" className="w-full py-16 bg-[#f8fafc]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5 }}
-        className="container mx-auto px-6 md:px-12 max-w-3xl"
-      >
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-semibold tracking-widest mb-4">
-            DOMANDE FREQUENTI
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#0f172a] mb-3">
+    <section id="faq" className="w-full py-16 md:py-24 bg-[#f8fafc]">
+      <div className="container mx-auto px-6 md:px-12 max-w-3xl">
+        <div className="text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold tracking-widest uppercase mb-5"
+          >
+            <Sparkles size={12} />
+            Domande frequenti
+          </motion.div>
+          <motion.h2
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.05 }}
+            className="text-3xl md:text-4xl font-black tracking-tight text-[#0f172a] mb-3"
+          >
             Tutto quello che devi sapere
-          </h2>
-          <p className="text-base text-[#475569] max-w-2xl mx-auto">
-            Risposte chiare su Chat AI, limiti e piani.
-          </p>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-base text-[#475569] max-w-2xl mx-auto"
+          >
+            Risposte chiare su Chat AI, limiti, piani e privacy.
+          </motion.p>
         </div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
 
             return (
-              <div
+              <motion.div
                 key={index}
-                className="border border-[#e2e8f0] rounded-2xl bg-white overflow-hidden"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.35, delay: index * 0.05 }}
+                className={`overflow-hidden rounded-2xl bg-white border transition-all duration-300 ${
+                  isOpen
+                    ? "border-emerald-400 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-400/20"
+                    : "border-[#e2e8f0] hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5"
+                }`}
               >
                 <button
                   onClick={() => toggle(index)}
-                  className="w-full flex items-center justify-between px-5 py-3.5 text-left hover:bg-black/[0.02] transition-colors"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-answer-${index}`}
+                  className="w-full flex items-center justify-between gap-4 px-5 md:px-6 py-4 text-left cursor-pointer"
                 >
-                  <span className="font-medium text-sm text-[#0f172a] pr-3">
+                  <span
+                    className={`font-semibold text-sm md:text-base pr-2 transition-colors duration-300 ${
+                      isOpen ? "text-emerald-700" : "text-[#0f172a]"
+                    }`}
+                  >
                     {faq.question}
                   </span>
-                  <ChevronDown
-                    className={`w-4 h-4 text-emerald-600 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                  />
+                  <span
+                    className={`flex items-center justify-center w-8 h-8 rounded-full border shrink-0 transition-all duration-300 ${
+                      isOpen
+                        ? "rotate-180 bg-emerald-50 border-emerald-300 text-emerald-600"
+                        : "border-[#e2e8f0] text-[#64748b] group-hover:border-emerald-300"
+                    }`}
+                  >
+                    <ChevronDown size={16} strokeWidth={2.5} />
+                  </span>
                 </button>
-                <AnimatePresence>
+
+                <AnimatePresence initial={false}>
                   {isOpen && (
                     <motion.div
+                      id={`faq-answer-${index}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      <p className="px-5 pt-2 pb-4 text-sm text-[#475569] leading-relaxed">
-                        {faq.answer}
-                      </p>
+                      <div className="px-5 md:px-6 pb-5">
+                        <div className="pt-4 border-t border-[#e2e8f0]/70">
+                          <p className="text-sm text-[#475569] leading-relaxed">
+                            {faq.answer}
+                          </p>
+                        </div>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             );
           })}
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

@@ -1,66 +1,239 @@
 // Semplycode Extension Background Service Worker (Manifest V3)
 
-const CODE_KEYWORDS_BG = [
-  'function', 'const', 'let', 'var', 'def', 'class', 'import', 'export',
-  'return', 'if', 'else', 'for', 'while', 'switch', 'case', 'try', 'catch',
-  'throw', 'new', 'this', 'typeof', 'instanceof', 'void', 'delete',
-  'async', 'await', 'yield', 'from', 'extends', 'super', 'static',
-  'public', 'private', 'protected', 'interface', 'implements', 'package',
-  'namespace', 'using', 'include', 'define', 'printf', 'scanf',
-  'print', 'range', 'enumerate', 'lambda', 'map', 'filter', 'reduce',
-  'then', 'catch', 'finally', 'Promise', 'console', 'log', 'debug',
-  'int', 'float', 'double', 'string', 'bool', 'boolean', 'char',
-  'void', 'null', 'undefined', 'true', 'false', 'NaN', 'Infinity',
-  'main', 'fn', 'func', 'let', 'mut', 'println', 'System',
-  'require', 'module', 'exports', 'default', 'component',
-  'useState', 'useEffect', 'useRef', 'useCallback', 'useMemo',
-  'styled', 'keyof', 'typeof', 'as const', 'unknown', 'never',
-  'constructor', 'prototype', '__proto__', 'bind', 'apply', 'call',
+const STRONG_KEYWORDS_BG = [
+  'const', 'var', 'def', 'import', 'export', 'async', 'await', 'typeof',
+  'instanceof', 'require', 'namespace', 'lambda', 'enum', 'delegate',
+  'struct', 'declare', 'typedef', 'constexpr', 'finally', 'usestate',
+  'useeffect', 'useref', 'usecallback', 'usememo', 'constructor',
+  'prototype', 'keyof', 'unknown', 'never', 'readonly', 'void', 'null',
+  'undefined', 'bool', 'boolean', 'char', 'printf', 'scanf', 'println',
+  'fn', 'func', 'mut',
 ];
+
+const WEAK_KEYWORDS_BG = [
+  'if', 'else', 'for', 'while', 'do', 'new', 'this', 'from', 'case', 'try',
+  'static', 'public', 'private', 'protected', 'let', 'default', 'string',
+  'int', 'float', 'double', 'true', 'false', 'map', 'filter', 'reduce',
+  'then', 'print', 'range', 'list', 'dict', 'bind', 'apply', 'call',
+  'promise', 'log', 'debug', 'styled', 'component',
+  'function', 'return', 'class', 'include', 'define', 'module', 'template',
+  'throw', 'catch', 'switch', 'package', 'main', 'yield', 'extends',
+  'interface', 'implements',
+];
+
+const COMMON_WORDS_BG = [
+  'a', 'an', 'the', 'and', 'or', 'nor', 'but', 'not', 'yet', 'so', 'if',
+  'of', 'to', 'in', 'on', 'at', 'by', 'as', 'for', 'with', 'from', 'about',
+  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'will', 'would',
+  'could', 'should', 'shall', 'may', 'might', 'must', 'can', 'do', 'does',
+  'did', 'has', 'have', 'had', 'this', 'that', 'these', 'those', 'it',
+  'its', 'there', 'their', 'they', 'them', 'which', 'who', 'whom', 'whose',
+  'what', 'when', 'where', 'why', 'how', 'all', 'each', 'every', 'some',
+  'any', 'many', 'much', 'more', 'most', 'few', 'less', 'than', 'then',
+  'also', 'just', 'very', 'too', 'because', 'although', 'while', 'after',
+  'before', 'during', 'until', 'since', 'into', 'onto', 'upon', 'again',
+  'against', 'other', 'another', 'such', 'only', 'own', 'same', 'you',
+  'your', 'yours', 'i', 'me', 'my', 'we', 'us', 'our', 'he', 'him', 'his',
+  'she', 'her', 'they', 'them', 'someone', 'anyone', 'everyone', 'nobody',
+  'something', 'anything', 'everything', 'nothing', 'get', 'set', 'use',
+  'used',
+  'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'uno', 'una', 'di', 'a', 'da',
+  'in', 'con', 'su', 'per', 'tra', 'fra', 'e', 'o', 'ma', 'se', 'che',
+  'chi', 'cui', 'quale', 'quali', 'questo', 'questa', 'questi', 'queste',
+  'quello', 'quella', 'quelli', 'quelle', 'qui', 'li', 'molto', 'molta',
+  'molti', 'molte', 'poco', 'poca', 'pochi', 'poche', 'tutto', 'tutta',
+  'tutti', 'tutte', 'essere', 'avere', 'dovere', 'potere', 'volere', 'fare',
+  'dire', 'andare', 'venire', 'anche', 'ancora', 'cosi', 'cosi', 'quindi',
+  'dunque', 'infatti', 'pero', 'pero', 'tuttavia', 'non', 'piu', 'meno',
+  'solo', 'sempre', 'mai', 'ora', 'adesso', 'dopo', 'prima', 'quando',
+  'dove', 'come', 'perche', 'senza', 'dentro', 'fuori', 'sopra', 'sotto',
+  'vicino', 'lontano', 'nostro', 'nostra', 'nostri', 'nostre', 'vostro',
+  'vostra', 'loro', 'mio', 'mia', 'miei', 'mie', 'tuo', 'tua', 'tuoi',
+  'tue', 'suo', 'sua', 'suoi', 'sue', 'al', 'allo', 'alla', 'ai', 'agli',
+  'alle', 'dal', 'dallo', 'dalla', 'dai', 'dagli', 'dalle', 'nel', 'nello',
+  'nella', 'nei', 'negli', 'nelle', 'sul', 'sullo', 'sulla', 'sui', 'sugli',
+  'sulle', 'del', 'dello', 'della', 'dei', 'degli', 'delle', 'sia', 'sono',
+  'sei', 'era', 'erano', 'ho', 'hai', 'ha', 'abbiamo', 'avete', 'hanno',
+  'posso', 'puoi', 'puo', 'possiamo', 'potete', 'possono', 'voglio',
+  'vuoi', 'vuole', 'vogliamo', 'volete', 'vogliono', 'faccio', 'fai',
+  'facciamo', 'fate', 'fanno', 'dico', 'dici', 'dice', 'diciamo', 'dite',
+  'dicono', 'vado', 'vai', 'va', 'andiamo', 'andate', 'vanno', 'viene',
+  'vengono', 'sara', 'saremo', 'sarete', 'saranno', 'ecc', 'etc',
+  'e', 'piu', 'perche', 'cosi', 'gia', 'si', 'citta', 'puo', 'la',
+];
+
+const COMMON_WORD_SET_BG = new Set(COMMON_WORDS_BG);
 
 function isCodeText(text) {
   const t = text.trim();
   if (t.length < 8) return false;
   if (t.length > 12000) return false;
 
-  let score = 0;
-
-  if (/<\/?[a-z][\w]*[^>]*>/i.test(t)) score += 3;
-  if (/[{}\[\]();]/.test(t)) score += 2;
-  if (/=>|->|::|\.\.\./.test(t)) score += 1.5;
-  if (/[=+\-*/%&|^~<>!]=?/.test(t)) score += 1;
-
-  const keywordMatches = CODE_KEYWORDS_BG.filter(k => new RegExp('\\b' + k.replace(/ /g, '\\s+') + '\\b').test(t));
-  score += keywordMatches.length * 1.5;
+  const tokens = t.toLowerCase().match(/[\p{L}]+/gu) || [];
+  const wordSet = new Set(tokens);
+  const wordCount = tokens.length;
+  const origTokens = t.match(/[\p{L}]+/gu) || [];
 
   const lines = t.split('\n').filter(l => l.trim());
-  if (lines.length >= 2) {
-    if (lines.some(l => /^\s{2,}/.test(l))) score += 2;
-    const indentations = lines.map(l => l.match(/^\s*/)[0].length).filter(i => i > 0);
-    if (indentations.length >= 2) score += 1;
-    if (t.split('\n').some(l => !l.trim()) && lines.length >= 3) score += 1;
+  const lineCount = lines.length;
+
+  let codeScore = 0;
+  let proseScore = 0;
+  let structural = false;
+
+  const openBraces = (t.match(/\{/g) || []).length;
+  const closeBraces = (t.match(/\}/g) || []).length;
+  if (openBraces > 0 && openBraces === closeBraces) {
+    codeScore += 4;
+    structural = true;
   }
 
-  if (t.match(/['"`].*?['"`]/g)) score += Math.min(t.match(/['"`].*?['"`]/g).length * 0.5, 2);
-  if (/\/\/|# |\/\*|\*\//.test(t)) score += 2;
-  if (/\b0x[0-9a-fA-F]+\b/.test(t)) score += 1.5;
-  if (/\.[a-zA-Z][\w-]*\s*\{|#[a-zA-Z][\w-]*\s*\{/.test(t)) score += 3;
-  if (/[a-z-]+\s*:\s*[^;]+;/i.test(t)) score += 2;
-  if (/['"]\.[\w/]+\.[a-z]+['"]/.test(t)) score += 1;
-  if (/from\s+['"]/.test(t) || /require\s*\(/.test(t)) score += 1.5;
-  if (/`.*\$\{.*\}.*`/.test(t)) score += 2;
-  if (/:\s*(string|number|boolean|void|any|never|unknown)\b/.test(t)) score += 1.5;
+  if (/=>|\b->\b|::|\b\.\.\.\b/.test(t)) {
+    codeScore += 3;
+    structural = true;
+  }
 
-  const words = t.split(/\s+/).filter(w => w.length > 0);
-  const wordCount = words.length;
-  const capitalizedWords = words.filter(w => /^[A-Z][a-z]+$/.test(w)).length;
-  if (capitalizedWords > wordCount * 0.3) score -= 2;
-  if (/[.!?]$/.test(t.trim()) && !/[;{}]/.test(t)) score -= 1.5;
-  if (lines.filter(l => l.length > 120).length > 0 && !/[;{}()[\]]/.test(t)) score -= 2;
-  if (lines.length <= 2 && wordCount >= 15 && !/[;{}()[\]]/.test(t)) score -= 2;
-  if (/^[A-Z]/.test(t) && /[.!?]\s+[A-Z]/.test(t) && !/[;{}()[\]]/.test(t)) score -= 2;
+  if (/`[^`]*\$\{[^}]*\}[^`]*`/.test(t)) {
+    codeScore += 3;
+    structural = true;
+  }
 
-  return score >= 3;
+  const strongKeywordCount = STRONG_KEYWORDS_BG.filter(k => wordSet.has(k)).length;
+  if (strongKeywordCount > 0) {
+    codeScore += Math.min(2 + strongKeywordCount * 1.5, 6);
+    structural = true;
+  }
+
+  const callablePattern = /\b(?:console\.log|print|println|printf|len|range|str|int|float|list|dict|parseInt|JSON|Math\.[A-Za-z]+|Promise|useState|useEffect|useRef|useCallback|useMemo|main)\s*\(/i;
+  if (callablePattern.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/from\s+['"]/.test(t) || /require\s*\(/.test(t) || /import\s+[^;]+\s+from/.test(t) || /export\s+(default\s+)?(function|class|const|let|var)\b/.test(t)) {
+    codeScore += 3;
+    structural = true;
+  }
+
+  const openTags = (t.match(/<[a-z][\w]*(?:\s[^<>]*?)?>/gi) || []).length;
+  const closeTags = (t.match(/<\/[a-z][\w]*\s*>/gi) || []).length;
+  if (openTags + closeTags >= 2) {
+    codeScore += 4;
+    structural = true;
+  } else if (openTags + closeTags === 1) {
+    codeScore += 2;
+  }
+
+  const noUrls = t.replace(/https?:\/\/\S+/g, '');
+  if (/\/\/|#\s|\/\*|\*\//.test(noUrls)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/\b(SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|REPLACE)\b/i.test(t) || /\bCREATE\s+(TABLE|INDEX|DATABASE|VIEW|TRIGGER|FUNCTION|PROCEDURE)\b/i.test(t)) {
+    codeScore += 2;
+    structural = true;
+    const sqlClauses = (t.match(/\b(FROM|WHERE|JOIN|GROUP\s+BY|ORDER\s+BY|HAVING|INTO|VALUES|LIMIT|LEFT|RIGHT|INNER|OUTER)\b/gi) || []).length;
+    if (sqlClauses > 0) codeScore += Math.min(1 + sqlClauses, 4);
+  }
+
+  if (/\.[a-z][\w-]*\s*\{|#[a-z][\w-]*\s*\{/i.test(t)) {
+    codeScore += 3;
+    structural = true;
+  }
+
+  if (/:\s*(string|number|boolean|void|any|never|unknown|int|float|double|char|object|array)\b/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/\b0x[0-9a-fA-F]+\b/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/\b\d+\.\d+\b/.test(t)) codeScore += 1;
+
+  if (/`[^`]+`/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/\bas\s+const\b/i.test(t)) {
+    codeScore += 3;
+    structural = true;
+  }
+
+  if (/\bnew\s+[A-Z][A-Za-z0-9_]*\s*\(/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/\bclass\s+[A-Z][A-Za-z0-9_]*/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (/^\s*[A-Za-z_$][\w$]*\s*[+\-*/%]?=\s*\S/.test(t) || /[;{]\s*[A-Za-z_$][\w$]*\s*[+\-*/%]?=\s*\S/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  if (lineCount >= 2 && lines.some(l => /^\s{2,}/.test(l))) {
+    codeScore += 2;
+    structural = true;
+    if (lineCount >= 3) codeScore += 1;
+  }
+
+  if (/\$[A-Za-z_][\w]*|\$\{[\w]+\}/.test(t)) {
+    codeScore += 2;
+    structural = true;
+  }
+
+  const parenOpen = (t.match(/\(/g) || []).length;
+  const parenClose = (t.match(/\)/g) || []).length;
+  if (parenOpen > 0 && parenOpen === parenClose && parenOpen <= 3) codeScore += 1;
+
+  const semicolons = (t.match(/;/g) || []).length;
+  if (semicolons >= 2) codeScore += 2;
+  else if (semicolons === 1) codeScore += 1;
+
+  if (/[=+\-*/%&|^~<>]/.test(t)) codeScore += 1;
+
+  const quotes = (t.match(/['"`]/g) || []).length;
+  if (quotes >= 2) codeScore += 1;
+
+  const weakKeywordCount = WEAK_KEYWORDS_BG.filter(k => wordSet.has(k)).length;
+  if (weakKeywordCount >= 2) codeScore += Math.min(weakKeywordCount * 0.5, 2);
+
+  const cssProps = (t.match(/(?:^|[;{}])\s*[a-z-]+\s*:\s*[^;{}]+;/gi) || []).length;
+  if (cssProps >= 2) codeScore += 1;
+
+  if (/^[A-Z]/.test(t)) proseScore += 1;
+
+  if (/[.!?]/.test(t)) {
+    proseScore += 1;
+    const sentences = (t.match(/[.!?]\s+[A-Z]/g) || []).length;
+    if (sentences > 0) proseScore += Math.min(sentences, 3);
+  }
+
+  if (wordCount > 0) {
+    const commonCount = tokens.filter(w => COMMON_WORD_SET_BG.has(w)).length;
+    const ratio = commonCount / wordCount;
+    if (ratio > 0.5) proseScore += 3;
+    else if (ratio > 0.35) proseScore += 2;
+    else if (ratio > 0.25) proseScore += 1;
+  }
+
+  if (/[.!?]$/.test(t) && !/[;{}<>]/.test(t)) proseScore += 2;
+
+  const longLines = lines.filter(l => l.length > 120);
+  if (longLines.length > 0) proseScore += 2;
+
+  if (wordCount > 0 && origTokens.filter(w => /^[A-Z]/.test(w)).length / wordCount > 0.15) proseScore += 1;
+
+  if (!structural) return false;
+  return codeScore - proseScore >= 2 && codeScore >= 4;
 }
 
 // Setup context menus on installation

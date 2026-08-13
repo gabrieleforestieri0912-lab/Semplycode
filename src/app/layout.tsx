@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/lib/auth";
 import Analytics from "@/app/components/Analytics";
+import StructuredData from "@/app/components/StructuredData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,10 +75,7 @@ export const metadata: Metadata = {
     creator: "@semplycode",
   },
   alternates: {
-    languages: {
-      en: "https://semplycode.com",
-      it: "https://semplycode.com?lang=it",
-    },
+    canonical: "https://semplycode.com",
   },
   icons: {
     icon: "/semplycode.png",
@@ -119,6 +117,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
+        <StructuredData />
         <Analytics />
       </head>
       <body

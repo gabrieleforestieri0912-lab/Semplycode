@@ -3,7 +3,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
-import { ArrowRight, Play, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import ChromeLogo from "./ChromeLogo";
+import { CHROME_STORE_URL } from "@/lib/extension";
 
 const Hero = () => {
   const { user: sessionUser, status } = useSupabaseSession();
@@ -41,11 +43,11 @@ const Hero = () => {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl xs:text-5xl md:text-7xl font-black tracking-tight mb-6 md:mb-8 leading-[1.08] relative"
+              className="text-4xl xs:text-5xl md:text-7xl font-black tracking-tight mb-6 md:mb-8 leading-[1.08] relative text-[#0f172a]"
             >
-              <span style={{ color: "#0f172a", position: 'relative', zIndex: 1 }}>Smetti di combattere</span>
+              <span className="relative z-[1]">Smetti di combattere</span>
               <br className="hidden sm:block" />
-              <span style={{ color: "#0f172a", position: 'relative', zIndex: 1 }}>con il codice.{" "}</span>
+              <span className="relative z-[1]">con il codice.{" "}</span>
              <motion.span
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
@@ -69,8 +71,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            className="text-base xs:text-lg md:text-xl mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0"
-            style={{ color: "#64748b" }}
+            className="text-base xs:text-lg md:text-xl mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0 text-[#64748b]"
           >
             Semplycode scompone la logica complessa, trova i bug istantaneamente
             e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.
@@ -81,7 +82,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto"
+            className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto"
           >
             <motion.button
               whileHover={{ scale: 1.03 }}
@@ -98,20 +99,17 @@ const Hero = () => {
               <ArrowRight size={16} />
             </motion.button>
 
-            <motion.button
+            <motion.a
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" })}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-base font-semibold transition-all"
-              style={{
-                background: "rgba(0,0,0,0.03)",
-                border: "1px solid rgba(0,0,0,0.08)",
-                color: "#475569",
-              }}
+              href={CHROME_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-base font-semibold border border-[#e2e8f0] text-[#475569] hover:text-[#0f172a] hover:border-[#cbd5e1] hover:bg-black/[0.02] transition-all"
             >
-              <Play size={15} fill="currentColor" />
-              Guarda Demo
-            </motion.button>
+              <ChromeLogo className="w-4.5 h-4.5" />
+              Aggiungi a Chrome
+            </motion.a>
           </motion.div>
 
           {/* Social proof */}
@@ -125,11 +123,11 @@ const Hero = () => {
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> 10K+ sviluppatori
             </span>
-            <span style={{ color: "#1e293b" }}>·</span>
+            <span className="text-[#475569]">·</span>
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> 20+ linguaggi
             </span>
-            <span style={{ color: "#1e293b" }}>·</span>
+            <span className="text-[#475569]">·</span>
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> Gratis per sempre
             </span>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/api-auth';
 import {
   findChatsByUserId,
   findChatById,
@@ -19,8 +19,8 @@ interface ChatMessage {
 }
 
 async function getUserKey(req: NextRequest): Promise<string | null> {
-  const supabaseSession = await getSession();
-  return supabaseSession?.user?.email || null;
+  const user = await getAuthUser(req);
+  return user?.email || null;
 }
 
 export async function GET(req: NextRequest) {

@@ -39,6 +39,7 @@ import {
   Share2,
   Github,
   Archive,
+  Bookmark,
   AlertCircle,
   Search,
   Copy,
@@ -411,10 +412,11 @@ interface ChatMessageProps {
   onLineClick?: (line: number) => void;
   enableTyping?: boolean;
   onRegenerate?: () => void;
+  onSave?: () => void;
   highlightedLine?: number | null;
 }
 
-const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, highlightedLine }: ChatMessageProps) => {
+const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave, highlightedLine }: ChatMessageProps) => {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"liked" | "disliked" | null>(null);
@@ -488,6 +490,17 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, highlig
                 >
                   <ThumbsDown size={12} />
                 </button>
+                {onSave && (
+                  <button
+                    type="button"
+                    onClick={onSave}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-emerald-400 rounded-md hover:bg-emerald-900/15 transition-all"
+                    title="Salva nel cassetto"
+                  >
+                    <Bookmark size={12} />
+                    Salva
+                  </button>
+                )}
                 {onRegenerate && (
                   <button
                     type="button"
@@ -922,6 +935,45 @@ export default function Chat() {
     setCode("");
     setMessages([]);
     setOutput("File rimossi. In attesa di nuovo codice...");
+  };
+
+  const saveToNotes = async (explanationOverride?: string) => {
+    if (!user?.email) {
+      router.push(`/login?callbackUrl=/chat`);
+      return;
+    }
+    const explanation =
+      explanationOverride !== undefined
+        ? explanationOverride
+        : ([...messages].reverse().find((m) => m.role === "assistant")?.content || "");
+    if (!explanation) {
+      setOutput("Nessuna analisi da salvare nel cassetto.");
+      return;
+    }
+    if (!code.trim()) {
+      setOutput("Nessun codice da salvare nel cassetto.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          snippet_code: code,
+          explanation,
+          language: detectedLang,
+          source_type: "webapp",
+          source_ref: currentChatId || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Errore salvataggio");
+      setOutput("Nota salvata nel cassetto ✓ Categorizzazione in corso...");
+      // Categorizzazione asincrona (non blocca la UX)
+      fetch(`/api/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
+    } catch (error) {
+      setOutput((error as Error).message || "Impossibile salvare la nota.");
+    }
   };
 
   const exportAnalysisReport = () => {
@@ -1823,6 +1875,14 @@ export default function Chat() {
                 >
                   <Share2 size={16} />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => saveToNotes()}
+                  className="p-2 text-gray-500 hover:text-emerald-400 rounded-lg"
+                  title="Salva nel cassetto"
+                >
+                  <Bookmark size={16} />
+                </button>
               </div>
             )}
           </div>
@@ -1899,6 +1959,11 @@ export default function Chat() {
                           i === messages.length - 1 &&
                           !isLoading
                             ? () => regenerateMessage(i)
+                            : undefined
+                        }
+                        onSave={
+                          m.role === "assistant" && m.content
+                            ? () => saveToNotes(m.content)
                             : undefined
                         }
                         highlightedLine={highlightedLine}

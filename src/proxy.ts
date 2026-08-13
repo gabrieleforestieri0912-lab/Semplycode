@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSession, getAuthenticatedUser } from '@/lib/supabase/middleware';
 
-const protectedPages = ['/dashboard', '/settings'];
-const protectedApis = ['/api/chat/history', '/api/checkout'];
+const protectedPages = ['/chat', '/dashboard', '/settings', '/notes', '/extension-link'];
+// Nota: le API del cassetto (/api/notes*, /api/categories, /api/learning-paths)
+// e /api/chat/history gestiscono da sole l'auth (cookie O Bearer token
+// dell'estensione), quindi NON vanno protette qui: il proxy legge solo i
+// cookie e bloccherebbe le richieste Bearer dell'estensione.
+const protectedApis = ['/api/checkout'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -48,5 +52,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/chat/:path*', '/dashboard/:path*', '/settings/:path*', '/api/:path*'],
+  matcher: ['/chat/:path*', '/dashboard/:path*', '/settings/:path*', '/notes/:path*', '/extension-link/:path*', '/api/:path*'],
 };

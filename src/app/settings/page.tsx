@@ -220,23 +220,17 @@ export default function SettingsPage() {
               <label className="block text-xs font-medium text-[#64748b] mb-2">
                 Seleziona lingua
               </label>
-              <div className="relative">
-                <select
-                  value={language}
-                  onChange={(e) => toggleLanguage(e.target.value)}
-                  className="appearance-none w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-2xl text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all cursor-pointer hover:border-emerald-900"
-                >
-                  <option value="en">English</option>
-                  <option value="it">Italiano</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="pt">Português</option>
-                  <option value="ru">Русский</option>
-                  <option value="zh">中文</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute inset-y-0 right-4 flex items-center w-4 h-4 text-emerald-400/70" />
-              </div>
+               <div className="relative">
+                 <select
+                   value={language}
+                   onChange={(e) => toggleLanguage(e.target.value as 'it' | 'en')}
+                   className="appearance-none w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-2xl text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all cursor-pointer hover:border-emerald-900"
+                 >
+                   <option value="en">English</option>
+                   <option value="it">Italiano</option>
+                 </select>
+                 <ChevronDown className="pointer-events-none absolute inset-y-0 right-4 flex items-center w-4 h-4 text-emerald-400/70" />
+               </div>
               <p className="text-xs text-[#64748b] mt-2">
                 Lingua corrente: {language}
               </p>

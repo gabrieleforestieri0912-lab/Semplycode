@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
-import { Code2, Brain, Languages, Zap, Shield, FileCode, Upload, LucideIcon, ArrowRight } from 'lucide-react';
+import { Code2, Brain, Languages, Zap, Shield, FileCode, Upload, LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Feature {
@@ -150,16 +149,7 @@ const Features = () => {
               <h3 className="text-lg font-bold text-[#0f172a] mb-2 transition-colors duration-200">
                 {f.title}
               </h3>
-              <p className="text-sm text-[#475569] leading-relaxed mb-4">{f.desc}</p>
-
-              <Link
-                href="/chat"
-                className="flex items-center gap-1.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0"
-                style={{ color: f.accent }}
-              >
-                Scopri di più
-                <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
-              </Link>
+              <p className="text-sm text-[#475569] leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
         </div>

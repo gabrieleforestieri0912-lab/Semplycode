@@ -14,9 +14,9 @@ const storage = {
 // Default to localhost during development
 let API_BASE = DEV_API_BASE;
 
-// === TEMPORARY DEV BYPASS (disattiva il login) ===
-// Imposta su false per riattivare l'autenticazione
-const DEV_BYPASS_AUTH = true;
+// L'autenticazione è attiva: l'utente accede con codice email e riceve
+// un JWT Bearer firmato dal server (usato come Authorization header).
+const DEV_BYPASS_AUTH = false;
 
 // === DASHBOARD DATA (dinamico - sarà popolato dall'API quando riattiveremo il login) ===
 let dashboardData = {
@@ -201,6 +201,10 @@ let currentToken = null;
 let currentUser = null;
 let chatMessages = [];
 
+// Ultimo codice analizzato + ultima risposta AI: servono per "Salva nel cassetto"
+let lastAnalyzedCode = "";
+let lastAssistantReply = "";
+
 // Load custom API base from storage (useful for local development)
 async function initApiBase() {
   try {
@@ -219,10 +223,26 @@ async function initApiBase() {
 
 const SITE_BASE = () => API_BASE.replace(/\/api\/?$/, "");
 
+// ===== Client API condiviso (bundle da src/lib/apiClient.ts) =====
+let sharedApi = null;
+
+function getSharedApi() {
+  if (!sharedApi && window.SemplycodeAPI) {
+    sharedApi = window.SemplycodeAPI.createApiClient({
+      baseUrl: () => API_BASE,
+      getToken: () => currentToken,
+      onUnauthorized: () => handleSessionExpired(),
+    });
+  }
+  return sharedApi;
+}
+
 async function apiFetch(path, options = {}) {
+  const api = getSharedApi();
+  if (api) return api.fetch(path, options);
+  // Fallback se il bundle non è disponibile
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(currentToken && { Authorization: `Bearer ${currentToken}` }),
@@ -232,14 +252,19 @@ async function apiFetch(path, options = {}) {
   return res;
 }
 
-function planLabelFromId(plan) {
-  if (plan === "pro") return "Pro";
-  if (plan === "enterprise") return "Enterprise";
-  if (plan === "guest") return "Ospite";
-  return "Gratuito";
+// Sessione scaduta: ripulisci token e riporta al login senza perdere il contesto
+function handleSessionExpired() {
+  if (!currentToken) return;
+  currentToken = null;
+  currentUser = null;
+  storage.remove(["token", "user"]).catch(() => {});
+  // Il codice nell'editor e la bozza restano intatti (context preserved)
+  showAuth();
+  initAuth();
+  const emailInput = document.getElementById("auth-email");
+  if (emailInput && currentUser?.email) emailInput.value = currentUser.email;
 }
 
-// ===== View helpers =====
 function showApp() {
   document.body.classList.remove("auth-mode");
   const authScreen = document.getElementById("auth-screen");
@@ -256,188 +281,18 @@ function showAuth() {
   if (appScreen) appScreen.classList.remove("visible");
 }
 
-function renderWeekChart(usedToday, dailyLimit) {
-  const container = document.getElementById("dash-week-chart");
-  if (!container) return;
-
-  const days = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
-  const todayIdx = (new Date().getDay() + 6) % 7;
-  const max = dailyLimit || 10;
-
-  const values = days.map((_, i) => {
-    if (i === todayIdx) return usedToday;
-    return Math.max(0, Math.min(max, Math.floor((max * 0.3) + Math.random() * max * 0.5)));
-  });
-
-  container.innerHTML = days
-    .map((day, i) => {
-      const pct = Math.max(8, Math.min(100, (values[i] / max) * 100));
-      return `<div class="dash-chart-bar-col"><div class="dash-chart-bar-track" style="height:${pct}%"><div class="dash-chart-bar-fill"></div></div><span class="day">${day}</span><span class="val">${values[i]}</span></div>`;
-    })
-    .join("");
-}
-
-function renderActivityList(chats) {
-  const list = document.getElementById("dash-activity-list");
-  if (!list) return;
-
-  if (!chats?.length) {
-    list.innerHTML =
-      '<div class="dash-empty"><p>Nessuna attività recente.</p><p style="margin-top:6px;font-size:11px;">Inizia una nuova analisi nel Playground.</p></div>';
-    return;
-  }
-
-  list.innerHTML = chats
-    .slice(0, 5)
-    .map((chat) => {
-      const title = (chat.title || "Nuova analisi").replace(/</g, "&lt;");
-      const lang = chat.language || "javascript";
-      const date = chat.createdAt
-        ? new Date(chat.createdAt).toLocaleDateString("it-IT")
-        : "";
-      return `<div class="dash-activity-item" data-chat-id="${chat._id || ""}">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</div>
-          <div class="meta">${lang} · ${date}</div>
-        </div>
-      </div>`;
-    })
-    .join("");
-
-  list.querySelectorAll(".dash-activity-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      const nav = document.querySelector('.nav-item[data-section="playground"]');
-      if (nav) nav.click();
-    });
-  });
-}
-
-async function loadDashboard() {
-  let stats = {
-    plan: "free",
-    analyses: 0,
-    chats: 0,
-    remainingAnalyses: 10,
-    dailyLimit: 10,
-    authenticated: false,
-  };
-
-  try {
-    const statsRes = await apiFetch("/usage/stats");
-    if (statsRes.ok) {
-      stats = await statsRes.json();
-    }
-  } catch (e) {
-    console.warn("[Semplycode] stats fetch failed", e);
-  }
-
-  let recentChats = [];
-  if (stats.authenticated) {
-    try {
-      const histRes = await apiFetch("/chat/history");
-      if (histRes.ok) {
-        const data = await histRes.json();
-        recentChats = data.chats || [];
-      }
-    } catch (e) {
-      console.warn("[Semplycode] history fetch failed", e);
-    }
-  }
-
-  const planLabel = planLabelFromId(stats.plan);
-  const remaining =
-    stats.remainingAnalyses === null ? "∞" : String(stats.remainingAnalyses);
-  const limit = stats.dailyLimit ?? 10;
-  const used =
-    stats.dailyLimit != null && stats.remainingAnalyses != null
-      ? limit - stats.remainingAnalyses
-      : stats.analyses || 0;
-
-  const firstName =
-    currentUser?.firstName ||
-    currentUser?.email?.split("@")[0] ||
-    (stats.authenticated ? "Utente" : "Ospite");
-
-  const set = (id, text) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
-  };
-
-  set("dash-user-name", firstName);
-  set("dash-plan-pill-label", planLabel);
-  set("dash-remaining", remaining);
-  set("dash-remaining-sub", stats.dailyLimit ? "al giorno" : "illimitate");
-  set("dash-analyses-total", String(stats.analyses ?? 0));
-  set("dash-chats-total", String(stats.chats ?? 0));
-  set("dash-plan-title", planLabel);
-  set("dash-action-plan", planLabel);
-  set(
-    "dash-plan-desc",
-    stats.plan === "free"
-      ? `${limit} analisi al giorno`
-      : stats.plan === "guest"
-        ? "3 analisi al giorno (ospite)"
-        : "Analisi illimitate",
-  );
-  set(
-    "dash-usage-label",
-    stats.dailyLimit != null ? `${used}/${limit}` : "Illimitato",
-  );
-
-  const bar = document.getElementById("dash-usage-bar");
-  if (bar) {
-    const pct =
-      stats.dailyLimit != null
-        ? Math.min(100, (used / limit) * 100)
-        : 100;
-    bar.style.width = `${pct}%`;
-  }
-
-  renderWeekChart(used, stats.dailyLimit);
-  renderActivityList(recentChats);
-}
-
-function initDashboardUi() {
+// ===== WEBAPP HUB (link rapidi alla webapp) =====
+function initHubUi() {
   document.querySelectorAll(".dash-action-card").forEach((card) => {
     card.addEventListener("click", () => {
       const action = card.dataset.action;
-      if (action === "playground") {
-        document.querySelector('.nav-item[data-section="playground"]')?.click();
-        return;
-      }
-      if (action === "plan-info") {
-        document.querySelector('.nav-item[data-section="account"]')?.click();
-        return;
-      }
       const base = SITE_BASE();
-      if (action === "settings") chrome.tabs.create({ url: `${base}/settings` });
-      if (action === "pricing") chrome.tabs.create({ url: `${base}/#prezzi` });
+      if (action === "dashboard") chrome.tabs.create({ url: base + "/dashboard" });
+      if (action === "notes") chrome.tabs.create({ url: base + "/notes" });
+      if (action === "settings") chrome.tabs.create({ url: base + "/settings" });
+      if (action === "pricing") chrome.tabs.create({ url: base + "/#prezzi" });
     });
   });
-
-  document.getElementById("dash-see-all")?.addEventListener("click", () => {
-    document.querySelector('.nav-item[data-section="playground"]')?.click();
-  });
-
-  document.getElementById("dash-manage-plan")?.addEventListener("click", () => {
-    chrome.tabs.create({ url: `${SITE_BASE()}/#prezzi` });
-  });
-
-  document.querySelectorAll(".dash-tip-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      const tip = card.dataset.tip;
-      if (tip === "pro") {
-        chrome.tabs.create({ url: `${SITE_BASE()}/#prezzi` });
-      } else {
-        document.querySelector('.nav-item[data-section="playground"]')?.click();
-      }
-    });
-  });
-}
-
-function renderDashboard() {
-  loadDashboard();
 }
 
 // ===== AUTH (real working flow) =====
@@ -538,22 +393,98 @@ function initAuth() {
     }
   };
 
-  // Step 2: Verify code (legacy auth flow - only runs when DEV_BYPASS_AUTH = false)
-  // Currently disabled / stubbed to keep file syntactically valid while using bypass mode.
+  // Step 2: Verify code → il server restituisce il JWT Bearer
   verifyBtn.onclick = async () => {
-    // Auth temporarily bypassed. See DEV_BYPASS_AUTH at top of file.
-    console.log("[Semplycode] verify code clicked (bypass active)");
+    const code = codeInput.value.trim();
+    if (!code) {
+      showError("Inserisci il codice ricevuto via email");
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Verifica...";
+    if (errorBox) errorBox.style.display = "none";
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-login-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailForCode, code }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Codice non valido o scaduto");
+      }
+
+      // Salva token + utente per le chiamate autenticate
+      currentToken = data.token || null;
+      currentUser = { email: data.user?.email || emailForCode };
+      if (currentToken) {
+        await storage.set({ token: currentToken, user: currentUser });
+      }
+
+      enterApp();
+    } catch (err) {
+      console.error("Errore verifica codice:", err);
+      showError(err.message || "Errore durante la verifica del codice.");
+    } finally {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Verifica codice";
+    }
   };
 
-  // Code validity timer (legacy)
+  // Timer di validità del codice (60s)
   let codeExpiryInterval = null;
 
   function startCodeExpiryTimer(seconds = 60) {
-    // no-op in current bypass mode
+    const expiryEl = document.getElementById("auth-code-expiry");
+    if (!expiryEl) return;
+    clearInterval(codeExpiryInterval);
+
+    const end = Date.now() + seconds * 1000;
+    expiryEl.style.display = "block";
+    const tick = () => {
+      const left = Math.max(0, Math.round((end - Date.now()) / 1000));
+      if (left <= 0) {
+        expiryEl.textContent = "Codice scaduto. Richiedine uno nuovo.";
+        if (codeInput) codeInput.disabled = true;
+        clearInterval(codeExpiryInterval);
+      } else {
+        expiryEl.textContent = `Codice valido per ${left}s`;
+      }
+    };
+    tick();
+    codeExpiryInterval = setInterval(tick, 1000);
+  }
+
+  // Timer di cooldown per il reinvio
+  function startCooldownTimer(endTime) {
+    const cooldownEl = document.getElementById("auth-cooldown");
+    if (!cooldownEl) return;
+    const end = typeof endTime === "number" ? endTime : Date.now() + 60 * 1000;
+    cooldownEl.style.display = "block";
+    const tick = () => {
+      const left = Math.max(0, Math.round((end - Date.now()) / 1000));
+      if (left <= 0) {
+        cooldownEl.style.display = "none";
+        resendBtn.disabled = false;
+      } else {
+        cooldownEl.textContent = `Puoi richiedere un nuovo codice tra ${left}s`;
+      }
+    };
+    tick();
+    const interval = setInterval(() => {
+      if (Date.now() >= end) {
+        clearInterval(interval);
+      }
+      tick();
+    }, 1000);
   }
 
   // Helper to reset code step UI (used on resend)
   function resetCodeStepUI() {
+    const expiryEl = document.getElementById("auth-code-expiry");
     if (expiryEl) {
       expiryEl.style.display = "none";
       expiryEl.textContent = "";
@@ -593,9 +524,10 @@ function initAuth() {
     } catch (e) {
       console.error("Errore durante il reinvio del codice:", e);
       showError("Impossibile inviare il codice. Controlla la connessione.");
+      resendBtn.disabled = false;
     }
-
-    resendBtn.disabled = false;
+    // Nota: se l'invio è andato a buon fine, il bottone resta disabilitato
+    // finché non scade il cooldown (startCooldownTimer lo riabilita).
   };
 }
 
@@ -610,9 +542,9 @@ function addMessage(role, text) {
   div.style.lineHeight = "1.4";
 
   if (role === "user") {
-    div.innerHTML = `<div style="background:#1f2937;padding:8px 12px;border-radius:10px;"><strong>Tu:</strong> ${text}</div>`;
+    div.innerHTML = `<div style="background:#ecfdf5;padding:8px 12px;border-radius:10px;color:#0f172a;"><strong style="color:#059669;">Tu:</strong> ${text}</div>`;
   } else {
-    div.innerHTML = `<div style="background:#0f172a;padding:9px 12px;border-radius:10px;border-left:3px solid #10b981;">${text}</div>`;
+    div.innerHTML = `<div style="background:#f8fafc;padding:9px 12px;border-radius:10px;border:1px solid #e2e8f0;border-left:3px solid #059669;color:#0f172a;">${text}</div>`;
   }
 
   container.appendChild(div);
@@ -624,6 +556,7 @@ function clearChat() {
   const container = document.getElementById("chat-messages");
   if (container) container.innerHTML = "";
   chatMessages = [];
+  lastAssistantReply = "";
 }
 
 async function sendToAI(messages) {
@@ -649,6 +582,38 @@ function initPlayground() {
   // Auto-save draft when editor changes (for CM6 we can add update listener later)
   // For now we save on analyze
 
+  // Save current analysis into the Cassetto delle Note
+  const saveNoteBtn = document.getElementById("save-note-btn");
+  if (saveNoteBtn) {
+    saveNoteBtn.onclick = () => {
+      if (!currentToken) {
+        alert("Devi accedere per salvare le note nel cassetto.");
+        showAuth();
+        initAuth();
+        return;
+      }
+      saveCurrentNote();
+    };
+  }
+
+  // Micro-azione: copia l'ultima risposta AI
+  const copyNoteBtn = document.getElementById("copy-note-btn");
+  if (copyNoteBtn) {
+    copyNoteBtn.onclick = async () => {
+      if (!lastAssistantReply) {
+        alert("Nessuna risposta da copiare.");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(lastAssistantReply);
+        copyNoteBtn.textContent = "Copiato ✓";
+        setTimeout(() => (copyNoteBtn.textContent = "Copia"), 1500);
+      } catch (e) {
+        alert("Impossibile copiare: " + e.message);
+      }
+    };
+  }
+
   // Analyze button - now uses the real editor
   analyzeBtn.onclick = async () => {
     const code = getEditorValue().trim();
@@ -656,6 +621,8 @@ function initPlayground() {
       alert("Inserisci del codice nell'editor");
       return;
     }
+
+    lastAnalyzedCode = code;
 
     // Save draft
     storage.set({ draftCode: code });
@@ -677,6 +644,7 @@ function initPlayground() {
         { role: "user", content: `Codice da analizzare:\n${code}` },
       ]);
 
+      lastAssistantReply = reply;
       const container = document.getElementById("chat-messages");
       container.removeChild(loadingDiv);
       addMessage("assistant", reply);
@@ -709,10 +677,11 @@ function initPlayground() {
         ...chatMessages.slice(-6),
       ]);
 
+      lastAnalyzedCode = code;
+      lastAssistantReply = reply;
       const container = document.getElementById("chat-messages");
       container.removeChild(loading);
       addMessage("assistant", reply);
-      loadDashboard();
     } catch (e) {
       const container = document.getElementById("chat-messages");
       container.removeChild(loading);
@@ -750,13 +719,202 @@ async function loadSelectedCodeFromContextMenu(autoAnalyze = false) {
   }
 }
 
+// ===== CASSETTO DELLE NOTE =====
+function escapeHtml(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function currentTabUrl() {
+  return new Promise((resolve) => {
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        resolve((tabs && tabs[0] && tabs[0].url) || "");
+      });
+    } catch (e) {
+      resolve("");
+    }
+  });
+}
+
+async function saveCurrentNote() {
+  const code = lastAnalyzedCode || getEditorValue().trim();
+  const explanation = lastAssistantReply;
+  if (!code || !explanation) {
+    alert("Analizza prima un codice per poterlo salvare nel cassetto.");
+    return;
+  }
+
+  const sourceUrl = await currentTabUrl();
+  try {
+    const res = await apiFetch("/notes", {
+      method: "POST",
+      body: JSON.stringify({
+        snippet_code: code,
+        explanation,
+        language: "javascript",
+        source_type: "extension",
+        source_url: sourceUrl || null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Errore salvataggio nota");
+
+    // Categorizzazione asincrona (non blocca il salvataggio)
+    apiFetch(`/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
+    lastAssistantReply = ""; // evita salvataggi doppi dello stesso contenuto
+    alert("Nota salvata nel cassetto ✓");
+  } catch (err) {
+    alert("Errore: " + err.message);
+  }
+}
+
+async function loadNotes() {
+  const listEl = document.getElementById("notes-list");
+  const detailEl = document.getElementById("notes-detail");
+  const subtitle = document.getElementById("notes-subtitle");
+  if (!listEl) return;
+
+  detailEl.style.display = "none";
+  listEl.style.display = "flex";
+
+  // Il cassetto richiede l'account: invita al login (onboarding minimo)
+  if (!currentToken) {
+    listEl.innerHTML =
+      '<div class="notes-empty">Accedi per usare il cassetto delle note.<br/><button id="notes-login-prompt" class="btn-primary" style="margin-top:10px; padding:8px 16px; font-size:12px; width:auto;">Accedi ora</button></div>';
+    document.getElementById("notes-login-prompt")?.addEventListener("click", () => {
+      showAuth();
+      initAuth();
+    });
+    return;
+  }
+
+  listEl.innerHTML = '<div class="notes-loading">Caricamento...</div>';
+
+  try {
+    const res = await apiFetch("/notes");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Errore caricamento");
+    const notes = data.notes || [];
+    if (subtitle) subtitle.textContent = `${notes.length} note salvate`;
+
+    // Batch di categorizzazione delle note rimaste in "pending"
+    apiFetch("/notes/categorize-pending", { method: "POST" }).catch(() => {});
+
+    if (!notes.length) {
+      listEl.innerHTML =
+        '<div class="notes-empty">Nessuna nota salvata.<br/>Usa "Salva nel cassetto" dopo un\'analisi.</div>';
+      return;
+    }
+
+    listEl.innerHTML = notes
+      .map(
+        (n) => `
+      <div class="notes-item" data-note-id="${n.id}">
+        <div class="notes-item-head">
+          <span class="notes-item-title">${escapeHtml(n.title || "Nota di codice")}</span>
+          ${n.status === "pending" ? '<span class="notes-badge notes-badge-pending">categorizzazione...</span>' : ""}
+        </div>
+        <div class="notes-item-meta">${escapeHtml(n.language)} · ${new Date(n.created_at).toLocaleDateString("it-IT")}</div>
+        ${n.categories && n.categories.length ? `<div class="notes-item-cats">${n.categories.map((c) => `<span class="notes-chip">${escapeHtml(c.name)}</span>`).join("")}</div>` : ""}
+      </div>`,
+      )
+      .join("");
+
+    listEl.querySelectorAll(".notes-item").forEach((el) => {
+      el.addEventListener("click", () => openNoteDetail(el.dataset.noteId));
+    });
+  } catch (err) {
+    listEl.innerHTML = `<div class="notes-empty">Errore: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function openNoteDetail(noteId) {
+  const listEl = document.getElementById("notes-list");
+  const detailEl = document.getElementById("notes-detail");
+  if (!listEl || !detailEl) return;
+
+  listEl.style.display = "none";
+  detailEl.style.display = "block";
+  detailEl.innerHTML = '<div class="notes-loading">Caricamento nota...</div>';
+
+  try {
+    const res = await apiFetch(`/notes/${noteId}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Errore caricamento nota");
+    const n = data.note;
+    const sourceHost = n.source_url ? (() => { try { return new URL(n.source_url).hostname; } catch (e) { return ""; } })() : "";
+
+    detailEl.innerHTML = `
+      <button id="notes-back" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:12px; margin-bottom:12px;">← Torna al cassetto</button>
+      <div class="notes-detail-card">
+        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px;">${escapeHtml(n.title || "Nota di codice")}</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:10px;">${escapeHtml(n.language)} · ${new Date(n.created_at).toLocaleDateString("it-IT")}${sourceHost ? ` · da ${escapeHtml(sourceHost)}` : ""}</div>
+        ${(n.categories || []).length ? `<div style="margin-bottom:10px;">${n.categories.map((c) => `<span class="notes-chip">${escapeHtml(c.name)}</span>`).join("")}</div>` : ""}
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin-bottom:6px;">Codice originale</div>
+        <pre class="notes-code">${escapeHtml(n.snippet_code)}</pre>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin:14px 0 6px;">Spiegazione</div>
+        <div class="notes-explain">${escapeHtml(n.explanation).replace(/\n/g, "<br/>")}</div>
+        ${n.related && n.related.length ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin:14px 0 6px;">Note correlate</div>${n.related.map((r) => `<div class="notes-related">${escapeHtml(r.title)}</div>`).join("")}` : ""}
+        <div style="display:flex; gap:8px; margin-top:14px;">
+          <button id="notes-open-webapp" class="btn-primary" style="flex:1; font-size:12px; padding:8px;">Apri nel cassetto (webapp)</button>
+          <button id="notes-delete" class="btn-outline" style="flex:1; font-size:12px; padding:8px; margin:0;">Elimina nota</button>
+        </div>
+      </div>`;
+
+    document.getElementById("notes-back").addEventListener("click", () => {
+      detailEl.style.display = "none";
+      listEl.style.display = "flex";
+      loadNotes();
+    });
+    document.getElementById("notes-open-webapp").addEventListener("click", () => {
+      chrome.tabs.create({ url: `${SITE_BASE()}/notes?note=${noteId}` });
+    });
+    document.getElementById("notes-delete").addEventListener("click", async () => {
+      if (!confirm("Eliminare questa nota?")) return;
+      const del = await apiFetch(`/notes/${noteId}`, { method: "DELETE" });
+      if (del.ok) {
+        detailEl.style.display = "none";
+        listEl.style.display = "flex";
+        loadNotes();
+      }
+    });
+  } catch (err) {
+    detailEl.innerHTML = `<div class="notes-empty">Errore: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+// ===== Polling note (la nota salvata in webapp appare qui) =====
+let notesRefreshTimer = null;
+
+function startNotesPolling() {
+  stopNotesPolling();
+  notesRefreshTimer = setInterval(() => {
+    const detailEl = document.getElementById("notes-detail");
+    // Non ricaricare mentre è aperto il dettaglio
+    if (detailEl && detailEl.style.display === "none") {
+      loadNotes();
+    }
+  }, 30000);
+}
+
+function stopNotesPolling() {
+  if (notesRefreshTimer) {
+    clearInterval(notesRefreshTimer);
+    notesRefreshTimer = null;
+  }
+}
+
 // Navigation between Playground / Dashboard / Account + active styling
 function initNavigation() {
   const navItems = document.querySelectorAll(".nav-item");
   const sections = {
     playground: document.getElementById("section-playground"),
-    dashboard: document.getElementById("section-dashboard"),
-    account: document.getElementById("section-account"),
+    notes: document.getElementById("section-notes"),
+    webapp: document.getElementById("section-webapp"),
     settings: document.getElementById("section-settings"),
   };
 
@@ -765,10 +923,10 @@ function initNavigation() {
     navItems.forEach((item) => {
       if (item.dataset.section === sectionName) {
         item.classList.add("active");
-        item.style.color = "#fff";
+        item.style.color = "#059669";
       } else {
         item.classList.remove("active");
-        item.style.color = "#9ca3af";
+        item.style.color = "#64748b";
       }
     });
 
@@ -795,8 +953,11 @@ function initNavigation() {
             if (codeEditor?.requestMeasure) codeEditor.requestMeasure();
           });
         }
-        if (target === "dashboard") {
-          loadDashboard();
+        if (target === "notes") {
+          loadNotes();
+          startNotesPolling();
+        } else {
+          stopNotesPolling();
         }
       }
     };
@@ -811,41 +972,52 @@ function initNavigation() {
 }
 
 // ===== MAIN INIT =====
+function enterApp() {
+  showApp();
+  initNavigation();
+  initHubUi();
+  initPlayground();
+  loadSelectedCodeFromContextMenu(true);
+  initCodeEditor();
+  initSettings();
+  populateAccount();
+}
+
 async function init() {
   await initApiBase();
 
   if (DEV_BYPASS_AUTH) {
-    // TEMP: salta completamente il login e vai dritto alle sezioni
-    showApp();
-    initNavigation();
-    initDashboardUi();
-    initPlayground();
-    loadSelectedCodeFromContextMenu(true);
-    loadDashboard();
-    initCodeEditor();
-    initSettings();
+    // Dev only: salta completamente il login
+    currentUser = { email: "dev@local" };
+    enterApp();
     return;
   }
 
-  // Flusso normale con autenticazione
+  // Flusso guest-first: l'estensione è utilizzabile subito (analisi con
+  // quota ospite); il login serve solo per salvare nel cassetto e per le note.
   const saved = await storage.get(["token", "user"]);
-
   if (saved.token && saved.user) {
     currentToken = saved.token;
     currentUser = saved.user;
-
-    showApp();
-    initNavigation();
-    initDashboardUi();
-    initPlayground();
-    loadSelectedCodeFromContextMenu(true);
-    loadDashboard();
-    initCodeEditor();
-    initSettings();
+    enterApp();
   } else {
-    showAuth();
-    initAuth();
+    enterApp();
   }
+}
+
+function populateAccount() {
+  const email = currentUser?.email || "";
+  const userNameEl = document.getElementById("webapp-user-name");
+  if (userNameEl) {
+    userNameEl.innerHTML = email
+      ? `Benvenuto, <span class="accent">${escapeHtml(email.split("@")[0] || "Utente")}</span>!`
+      : "Benvenuto! Accedi dalla webapp o dalle impostazioni per salvare le note.";
+  }
+
+  const loginBtn = document.getElementById("settings-login-btn");
+  const logoutBtn = document.getElementById("settings-logout-btn");
+  if (loginBtn) loginBtn.style.display = currentUser ? "none" : "block";
+  if (logoutBtn) logoutBtn.style.display = currentUser ? "block" : "none";
 }
 
 function initSettings() {
@@ -853,6 +1025,53 @@ function initSettings() {
   const logoutBtn = document.getElementById("settings-logout-btn");
   const apiBaseInput = document.getElementById("settings-api-base");
   const saveApiBtn = document.getElementById("settings-save-api");
+
+  // ── Collega account webapp (link-code) ──
+  const openLinkBtn = document.getElementById("settings-open-link");
+  const linkCodeInput = document.getElementById("settings-link-code");
+  const linkSubmitBtn = document.getElementById("settings-link-submit");
+  const linkFeedback = document.getElementById("settings-link-feedback");
+
+  const setLinkFeedback = (text, isError) => {
+    if (!linkFeedback) return;
+    linkFeedback.textContent = text;
+    linkFeedback.style.color = isError ? "#dc2626" : "#059669";
+    linkFeedback.style.display = "block";
+  };
+
+  if (openLinkBtn) {
+    openLinkBtn.onclick = () => chrome.tabs.create({ url: `${SITE_BASE()}/extension-link` });
+  }
+  if (linkSubmitBtn) {
+    linkSubmitBtn.onclick = async () => {
+      const code = linkCodeInput ? linkCodeInput.value.trim() : "";
+      if (!code) {
+        setLinkFeedback("Incolla il codice dalla webapp.", true);
+        return;
+      }
+      linkSubmitBtn.disabled = true;
+      linkSubmitBtn.textContent = "Collegamento...";
+      try {
+        const res = await apiFetch("/auth/link-code", {
+          method: "POST",
+          body: JSON.stringify({ code }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Codice non valido");
+        currentToken = data.token;
+        currentUser = data.user;
+        await storage.set({ token: currentToken, user: currentUser });
+        if (linkCodeInput) linkCodeInput.value = "";
+        setLinkFeedback("Account collegato! Ora puoi salvare nel cassetto.", false);
+        populateAccount();
+      } catch (err) {
+        setLinkFeedback(err.message || "Errore di collegamento.", true);
+      } finally {
+        linkSubmitBtn.disabled = false;
+        linkSubmitBtn.textContent = "Collega";
+      }
+    };
+  }
 
   // API base input
   if (apiBaseInput) apiBaseInput.value = API_BASE;

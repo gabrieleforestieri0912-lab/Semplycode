@@ -7,15 +7,15 @@ import {
   isPreviousDay,
 } from '@/lib/usageLimits';
 import { GUEST_COOKIE, generateGuestId } from '@/lib/guestSession';
-import { getSession } from '@/lib/supabase/server';
+import { getAuthUser } from '@/lib/api-auth';
 import { findUserByEmail, updateUser, countChatsByUserId } from '@/lib/supabase/db';
 
 const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
   try {
-    const supabaseSession = await getSession();
-    const email = supabaseSession?.user?.email || null;
+    const authUser = await getAuthUser(req);
+    const email = authUser?.email || null;
 
     if (email) {
       const user = await findUserByEmail(email);

@@ -6,14 +6,14 @@
   <title>Semplycode AI Co-Pilot</title>
   <style>
     :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --bg: #080d14;
-      --card-bg: rgba(17, 24, 39, 0.7);
-      --border: #1e293b;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      --primary: #059669;
+      --primary-dark: #047857;
+      --bg: #ffffff;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
     * {
@@ -71,7 +71,7 @@
     .logo-badge {
       width: 28px;
       height: 28px;
-      background: var(--primary);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #fff;
       font-weight: bold;
       border-radius: 8px;
@@ -85,7 +85,7 @@
     .brand-name {
       font-size: 18px;
       font-weight: 700;
-      color: #fff;
+      color: #0f172a;
       letter-spacing: -0.5px;
     }
 
@@ -139,7 +139,7 @@
       max-height: 120px;
       overflow-y: auto;
       color: #34d399;
-      background: rgba(0, 0, 0, 0.2);
+      background: #0b0f1a;
       padding: 8px;
       border-radius: 6px;
     }
@@ -189,7 +189,7 @@
 
     .btn-outline {
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(15, 23, 42, 0.12);
       color: var(--text-muted);
       width: 100%;
       grid-column: span 2;
@@ -197,13 +197,13 @@
 
     .btn-outline:hover {
       border-color: var(--primary);
-      color: #fff;
+      color: var(--primary);
     }
 
     .result-container {
       flex: 1;
-      background: rgba(17, 24, 39, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.08);
       border-radius: 16px;
       padding: 16px;
       min-height: 200px;
@@ -292,16 +292,16 @@
 
     .content-area code {
       font-family: monospace;
-      background: rgba(0, 0, 0, 0.3);
+      background: #ecfdf5;
       padding: 2px 4px;
       border-radius: 4px;
-      color: #34d399;
+      color: #047857;
     }
 
     .content-area pre {
       max-height: none;
-      background: #040711;
-      border: 1px solid rgba(16, 185, 129, 0.1);
+      background: #0b0f1a;
+      border: 1px solid #1e293b;
       margin: 8px 0;
     }
 
@@ -328,12 +328,12 @@
       transition: all 0.15s ease;
     }
     .nav-item.active {
-      background: #111827 !important;
-      color: #fff !important;
-      box-shadow: 0 0 0 1px var(--border);
+      background: #ecfdf5 !important;
+      color: #059669 !important;
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35);
     }
     .nav-item.active span {
-      color: #fff;
+      color: #059669;
     }
   </style>
   <link rel="stylesheet" href="panel-layout.css" />
@@ -345,7 +345,7 @@
     <div style="margin-bottom: 32px;">
       <img src="semplycode.png" alt="Semplycode" style="width: 48px; height: 48px; border-radius: 10px; margin: 0 auto 12px; display: block;" />
       <div style="font-size: 22px; font-weight: 700;">semplycode</div>
-      <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Accedi al tuo account</div>
+      <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Accedi al tuo account</div>
     </div>
 
     <div style="width: 100%; max-width: 320px;">
@@ -355,7 +355,7 @@
            type="email" 
            id="auth-email" 
            placeholder="Inserisci la tua email"
-           style="width: 100%; padding: 14px 16px; font-size: 15px; border: 1px solid #1e293b; border-radius: 12px; background: #111827; color: #fff; margin-bottom: 12px;"
+           style="width: 100%; padding: 14px 16px; font-size: 15px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a; margin-bottom: 12px;"
          />
         <button id="auth-send-code" class="btn-primary" style="width: 100%; padding: 14px; font-size: 15px; font-weight: 600;">
           Invia codice di accesso
@@ -365,7 +365,7 @@
 
       <!-- Code verification step -->
       <div id="auth-code-step" style="display: none; margin-top: 16px;">
-        <div style="font-size: 13px; color: #94a3b8; margin-bottom: 10px;">
+        <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">
           Abbiamo inviato un codice a 6 cifre a <strong id="auth-email-display"></strong>
         </div>
         <input 
@@ -373,7 +373,7 @@
           id="auth-code" 
           placeholder="123456"
           maxlength="6"
-          style="width: 100%; padding: 14px; font-size: 22px; letter-spacing: 8px; text-align: center; border: 1px solid #1e293b; border-radius: 12px; background: #111827; color: #fff; margin-bottom: 12px;"
+          style="width: 100%; padding: 14px; font-size: 22px; letter-spacing: 8px; text-align: center; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a; margin-bottom: 12px;"
         />
         <div style="display: flex; gap: 8px;">
           <button id="auth-verify" class="btn-primary" style="flex: 1; padding: 12px;">Verifica codice</button>
@@ -382,7 +382,7 @@
         <div id="auth-code-expiry" style="font-size:12px; color:#f59e0b; margin-top:8px; text-align:center; display:none;"></div>
       </div>
 
-      <div id="auth-error" style="margin-top: 12px; padding: 8px 12px; background: #3f1f1f; color: #fca5a5; font-size: 13px; border-radius: 8px; display: none;"></div>
+      <div id="auth-error" style="margin-top: 12px; padding: 8px 12px; background: #fef2f2; color: #dc2626; font-size: 13px; border-radius: 8px; display: none;"></div>
     </div>
   </div>
 
@@ -390,17 +390,17 @@
   <div id="app-screen">
 
 <!-- LEFT NAV -->
-    <div id="left-nav" style="width: 52px; background: #080d14; border-right: 1px solid #1e293b; display: flex; flex-direction: column; padding-top: 8px; gap: 4px; flex-shrink: 0;">
-      <button class="nav-item active" data-section="playground" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #fff; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
+    <div id="left-nav" style="width: 52px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding-top: 8px; gap: 4px; flex-shrink: 0;">
+      <button class="nav-item active" data-section="playground" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #059669; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
             <span style="margin-top: 2px;">Playground</span>
           </button>
-          <button class="nav-item" data-section="dashboard" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
-            <span style="margin-top: 2px;">Dashboard</span>
+          <button class="nav-item" data-section="notes" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #64748b; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
+            <span style="margin-top: 2px;">Note</span>
           </button>
-          <button class="nav-item" data-section="account" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
-            <span style="margin-top: 2px;">Account</span>
+          <button class="nav-item" data-section="webapp" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #64748b; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
+            <span style="margin-top: 2px;">Webapp</span>
           </button>
-          <button class="nav-item" data-section="settings" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
+          <button class="nav-item" data-section="settings" style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; font-size: 9px; color: #64748b; background: none; border: none; cursor: pointer; border-radius: 8px; margin: 0 4px;">
             <span style="margin-top: 2px;">Impostazioni</span>
           </button>
 
@@ -414,7 +414,11 @@
       <div id="section-playground" class="main-section">
         <div class="playground-toolbar">
           <div style="font-size: 13px; font-weight: 600; color: var(--primary);">PLAYGROUND</div>
-          <button id="analyze-btn" class="btn-primary" style="padding: 6px 14px; font-size: 12px;">Analizza</button>
+          <div style="display:flex; gap:6px;">
+            <button id="copy-note-btn" class="btn-secondary" style="padding: 6px 12px; font-size: 12px;" title="Copia l'ultima risposta">Copia</button>
+            <button id="save-note-btn" class="btn-secondary" style="padding: 6px 14px; font-size: 12px;">Salva nel cassetto</button>
+            <button id="analyze-btn" class="btn-primary" style="padding: 6px 14px; font-size: 12px;">Analizza</button>
+          </div>
         </div>
 
         <div class="playground-editor-zone">
@@ -425,247 +429,64 @@
           <div class="chat-label">CHAT AI</div>
           <div id="chat-messages"></div>
           <div class="playground-chat-input-row">
-            <input id="chat-input" placeholder="Chiedi all'AI..." style="flex:1; padding: 8px 12px; border-radius: 999px; border: 1px solid #1e293b; background: #111827; color: #fff; font-size: 12px;">
+            <input id="chat-input" placeholder="Chiedi all'AI..." style="flex:1; padding: 8px 12px; border-radius: 999px; border: 1px solid #e2e8f0; background: #ffffff; color: #0f172a; font-size: 12px;">
             <button id="chat-send" class="btn-primary" style="padding: 0 14px; border-radius: 999px; font-size: 12px;">Invia</button>
           </div>
         </div>
       </div>
 
-      <!-- DASHBOARD SECTION (allineata al sito web) -->
-      <div id="section-dashboard" class="main-section">
-        <div class="dash-header">
+      <!-- NOTES SECTION (Cassetto delle Note) -->
+      <div id="section-notes" class="main-section" style="display: none; padding: 16px; flex: 1; overflow-y: auto;">
+        <div class="dash-header" style="margin-bottom: 16px;">
           <div>
-            <div class="dash-header-title">Dashboard</div>
-            <div class="dash-header-sub">Benvenuto, <span class="accent" id="dash-user-name">Utente</span>!</div>
-          </div>
-          <div class="dash-plan-pill">
-            <span id="dash-plan-pill-label" style="font-size:11px;font-weight:700;color:#10b981;">Gratuito</span>
+            <div class="dash-header-title">Il mio Cassetto</div>
+            <div class="dash-header-sub" id="notes-subtitle">Le tue note di apprendimento</div>
           </div>
         </div>
 
-        <div class="dash-stats-row">
-          <div class="dash-stat-card">
-            <div class="label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              Analisi rimanenti
-            </div>
-            <div class="value" id="dash-remaining">—</div>
-            <div class="sub" id="dash-remaining-sub">al giorno</div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
-              Analisi totali
-            </div>
-            <div class="value" id="dash-analyses-total">0</div>
-            <div class="sub">oggi / periodo</div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Chat totali
-            </div>
-            <div class="value" id="dash-chats-total">0</div>
-            <div class="sub">salvate nel account</div>
+        <div id="notes-suggestion" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:10px 12px; margin-bottom:12px; font-size:12px; color:#065f46;"></div>
+
+        <div id="notes-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        <div id="notes-detail" style="display:none;"></div>
+      </div>
+
+            <!-- WEBAPP HUB (link rapidi alla webapp) -->
+      <div id="section-webapp" class="main-section" style="display: none; padding: 16px; flex: 1; overflow-y: auto;">
+        <div class="dash-header" style="margin-bottom: 16px;">
+          <div>
+            <div class="dash-header-title">Webapp</div>
+            <div class="dash-header-sub" id="webapp-user-name">Utente</div>
           </div>
         </div>
 
-        <div class="dash-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3z"/></svg>
-          Azioni rapide
-        </div>
-        <div class="dash-actions">
-          <div class="dash-action-card" data-action="playground">
-            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div>
-            <div><h4>Playground</h4><p>Analizza il codice</p></div>
+        <div class="dash-actions" style="grid-template-columns: 1fr;">
+          <div class="dash-action-card" data-action="dashboard">
+            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
+            <div><h4>Dashboard</h4><p>Statistiche e attività</p></div>
+          </div>
+          <div class="dash-action-card" data-action="notes">
+            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></div>
+            <div><h4>Cassetto note</h4><p>Vista completa e percorsi</p></div>
           </div>
           <div class="dash-action-card" data-action="settings">
             <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
-            <div><h4>Impostazioni</h4><p>Gestisci account</p></div>
+            <div><h4>Impostazioni webapp</h4><p>Profilo, tema, lingua</p></div>
           </div>
           <div class="dash-action-card" data-action="pricing">
-            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-            <div><h4>Aggiorna piano</h4><p>Passa a Pro</p></div>
-          </div>
-          <div class="dash-action-card" data-action="plan-info">
-            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M2 20h20M4 20V10M8 20V4M12 20v-6M16 20v-4M20 20V8"/></svg></div>
-            <div><h4>Piano attuale</h4><p id="dash-action-plan">Gratuito</p></div>
+            <div class="icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M4 20V10M8 20V4M12 20v-6M16 20v-4M20 20V8"/></svg></div>
+            <div><h4>Piano &amp; Prezzi</h4><p>Gestisci abbonamento</p></div>
           </div>
         </div>
 
-        <div class="dash-section-head">
-          <div class="dash-section-title" style="margin:0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Attività recente
-          </div>
-          <button type="button" class="dash-link-btn" id="dash-see-all">Vedi tutto</button>
-        </div>
-        <div class="dash-activity-list" id="dash-activity-list">
-          <div class="dash-empty">Caricamento...</div>
-        </div>
-
-        <div class="dash-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Utilizzo questa settimana
-        </div>
-        <div class="dash-chart">
-          <div class="dash-chart-bars" id="dash-week-chart"></div>
-          <p style="font-size:10px;color:#64748b;text-align:center;margin-top:10px;">Analisi per giorno (ultimi 7 giorni)</p>
-        </div>
-
-        <div class="dash-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M2 20h20M4 20V10M8 20V4M12 20v-6M16 20v-4M20 20V8"/></svg>
-          Il tuo piano
-        </div>
-        <div class="dash-plan-box">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="font-size:22px;font-weight:800;color:#fff;" id="dash-plan-title">Gratuito</span>
-            <span style="font-size:10px;background:rgba(16,185,129,0.15);color:#10b981;padding:2px 8px;border-radius:99px;font-weight:600;">ATTIVO</span>
-          </div>
-          <p style="font-size:11px;color:#94a3b8;margin-bottom:10px;" id="dash-plan-desc">10 analisi al giorno</p>
-          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;">
-            <span style="color:#94a3b8;">Utilizzo oggi</span>
-            <span style="color:#fff;font-weight:600;" id="dash-usage-label">0/10</span>
-          </div>
-          <div class="dash-progress"><div id="dash-usage-bar" style="width:0%"></div></div>
-          <button type="button" class="dash-link-btn" id="dash-manage-plan" style="margin-top:12px;">Gestisci piano →</button>
-        </div>
-
-        <div class="dash-section-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>
-          Consigli &amp; prossimi passi
-        </div>
-        <div class="dash-tips">
-          <div class="dash-tip-card" data-tip="files">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            <h4>Carica i tuoi file</h4>
-            <p>Carica file di codice e l'AI li analizza automaticamente.</p>
-          </div>
-          <div class="dash-tip-card" data-tip="project">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            <h4>Analizza un progetto</h4>
-            <p>Incolla più file o un modulo per feedback architetturale.</p>
-          </div>
-          <div class="dash-tip-card" data-tip="pro">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            <h4>Passa a Pro</h4>
-            <p>Analisi illimitate e funzioni avanzate.</p>
-          </div>
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-top: 16px;">
+          <h3 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">Approfondisci</h3>
+          <p style="font-size: 12px; color: #64748b; line-height: 1.6;">
+            L'estensione è pensata per spiegazioni rapide contestuali. Per analisi
+            approfondite, cronologia completa, ripasso e abbonamento usa la webapp:
+            si apre con lo stesso account.
+          </p>
         </div>
       </div>
-
-      <!-- ACCOUNT / SUBSCRIPTION SECTION -->
-      <div id="section-account" class="main-section" style="display: none; padding: 16px; flex: 1; overflow-y: auto;">
-        <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Il tuo Account</div>
-
-        <!-- User Info -->
-<div style="background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-            <div style="width: 44px; height: 44px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </div>
-            <div>
-              <div style="font-weight: 600; color: #fff;">Utente Demo</div>
-              <div style="font-size: 12px; color: #94a3b8;">demo@semplycode.com</div>
-            </div>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button onclick="this.textContent='Disponibile dopo il login'; this.disabled=true; setTimeout(()=>{this.textContent='Modifica Profilo';this.disabled=false;}, 1200)" class="btn-secondary" style="width: 100%; padding: 8px; font-size: 13px; background: rgba(16,185,129,0.1); border: 1px solid #1e293b; color: #10b981;">
-              Modifica Profilo
-            </button>
-            <button onclick="this.textContent='Disponibile dopo il login'; this.disabled=true; setTimeout(()=>{this.textContent='Cambia Password';this.disabled=false;}, 1200)" class="btn-secondary" style="width: 100%; padding: 8px; font-size: 13px; background: rgba(16,185,129,0.1); border: 1px solid #1e293b; color: #10b981;">
-              Cambia Password
-            </button>
-          </div>
-        </div>
-
-        <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: #94a3b8;">Piano e Abbonamento</div>
-
-        <!-- Gratis - ATTUALE -->
-        <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid #10b981; border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-              <div style="width: 28px; height: 28px; background: rgba(16,185,129,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #10b981;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              </div>
-              <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 15px;">Gratis</div>
-                <div style="font-size: 11px; color: #64748b;">Inizia a costruire gratis</div>
-              </div>
-            </div>
-
-            <div style="font-size: 28px; font-weight: 800; margin: 8px 0 12px;">Free</div>
-
-            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; line-height: 1.6; margin-bottom: 12px;">
-              <li>10 Analisi AI al giorno</li>
-              <li>Motore Neurale Standard</li>
-              <li>Accesso Web Editor</li>
-              <li>Supporto Community</li>
-            </ul>
-
-            <div style="position: absolute; top: 14px; right: 14px;">
-              <span style="background: #10b981; color: #000; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">ATTUALE</span>
-            </div>
-          </div>
-
-          <!-- Pro -->
-          <div style="background: linear-gradient(145deg, #064e3b, #042f23); border: 1px solid rgba(16,185,129,0.3); border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative;">
-            <div style="position: absolute; top: 10px; right: 10px;">
-              <span style="background: rgba(16,185,129,0.15); color: #10b981; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(16,185,129,0.3); display: flex; align-items: center; gap: 4px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l14 8M5 16l14-8"/></svg>
-                Più Popolare
-              </span>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-              <div style="width: 28px; height: 28px; background: rgba(16,185,129,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #10b981;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 700; font-size: 15px;">Pro</div>
-                <div style="font-size: 11px; color: #64748b;">Per sviluppatori seri</div>
-              </div>
-            </div>
-
-            <div style="font-size: 28px; font-weight: 800; margin: 8px 0 12px;">€19.99 <span style="font-size: 12px; font-weight: 400;">/mese</span></div>
-
-            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; line-height: 1.6; margin-bottom: 12px;">
-              <li>Analisi AI Illimitate</li>
-              <li>Advanced Neural Core</li>
-              <li>Esportazione Locale</li>
-              <li>Supporto Prioritario</li>
-              <li>Debugging Avanzato</li>
-            </ul>
-
-            <button style="width: 100%; background: #10b981; color: #000; font-weight: 600; padding: 8px; border-radius: 10px; border: none; font-size: 13px; cursor: pointer;">Passa a Pro</button>
-          </div>
-
-          <!-- Enterprise -->
-          <div style="background: linear-gradient(145deg, #1e1040, #0f0a2e); border: 1px solid rgba(139,92,246,0.3); border-radius: 16px; padding: 16px;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-              <div style="width: 28px; height: 28px; background: rgba(139,92,246,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
-              </div>
-              <div>
-                <div style="font-weight: 700; font-size: 15px;">Enterprise</div>
-                <div style="font-size: 11px; color: #64748b;">Scala l'intero team</div>
-              </div>
-            </div>
-
-            <div style="font-size: 28px; font-weight: 800; margin: 8px 0 12px;">€49.99 <span style="font-size: 12px; font-weight: 400;">/mese</span></div>
-
-            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; line-height: 1.6; margin-bottom: 12px;">
-              <li>Training AI Personalizzato</li>
-              <li>Collaborazione Team</li>
-              <li>Accesso completo alle API</li>
-              <li>Account Manager Dedicato</li>
-              <li>Supporto White-label</li>
-            </ul>
-
-<button style="width: 100%; background: #1e293b; color: #fff; font-weight: 600; padding: 8px; border-radius: 10px; border: 1px solid #334155; font-size: 13px; cursor: pointer;">Contattaci</button>
-           </div>
-         </div>
-       </div>
 
 <!-- SETTINGS SECTION -->
         <div id="section-settings" class="main-section" style="display: none; padding: 16px; flex: 1; overflow-y: auto;">
@@ -676,29 +497,40 @@
             </div>
           </div>
 
-          <div style="background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
-            <h3 style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 12px;">Accesso</h3>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+            <h3 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">Accesso</h3>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="settings-login-btn" class="btn-secondary" style="width: 100%; padding: 10px; font-size: 13px; justify-content: flex-start; gap: 8px; background: rgba(16,185,129,0.1); border: 1px solid #1e293b; color: #10b981;">
+              <button id="settings-login-btn" class="btn-secondary" style="width: 100%; padding: 10px; font-size: 13px; justify-content: flex-start; gap: 8px; background: #ecfdf5; border: 1px solid #e2e8f0; color: #059669;">
                 Accedi o Registrati
               </button>
-              <button id="settings-logout-btn" style="width: 100%; padding: 10px; font-size: 13px; justify-content: flex-start; gap: 8px; display: none; background: none; border: 1px solid #334155; color: #fca5a5; border-radius: 10px; cursor: pointer;">
+              <button id="settings-logout-btn" style="width: 100%; padding: 10px; font-size: 13px; justify-content: flex-start; gap: 8px; display: none; background: none; border: 1px solid #fecaca; color: #dc2626; border-radius: 10px; cursor: pointer;">
                 Esci
               </button>
             </div>
           </div>
 
-          <div style="background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
-            <h3 style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 12px;">Tema</h3>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+            <h3 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">Tema</h3>
             <div style="display: flex; gap: 8px;">
               <button id="theme-dark" class="btn-primary" style="flex: 1; padding: 8px; font-size: 12px; background: #0f172a; border: 1px solid #10b981;">Dark</button>
               <button id="theme-light" class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px;">Light</button>
             </div>
           </div>
 
-          <div style="background: #111827; border: 1px solid #1e293b; border-radius: 14px; padding: 16px;">
-            <h3 style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 12px;">API Configuration</h3>
-            <input type="text" id="settings-api-base" placeholder="http://localhost:3000/api" style="width: 100%; padding: 10px; background: #010409; border: 1px solid #1e293b; border-radius: 8px; color: #f1f5f9; font-size: 12px; margin-bottom: 8px;" />
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+            <h3 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">Collega account webapp</h3>
+            <p style="font-size: 11px; color: #64748b; margin-bottom: 10px;">
+              Se sei loggato sulla webapp, copia il codice dalla pagina di collegamento e incollalo qui.
+            </p>
+            <button id="settings-open-link" class="btn-secondary" style="width: 100%; padding: 8px; font-size: 12px; margin-bottom: 8px;">Apri pagina di collegamento</button>
+            <input type="text" id="settings-link-code" placeholder="Codice dalla webapp" style="width: 100%; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #0f172a; font-size: 12px; margin-bottom: 8px;" />
+            <button id="settings-link-submit" class="btn-primary" style="width: 100%; padding: 8px; font-size: 12px;">Collega</button>
+            <div id="settings-link-feedback" style="font-size: 11px; margin-top: 6px; display: none;"></div>
+          </div>
+
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+            <h3 style="font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">API Configuration</h3>
+            <input type="text" id="settings-api-base" placeholder="http://localhost:3000/api" style="width: 100%; padding: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; color: #0f172a; font-size: 12px; margin-bottom: 8px;" />
             <button id="settings-save-api" class="btn-primary" style="width: 100%; padding: 8px; font-size: 12px;">Salva</button>
           </div>
         </div>
@@ -707,6 +539,7 @@
     </div>
 
     <script src="codemirror-bundle.js"></script>
-<script src="sidepanel.js"></script>
+    <script src="api-client.js"></script>
+    <script src="sidepanel.js"></script>
 </body>
 </html>

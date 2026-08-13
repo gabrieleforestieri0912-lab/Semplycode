@@ -373,12 +373,11 @@ const Pricing = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
                 whileHover={{ y: -4 }}
-                className={`relative flex flex-col rounded-2xl h-full border transition-all duration-300 ${
+                className={`relative flex flex-col rounded-2xl h-full border transition-all duration-300 bg-white ${
                   plan.popular
                     ? "border-emerald-500 shadow-lg shadow-emerald-500/15 ring-1 ring-emerald-500/20"
                     : "border-[#e2e8f0] hover:border-[#cbd5e1] shadow-sm hover:shadow-md"
                 }`}
-                style={{ background: "#ffffff" }}
               >
                 {/* Body */}
                 <div className="flex flex-col h-full p-6">

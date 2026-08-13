@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Code2, Zap, GraduationCap, ArrowRight, Sparkles, LucideIcon } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+
+const MotionLink = motion(Link);
 
 interface Step {
   step: string;
@@ -133,7 +136,7 @@ const HowItWorks = () => {
           >
             {current.headline}
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: "#475569" }}>
+          <p className="text-lg max-w-2xl mx-auto text-[#475569]">
             {current.subtitle}
           </p>
         </motion.div>
@@ -149,11 +152,7 @@ const HowItWorks = () => {
               className="relative group"
             >
               <div
-                className="relative rounded-3xl p-8 h-full flex flex-col transition-all duration-400"
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid rgba(0,0,0,0.08)",
-                }}
+                className="relative rounded-3xl p-8 h-full flex flex-col transition-all duration-400 bg-white border border-[#e2e8f0]"
               >
                 <div
                   className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
@@ -174,16 +173,16 @@ const HowItWorks = () => {
                   </div>
                   <span
                     className="text-5xl font-black select-none"
-                    style={{ color: "rgba(0,0,0,0.05)" }}
+                    style={{ color: "color-mix(in srgb, var(--foreground) 8%, transparent)" }}
                   >
                     {item.step}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-bold mb-3" style={{ color: "#0f172a" }}>
+                <h3 className="text-xl font-bold mb-3 text-[#0f172a]">
                   {item.title}
                 </h3>
-                <p className="text-sm leading-relaxed flex-grow" style={{ color: "#64748b" }}>
+                <p className="text-sm leading-relaxed flex-grow text-[#64748b]">
                   {item.desc}
                 </p>
 
@@ -206,7 +205,7 @@ const HowItWorks = () => {
           transition={{ delay: 0.4 }}
           className="mt-14 text-center"
         >
-          <motion.a
+          <MotionLink
             href="#demo"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
@@ -219,7 +218,7 @@ const HowItWorks = () => {
           >
             {current.cta}
             <ArrowRight size={15} className="group-hover:translate-x-1 text-emerald-200 transition-transform" />
-          </motion.a>
+          </MotionLink>
         </motion.div>
       </div>
     </section>

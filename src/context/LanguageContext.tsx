@@ -3,25 +3,27 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextValue {
-  language: string;
-  toggleLanguage: (lang: string) => void;
+  language: 'it' | 'en';
+  toggleLanguage: (lang: 'it' | 'en') => void;
 }
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLanguage] = useState('it');
+  const [language, setLanguage] = useState<'it' | 'en'>('it');
 
   useEffect(() => {
     const savedLang = localStorage.getItem('language');
     if (savedLang === 'en' || savedLang === 'it') {
       setLanguage(savedLang);
     }
+    document.documentElement.lang = savedLang === 'en' ? 'en' : 'it';
   }, []);
 
-  const toggleLanguage = (lang: string) => {
+  const toggleLanguage = (lang: 'it' | 'en') => {
     setLanguage(lang);
     localStorage.setItem('language', lang);
+    document.documentElement.lang = lang;
   };
 
   return (

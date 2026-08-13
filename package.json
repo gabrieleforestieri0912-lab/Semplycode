@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run build:extension",
-    "build:extension": "node scripts/build-extension.js",
+    "build": "next build",
+    "build:extension-api": "esbuild src/lib/apiClient.extension.ts --bundle --format=iife --platform=browser --target=es2020 --outfile=chrome-extension/api-client.js",
     "start": "next start",
     "lint": "eslint",
     "test": "jest --runInBand"
@@ -38,7 +38,7 @@
     "jszip": "^3.10.1",
     "lodash": "^4.17.23",
     "lucide-react": "^0.577.0",
-    "next": "16.1.6",
+    "next": "^16.3.0",
     "nodemailer": "^6.9.3",
     "prismjs": "^1.30.0",
     "react": "19.2.3",
@@ -52,6 +52,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.3",
     "@types/jsonwebtoken": "^9.0.10",
@@ -63,8 +65,10 @@
     "babel-plugin-react-compiler": "1.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "^16.3.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.4.1",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^6.0.3"
   }

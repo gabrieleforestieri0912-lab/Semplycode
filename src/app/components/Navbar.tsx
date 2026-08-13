@@ -13,10 +13,14 @@ import {
   Settings,
   BarChart3,
   Code2,
+  Bookmark,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import ThemeToggle from "./ThemeToggle";
+
+const MotionLink = motion(Link);
 
 const Navbar = () => {
   const router = useRouter();
@@ -91,9 +95,9 @@ const Navbar = () => {
 
   const navLinks = [
     { href: "#demo", label: "Demo" },
-    { href: "#funzionalita", label: "Features" },
+    { href: "#funzionalita", label: "Funzionalità" },
     { href: "#estensione", label: "Estensione" },
-    { href: "#prezzi", label: "Pricing" },
+    { href: "#prezzi", label: "Prezzi" },
   ];
 
   const navLinkClass = `relative font-medium transition-all duration-200 text-[#475569] hover:text-[#0f172a] text-sm`;
@@ -168,8 +172,18 @@ return (
               <BarChart3 size={16} />
               Dashboard
             </Link>
+            <Link
+              href="/notes"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
+            >
+              <Bookmark size={16} />
+              Note
+            </Link>
           </div>
           )}
+
+          {/* Theme toggle — a sinistra dei bottoni di accesso */}
+          <ThemeToggle />
 
           {/* Account / Auth */}
           {sessionUser ? (
@@ -238,6 +252,16 @@ return (
                         >
                           <Code2 className="w-4 h-4 text-[#64748b]" />
                           {t.editor}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            router.push("/notes");
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] transition-colors"
+                        >
+                          <Bookmark className="w-4 h-4 text-[#64748b]" />
+                          Il mio Cassetto
                         </button>
                         <button
                           onClick={() => {
@@ -318,7 +342,7 @@ return (
             >
               <div className="flex flex-col p-4 gap-1">
                 {navLinks.map((link, i) => (
-                  <motion.a
+                  <MotionLink
                     key={link.href}
                     href={link.href}
                     initial={{ opacity: 0, x: -10 }}
@@ -329,7 +353,7 @@ return (
                   >
                     <span className="w-1 h-4 rounded-full bg-emerald-500/0 group-hover:bg-emerald-500/80 transition-colors" />
                     {link.label}
-                  </motion.a>
+                  </MotionLink>
                 ))}
               </div>
             </motion.div>

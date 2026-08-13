@@ -11,18 +11,26 @@ import {
   CheckCircle,
   Eye,
   EyeOff,
+  Smartphone,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useSupabaseSession } from "@/lib/auth";
 import { SkeletonAuthForm } from "@/app/components/Skeleton";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshSession } = useSupabaseSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [authMode, setAuthMode] = useState<"password" | "code">("password");
+  const [codeStep, setCodeStep] = useState<"email" | "sent">("email");
+  const [codeValue, setCodeValue] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [codeSuccess, setCodeSuccess] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -43,22 +51,62 @@ function LoginForm() {
     setIsLoading(true);
     setError("");
     setSuccess("");
+    setCodeError("");
+    setCodeSuccess("");
 
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      if (authMode === "password") {
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
 
-      if (error) {
-        throw new Error("Email o password non validi");
+        if (error) {
+          throw new Error("Email o password non validi");
+        }
+
+        const callbackUrl = searchParams.get("callbackUrl") || "/";
+        router.push(callbackUrl);
+      } else if (authMode === "code") {
+        if (codeStep === "email") {
+          const response = await fetch("/api/auth/send-login-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Errore invio codice");
+          }
+
+          setCodeSuccess(data.message || "Codice inviato!");
+          setCodeStep("sent");
+        } else if (codeStep === "sent") {
+          const response = await fetch("/api/auth/verify-login-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email, code: codeValue }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Codice non valido");
+          }
+
+          await refreshSession();
+          router.push("/");
+        }
       }
-
-      const callbackUrl = searchParams.get("callbackUrl") || "/";
-      router.push(callbackUrl);
     } catch (err) {
-      setError((err as Error).message);
+      if (authMode === "code" && codeStep === "sent") {
+        setCodeError((err as Error).message);
+      } else {
+        setError((err as Error).message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +114,10 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-6 py-8 font-sans relative">
-      <Link href="/" className="fixed top-5 left-5 z-50 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-emerald-400 transition-colors">
+      <Link
+        href="/"
+        className="fixed top-5 left-5 z-50 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-emerald-400 transition-colors"
+      >
         <ArrowRight className="w-4 h-4 rotate-180" />
         Home
       </Link>
@@ -82,6 +133,43 @@ function LoginForm() {
           </Link>
         </p>
 
+        <div className="flex bg-gray-100 rounded-xl p-1">
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("password");
+              setCodeStep("email");
+              setCodeError("");
+              setCodeSuccess("");
+              setError("");
+            }}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+              authMode === "password"
+                ? "bg-white text-emerald-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Password
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode("code");
+              setCodeStep("email");
+              setCodeError("");
+              setCodeSuccess("");
+              setError("");
+            }}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+              authMode === "code"
+                ? "bg-white text-emerald-600 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Codice email
+          </button>
+        </div>
+
         {error && (
           <div
             role="alert"
@@ -93,29 +181,49 @@ function LoginForm() {
                 <AlertCircle className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-red-700">
-                  Accesso non riuscito
-                </div>
+                <div className="font-semibold text-red-700">Accesso non riuscito</div>
                 <div className="text-red-600 mt-1">{error}</div>
               </div>
             </div>
-            <div className="flex items-center gap-2 justify-end">
-              <Link
-                href="/forgot-password"
-                className="text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
-              >
-                Recupera password
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setError("");
-                  (document.querySelector('input[name="password"]') as HTMLInputElement)?.focus();
-                }}
-                className="text-sm px-3 py-1 rounded-full bg-red-100 border border-red-200 text-red-500 hover:bg-red-200 transition-colors"
-              >
-                Riprova
-              </button>
+            {authMode === "password" && (
+              <div className="flex items-center gap-2 justify-end">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
+                >
+                  Recupera password
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    (
+                      document.querySelector('input[name="password"]') as HTMLInputElement
+                    )?.focus();
+                  }}
+                  className="text-sm px-3 py-1 rounded-full bg-red-100 border border-red-200 text-red-500 hover:bg-red-200 transition-colors"
+                >
+                  Riprova
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {codeError && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="bg-red-50 border border-red-200 rounded-2xl p-4 flex flex-col gap-2 text-sm text-left"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-red-100 text-red-500 shrink-0">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-red-700">Codice non valido</div>
+                <div className="text-red-600 mt-1">{codeError}</div>
+              </div>
             </div>
           </div>
         )}
@@ -127,21 +235,28 @@ function LoginForm() {
           </div>
         )}
 
+        {codeSuccess && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 items-center text-emerald-600 text-sm text-left">
+            <CheckCircle className="w-5 h-5 shrink-0" />
+            {codeSuccess}
+          </div>
+        )}
+
         <form className="mt-2 space-y-4 text-left" onSubmit={handleSubmit}>
           {isLoading ? (
             <div className="space-y-3 animate-pulse" aria-hidden>
-                <div className="flex items-center gap-3 justify-center">
-                  <div className="w-10 h-10 rounded-xl bg-[#e2e8f0]"></div>
-                  <div className="w-40 h-6 rounded bg-[#e2e8f0]"></div>
-                </div>
-                <div className="space-y-3">
-                  <div className="h-3 w-32 rounded bg-[#e2e8f0] mx-1"></div>
-                  <div className="h-12 rounded-2xl bg-[#e2e8f0]"></div>
-                  <div className="h-3 w-24 rounded bg-[#e2e8f0] mx-1"></div>
-                  <div className="h-12 rounded-2xl bg-[#e2e8f0]"></div>
-                </div>
+              <div className="flex items-center gap-3 justify-center">
+                <div className="w-10 h-10 rounded-xl bg-[#e2e8f0]"></div>
+                <div className="w-40 h-6 rounded bg-[#e2e8f0]"></div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-3 w-32 rounded bg-[#e2e8f0] mx-1"></div>
+                <div className="h-12 rounded-2xl bg-[#e2e8f0]"></div>
+                <div className="h-3 w-24 rounded bg-[#e2e8f0] mx-1"></div>
                 <div className="h-12 rounded-2xl bg-[#e2e8f0]"></div>
               </div>
+              <div className="h-12 rounded-2xl bg-[#e2e8f0]"></div>
+            </div>
           ) : (
             <>
               <div className="space-y-4">
@@ -155,6 +270,7 @@ function LoginForm() {
                       name="email"
                       type="email"
                       required
+                      value={formData.email}
                       onChange={handleChange}
                       className="w-full bg-white border border-[#e2e8f0] rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[#0f172a] placeholder:text-[#64748b]"
                       placeholder="nome@azienda.com"
@@ -162,51 +278,103 @@ function LoginForm() {
                   </div>
                 </div>
 
-                <div className="relative">
-                  <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
-                    Password
-                  </label>
+                {authMode === "password" && (
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
-                    <input
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      onChange={handleChange}
-                      className="w-full bg-white border border-[#e2e8f0] rounded-2xl py-3 pl-12 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[#0f172a] placeholder:text-[#64748b]"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#94a3b8] transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
+                    <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
+                      <input
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="w-full bg-white border border-[#e2e8f0] rounded-2xl py-3 pl-12 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[#0f172a] placeholder:text-[#64748b]"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#94a3b8] transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {authMode === "code" && codeStep === "sent" && (
+                  <div className="relative">
+                    <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
+                      Codice di accesso
+                    </label>
+                    <div className="relative">
+                      <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
+                      <input
+                        name="code"
+                        type="text"
+                        inputMode="numeric"
+                        required
+                        value={codeValue}
+                        onChange={(e) => setCodeValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        className="w-full bg-white border border-[#e2e8f0] rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[#0f172a] placeholder:text-[#64748b] tracking-widest"
+                        placeholder="123456"
+                        maxLength={6}
+                      />
+                    </div>
+                    <p className="text-xs text-[#64748b] mt-1 ml-1">
+                      Inserisci il codice a 6 cifre ricevuto via email.
+                    </p>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-end">
-                <Link
-                  href="/forgot-password"
-                  className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
-                >
-                  Password dimenticata?
-                </Link>
-              </div>
+              {authMode === "password" && (
+                <div className="flex items-center justify-end">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    Password dimenticata?
+                  </Link>
+                </div>
+              )}
+
+              {authMode === "code" && codeStep === "sent" && (
+                <div className="flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCodeStep("email");
+                      setCodeError("");
+                      setCodeSuccess("");
+                    }}
+                    className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    Modifica email
+                  </button>
+                </div>
+              )}
 
               <button
                 disabled={isLoading}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 focus:outline-none transition-all shadow-xl shadow-emerald-500/25 disabled:opacity-70"
               >
                 <span className="flex items-center gap-2">
-                  Accedi{" "}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  {authMode === "password"
+                    ? "Accedi"
+                    : codeStep === "email"
+                      ? "Invia codice"
+                      : "Verifica codice"}
+                  {authMode === "password" && (
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  )}
                 </span>
               </button>
             </>
@@ -227,7 +395,10 @@ function LoginForm() {
             type="button"
             onClick={async () => {
               const supabase = createClient();
-              await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/api/auth/callback` } });
+              await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+              });
             }}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e2e8f0] rounded-2xl text-sm font-semibold text-[#475569] bg-white hover:bg-[#f8fafc] focus:outline-none transition-all"
           >
@@ -244,7 +415,10 @@ function LoginForm() {
             type="button"
             onClick={async () => {
               const supabase = createClient();
-              await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: `${window.location.origin}/api/auth/callback` } });
+              await supabase.auth.signInWithOAuth({
+                provider: "github",
+                options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+              });
             }}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e2e8f0] rounded-2xl text-sm font-semibold text-[#475569] bg-white hover:bg-[#f8fafc] focus:outline-none transition-all"
           >
@@ -261,9 +435,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={<SkeletonAuthForm />}
-    >
+    <Suspense fallback={<SkeletonAuthForm />}>
       <LoginForm />
     </Suspense>
   );

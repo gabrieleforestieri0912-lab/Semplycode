@@ -11,19 +11,17 @@ import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
 import Pricing from "./components/Pricing";
 import Footer from "./components/Footer";
-import ChromeExtensionCTA from "./components/ChromeExtensionCTA";
 import FAQ from "./components/FAQ";
 import ImportCodeSection from "./components/ImportCodeSection";
+import ExtensionSection from "./components/ExtensionSection";
 
 const DemoSection = dynamic(() => import("./components/Demo"), {
   ssr: false,
   loading: () => (
-    <div className="container mx-auto px-4 md:px-6 -mt-8 md:-mt-16 mb-12">
-      <div
-        className="w-full h-[500px] md:h-[600px] rounded-3xl animate-pulse flex items-center justify-center"
+    <div className="container mx-auto px-4 md:px-6 -mt-8 md:-mt-16 mb-12">      <div className="w-full h-[500px] md:h-[600px] rounded-3xl animate-pulse flex items-center justify-center"
         style={{ background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)" }}
       >
-        <span style={{ color: "#475569", fontFamily: "monospace" }}>Caricamento AI Core...</span>
+        <span className="text-[#475569]" style={{ fontFamily: "monospace" }}>Caricamento AI Core...</span>
       </div>
     </div>
   )
@@ -41,10 +39,7 @@ interface Particle {
 
 export default function Home() {
   return (
-    <div
-      className="flex flex-col min-h-screen font-sans bg-white"
-      style={{ color: "#0f172a" }}
-    >
+    <div className="flex flex-col min-h-screen font-sans bg-white text-[#0f172a]">
       <Navbar />
 
       <main className="grow">
@@ -72,8 +67,8 @@ export default function Home() {
         <Features />
 
         <ImportCodeSection />
-        <ChromeExtensionCTA />
         <Pricing />
+        <ExtensionSection />
         <FAQ />
       </main>
 

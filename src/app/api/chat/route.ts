@@ -1,14 +1,15 @@
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 import { once } from '@/lib/rateLimiter';
+import { getAuthUser } from '@/lib/api-auth';
 import {
   GUEST_DAILY_LIMIT,
   FREE_DAILY_LIMIT,
   isPreviousDay,
 } from '@/lib/usageLimits';
 import { GUEST_COOKIE, generateGuestId } from '@/lib/guestSession';
-import { getSession } from '@/lib/supabase/server';
 import { findUserByEmail, updateUser } from '@/lib/supabase/db';
+import { chatWithAI, chatWithAIStream, type ChatMessage } from '@/lib/ai-provider';
 
 const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -18,8 +19,9 @@ async function checkGuestQuota(guestId: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseSession = await getSession();
-    const email = supabaseSession?.user?.email || null;
+    // Autenticazione: sessione cookie (webapp) oppure Bearer token (estensione)
+    const authUser = await getAuthUser(req);
+    const email = authUser?.email || null;
     const body: { messages?: unknown[]; model?: string; stream?: boolean } = await req.json();
     const messages = body.messages;
     const requestedModel = body.model;
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const model = requestedModel || process.env.OLLAMA_MODEL || 'llama3';
+    const model = requestedModel || process.env.OPENAI_MODEL || process.env.OLLAMA_MODEL || 'gpt-4o';
     let setGuestCookie: string | null = null;
     let plan: string | null = null;
 
@@ -84,23 +86,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
-    const ollamaResponse = await fetch(`${ollamaUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: wantsStream,
-      }),
-    });
-
-    if (!ollamaResponse.ok) {
-      const errText = await ollamaResponse.text().catch(() => '');
-      throw new Error(`Ollama error: ${ollamaResponse.statusText} ${errText}`);
-    }
-
-    // Increment usage counter
     const incrementUsage = async () => {
       if (email && plan === 'free') {
         const user = await findUserByEmail(email).catch(() => null);
@@ -113,83 +98,87 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    if (!wantsStream || !ollamaResponse.body) {
-      // Non-streaming fallback
-      const data = await ollamaResponse.json();
-      let content = '';
-      if (data?.message?.content) content = data.message.content;
-      else if (Array.isArray(data.choices) && data.choices[0]?.message?.content) content = data.choices[0].message.content;
-      else content = JSON.stringify(data);
+    if (!wantsStream) {
+      try {
+        const result = await chatWithAI({ messages: messages as ChatMessage[], model });
+        await incrementUsage();
 
-      await incrementUsage();
+        const res = new Response(JSON.stringify({ message: { content: result.content } }), {
+          headers: { 'content-type': 'application/json' },
+        });
+        if (setGuestCookie) {
+          res.headers.set('set-cookie', `${GUEST_COOKIE}=${setGuestCookie}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 365}`);
+        }
+        return res;
+      } catch (error) {
+        console.error('AI Provider error:', error);
+        return new Response(
+          JSON.stringify({
+            error: error instanceof Error ? error.message : 'Impossibile contattare il motore AI. Verifica la configurazione o riprova più tardi.',
+            code: 'AI_ERROR',
+          }),
+          { status: 500, headers: { 'content-type': 'application/json' } },
+        );
+      }
+    }
 
-      const res = new Response(JSON.stringify({ message: { content } }), {
-        headers: { 'content-type': 'application/json' },
+    try {
+      const aiResponse = await chatWithAIStream({ messages: messages as ChatMessage[], model });
+      const aiReader = aiResponse.body?.getReader();
+      const decoder = new TextDecoder();
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          if (!aiReader) {
+            controller.close();
+            return;
+          }
+
+          try {
+            while (true) {
+              const { done, value } = await aiReader.read();
+              if (done) break;
+              controller.enqueue(value);
+            }
+          } catch (err) {
+            console.error('Stream proxy error:', err);
+          } finally {
+            await incrementUsage();
+            controller.close();
+          }
+        },
+        cancel() {
+          aiReader?.cancel().catch(() => {});
+        },
+      });
+
+      const res = new Response(stream, {
+        headers: {
+          'content-type': 'text/event-stream',
+          'cache-control': 'no-cache',
+          connection: 'keep-alive',
+        },
       });
       if (setGuestCookie) {
         res.headers.set('set-cookie', `${GUEST_COOKIE}=${setGuestCookie}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 365}`);
       }
       return res;
+    } catch (error) {
+      console.error('AI Provider stream error:', error);
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : 'Impossibile contattare il motore AI. Verifica la configurazione o riprova più tardi.',
+          code: 'AI_ERROR',
+        }),
+        { status: 500, headers: { 'content-type': 'application/json' } },
+      );
     }
-
-    // Streaming response
-    const encoder = new TextEncoder();
-    const reader = ollamaResponse.body.getReader();
-    const decoder = new TextDecoder();
-    let fullContent = '';
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(Boolean);
-
-            for (const line of lines) {
-              try {
-                const parsed = JSON.parse(line);
-                const delta = parsed.message?.content || parsed.response || '';
-                if (delta) {
-                  fullContent += delta;
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta })}\n\n`));
-                }
-                if (parsed.done) break;
-              } catch {
-                // skip malformed JSON lines
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Stream error:', err);
-        } finally {
-          await incrementUsage();
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
-          controller.close();
-          reader.releaseLock();
-        }
-      },
-    });
-
-    const res = new Response(stream, {
-      headers: {
-        'content-type': 'text/event-stream',
-        'cache-control': 'no-cache',
-        connection: 'keep-alive',
-      },
-    });
-    if (setGuestCookie) {
-      res.headers.set('set-cookie', `${GUEST_COOKIE}=${setGuestCookie}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 365}`);
-    }
-    return res;
   } catch (error) {
     console.error('API Error:', error);
     return new Response(
       JSON.stringify({
-        error: 'Impossibile contattare il motore AI. Verifica che Ollama sia in esecuzione o riprova più tardi.',
-        code: 'OLLAMA_ERROR',
+        error: 'Impossibile contattare il motore AI. Verifica la configurazione o riprova più tardi.',
+        code: 'AI_ERROR',
       }),
       { status: 500, headers: { 'content-type': 'application/json' } },
     );

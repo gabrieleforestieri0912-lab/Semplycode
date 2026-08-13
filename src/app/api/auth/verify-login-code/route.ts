@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/supabase/db';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '@/lib/ensureEnv';
+import { findUserByEmail, createUser } from '@/lib/supabase/db';
+import { createClient } from '@/lib/supabase/server';
+import { signExtensionToken } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,26 +9,28 @@ export async function POST(req: NextRequest) {
     if (!email || !code) return NextResponse.json({ error: 'Email e codice obbligatori' }, { status: 400 });
 
     const normalized = email.toLowerCase().trim();
-    const user = await findUserByEmail(normalized);
-    if (!user) return NextResponse.json({ error: 'Codice non valido' }, { status: 401 });
+    const supabase = await createClient();
 
-    const now = new Date();
-    const expiry = user.login_code_expiry ? new Date(user.login_code_expiry) : null;
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: normalized,
+      token: code,
+      type: 'email',
+    });
 
-    if (!user.login_code || !expiry || user.login_code !== code || expiry < now) {
+    if (error || !data.session) {
       return NextResponse.json({ error: 'Codice non valido o scaduto' }, { status: 401 });
     }
 
-    await updateUser(normalized, { login_code: null, login_code_expiry: null });
+    const user = await findUserByEmail(normalized);
+    if (!user) {
+      await createUser({ email: normalized });
+    }
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    // Emette il JWT Bearer usato dall'estensione Chrome (la webapp
+    // continua ad autenticarsi tramite la sessione a cookie Supabase).
+    const token = signExtensionToken(normalized);
 
-    return NextResponse.json({
-      token,
-      user: { email: user.email, firstName: user.first_name, lastName: user.last_name },
-    });
+    return NextResponse.json({ success: true, token, user: { email: normalized } });
   } catch (error) {
     console.error('verify-login-code error:', error);
     return NextResponse.json({ error: 'Errore del server' }, { status: 500 });
