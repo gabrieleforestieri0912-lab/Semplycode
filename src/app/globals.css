@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Gradient text: robust across browsers (Safari needs -webkit-text-fill-color) */
+.text-gradient {
+  background-image: linear-gradient(90deg, #059669 0%, #10b981 55%, #2dd4bf 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #1e293b;
@@ -68,6 +77,7 @@ html.dark [class*="border-gray-200"] { border-color: #1e293b !important; }
 
 /* Emerald backgrounds used for cards */
 html.dark [class*="bg-emerald-50"] { background: #064e3b !important; }
+html.dark [class*="bg-red-50"] { background: #450a0a !important; }
 html.dark [class*="border-emerald-200"] { border-color: #065f46 !important; }
 html.dark [class*="text-emerald-600"] { color: #10b981 !important; }
 html.dark [class*="text-emerald-700"] { color: #34d399 !important; }
@@ -121,6 +131,72 @@ html.dark [class*="from-emerald-500"] { background: #10b981 !important; }
 /* Effects */
 .text-shadow-glow {
   text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* ========================================
+   Hero: background codice animato
+   Solo transform/opacity (GPU-composite).
+   ======================================== */
+@keyframes code-float-line {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--range, -10px));
+  }
+}
+
+@keyframes code-line-pulse {
+  0%,
+  100% {
+    opacity: var(--op, 0.3);
+  }
+  50% {
+    opacity: calc(var(--op, 0.3) * 0.6);
+  }
+}
+
+.code-float-line {
+  opacity: var(--op, 0.3);
+  animation:
+    code-float-line var(--dur, 7s) ease-in-out infinite,
+    code-line-pulse var(--dur, 7s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes code-bg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.code-float-bg {
+  animation: code-bg-fade-in 0.9s ease 0.25s both;
+}
+
+/* Reduced motion: nessun movimento, resta il codice statico */
+@media (prefers-reduced-motion: reduce) {
+  .code-float-line {
+    animation: none;
+  }
+}
+
+/* Mobile: solo i blocchi a sinistra (quelli pari a destra non hanno spazio; l'overlay è l'ultimo figlio, escluso) */
+@media (max-width: 640px) {
+  .code-float-bg > .code-float-item:nth-child(even) {
+    display: none !important;
+  }
+}
+
+/* Variante "sides" (login/register): su mobile le colonne ai lati non hanno spazio -> nascoste del tutto */
+@media (max-width: 640px) {
+  .code-float-bg--sides {
+    display: none;
+  }
 }
 
 /* App shell */
@@ -226,3 +302,4 @@ html.dark .notes-markdown h4 { color: #f1f5f9; }
 html.dark .notes-markdown code { background: #064e3b; color: #6ee7b7; }
 html.dark .notes-markdown strong { color: #6ee7b7; }
 html.dark .notes-markdown blockquote { color: #94a3b8; }
+

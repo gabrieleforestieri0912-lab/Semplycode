@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/purity */
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSupabaseSession } from '@/lib/auth';
 import useSWR from 'swr';
@@ -39,16 +38,13 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export default function DashboardPage() {
   const router = useRouter();
   const { user: supabaseUser, status } = useSupabaseSession();
-  const [user] = useState<UserInfo | null>(() => {
-    if (supabaseUser) {
-      return {
+  const user: UserInfo | null = supabaseUser
+    ? {
         firstName: supabaseUser.user_metadata?.full_name?.split(' ')[0] || 'User',
         lastName: supabaseUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
         email: supabaseUser.email || '',
-      };
-    }
-    return null;
-  });
+      }
+    : null;
 
   const { data: stats, isLoading: statsLoading } = useSWR<Stats>(
     status === 'authenticated' ? '/api/user/stats' : null,
@@ -115,15 +111,15 @@ export default function DashboardPage() {
         >
             <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-linear-to-br from-primary to-emerald-500 rounded-2xl blur-lg opacity-40 animate-pulse"></div>
-                <div className="relative w-16 h-16 bg-linear-to-br from-primary to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20">
-                  <BarChart3 className="text-white w-8 h-8" />
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl blur-lg opacity-40 animate-pulse"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <BarChart3 className="text-white w-7 h-7" />
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-black text-[#0f172a] tracking-tight">Dashboard</h1>
-                <p className="text-[#64748b] font-medium">Benvenuto, <span className="text-primary font-semibold">{user.firstName}</span>!</p>
+                <h1 className="text-3xl font-bold text-[#0f172a]">Dashboard</h1>
+                <p className="text-sm text-[#64748b] mt-1">Benvenuto, <span className="text-primary font-semibold">{user.firstName}</span>!</p>
               </div>
             </div>
 
@@ -152,7 +148,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="relative group">
-              <div className="absolute inset-0 bg-linear-to-br from-violet-500 to-indigo-500 rounded-2xl blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
+              <div className="absolute inset-0 bg-linear-to-br from-emerald-500 to-teal-500 rounded-2xl blur-xl opacity-10 group-hover:opacity-20 transition-opacity"></div>
               <div className="relative bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm">
                 <div className="relative flex items-center justify-between">
                   <div>
@@ -240,7 +236,7 @@ export default function DashboardPage() {
               </Link>
 
               <div className="relative bg-white border border-[#e2e8f0] rounded-2xl p-6 flex items-center gap-4 shadow-sm">
-                 <div className="w-10 h-10 bg-[#f1f5f9] rounded-xl flex items-center justify-center">
+                 <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
                   <Crown className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="flex-1">

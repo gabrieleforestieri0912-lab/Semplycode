@@ -5,34 +5,27 @@ import { motion } from "framer-motion";
 import {
   Check,
   Zap,
-  Star,
-  ShieldCheck,
+  Crown,
+  Rocket,
+  Building2,
   Loader2,
   Sparkles,
   ArrowRight,
   Lock,
-  Coins,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { loadStripe } from "@stripe/stripe-js";
 import { useSupabaseSession } from "@/lib/auth";
+import Toast, { useToast } from "./Toast";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
 );
 
 interface PlanStyle {
-  gradient: string;
-  glow: string;
   accent: string;
-  badge: boolean | null;
-  iconBg: string;
+  glow: string;
   btnClass: string;
-  featureCheck: string;
-  headerBg: string;
-  headerText: string;
-  nameText: string;
-  tokensBadge: string;
 }
 
 interface Plan {
@@ -42,81 +35,45 @@ interface Plan {
   tagline: string;
   priceId?: string;
   features: string[];
-  tokensLabel: string;
-  tokensNote: string;
   icon: React.ReactElement;
   popular?: boolean;
 }
 
 interface SectionTranslation {
-  title: string;
+  titleA: string;
+  titleB: string;
   subtitle: string;
   monthly: string;
   getStarted: string;
   popular: string;
-  free: string;
   secure: string;
-  tokensTitle: string;
-  tokensPerMonth: string;
   plans: Plan[];
 }
 
 const PLAN_STYLES: Record<string, PlanStyle> = {
   free: {
-    gradient: "from-slate-100 to-slate-200",
-    glow: "rgba(100,116,139,0.15)",
     accent: "#64748b",
-    badge: null,
-    iconBg: "bg-slate-100",
+    glow: "rgba(100,116,139,0.18)",
     btnClass:
-      "bg-[#0f172a] hover:bg-[#1e293b] text-white",
-    featureCheck: "text-emerald-600 bg-emerald-100",
-    headerBg: "bg-slate-50",
-    headerText: "text-slate-500",
-    nameText: "text-slate-800",
-    tokensBadge: "bg-slate-100 text-slate-700 border-slate-200",
+      "bg-slate-900 hover:bg-slate-800 text-white active:scale-[0.97]",
   },
   starter: {
-    gradient: "from-blue-900 via-blue-800 to-indigo-900",
-    glow: "rgba(59,130,246,0.35)",
     accent: "#3b82f6",
-    badge: null,
-    iconBg: "bg-blue-100",
+    glow: "rgba(59,130,246,0.28)",
     btnClass:
-      "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25",
-    featureCheck: "text-blue-600 bg-blue-100",
-    headerBg: "bg-blue-50",
-    headerText: "text-blue-200",
-    nameText: "text-white",
-    tokensBadge: "bg-blue-50 text-blue-700 border-blue-200",
+      "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/25 active:scale-[0.97]",
   },
   pro: {
-    gradient: "from-emerald-900 via-emerald-800 to-teal-900",
-    glow: "rgba(16,185,129,0.45)",
-    accent: "#059669",
-    badge: true,
-    iconBg: "bg-emerald-100",
+    accent: "#10b981",
+    glow: "rgba(16,185,129,0.35)",
     btnClass:
-      "bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-white shadow-lg shadow-emerald-500/25",
-    featureCheck: "text-emerald-600 bg-emerald-100",
-    headerBg: "bg-emerald-50",
-    headerText: "text-emerald-200",
-    nameText: "text-white",
-    tokensBadge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      "bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-white shadow-lg shadow-emerald-500/30 active:scale-[0.97]",
   },
   enterprise: {
-    gradient: "from-violet-900 via-purple-900 to-indigo-900",
-    glow: "rgba(139,92,246,0.35)",
     accent: "#8b5cf6",
-    badge: null,
-    iconBg: "bg-violet-100",
+    glow: "rgba(139,92,246,0.28)",
     btnClass:
-      "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25",
-    featureCheck: "text-violet-600 bg-violet-100",
-    headerBg: "bg-violet-50",
-    headerText: "text-violet-200",
-    nameText: "text-white",
-    tokensBadge: "bg-violet-50 text-violet-700 border-violet-200",
+      "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25 active:scale-[0.97]",
   },
 };
 
@@ -124,28 +81,25 @@ const Pricing = () => {
   const { language } = useLanguage();
   const [loading, setLoading] = useState<string | null>(null);
   const { user: sessionUser } = useSupabaseSession();
+  const { toast, showToast } = useToast();
 
   const t: Record<string, SectionTranslation> = {
     en: {
-      title: "Simple, Transparent Pricing",
+      titleA: "Simple,",
+      titleB: "transparent pricing",
       subtitle: "Pick the plan that fits your coding journey.",
       monthly: "/mo",
       getStarted: "Get Started",
       popular: "Most Popular",
-      free: "Always free",
       secure: "Secure payments via Stripe · Cancel anytime",
-      tokensTitle: "AI tokens",
-      tokensPerMonth: "tokens/month",
       plans: [
         {
           id: "free",
           name: "Free",
           price: "0",
           tagline: "Start building for free",
-          tokensLabel: "100K",
-          tokensNote: "tokens/month",
           features: [
-            "100K AI tokens per month",
+            "100 AI tokens per month",
             "Standard Neural Engine",
             "Web Editor access",
             "Basic error detection",
@@ -160,17 +114,15 @@ const Pricing = () => {
           price: "9.99",
           tagline: "For growing developers",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
-          tokensLabel: "1.5M",
-          tokensNote: "tokens/month",
           features: [
-            "1.5M AI tokens per month",
+            "1500 AI tokens per month",
             "Deep Code Reviews",
             "File upload (.py, .js, .ts…)",
             "Export reports (PDF)",
             "Priority queue",
             "Email Support",
           ],
-          icon: <Sparkles />,
+          icon: <Rocket />,
         },
         {
           id: "pro",
@@ -178,10 +130,8 @@ const Pricing = () => {
           price: "19.99",
           tagline: "For serious developers",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
-          tokensLabel: "3M",
-          tokensNote: "tokens/month",
           features: [
-            "3M AI tokens per month",
+            "3000 AI tokens per month",
             "All analysis types (security, performance…)",
             "ZIP / multi-file upload",
             "Real-time collaboration",
@@ -189,7 +139,7 @@ const Pricing = () => {
             "Export & share reports",
             "Priority Support",
           ],
-          icon: <Star />,
+          icon: <Crown />,
           popular: true,
         },
         {
@@ -198,8 +148,6 @@ const Pricing = () => {
           price: "49.99",
           tagline: "Scale your entire team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
-          tokensLabel: "∞",
-          tokensNote: "unlimited tokens",
           features: [
             "Unlimited AI tokens",
             "Custom AI Training",
@@ -210,30 +158,26 @@ const Pricing = () => {
             "Dedicated Account Manager",
             "White-label support",
           ],
-          icon: <ShieldCheck />,
+          icon: <Building2 />,
         },
       ],
     },
     it: {
-      title: "Prezzi Semplici e Trasparenti",
+      titleA: "Prezzi semplici,",
+      titleB: "senza sorprese",
       subtitle: "Scegli il piano adatto al tuo percorso di programmazione.",
       monthly: "/mese",
       getStarted: "Inizia Ora",
       popular: "Più Popolare",
-      free: "Sempre gratis",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
-      tokensTitle: "Token AI",
-      tokensPerMonth: "token/mese",
       plans: [
         {
           id: "free",
           name: "Gratis",
           price: "0",
           tagline: "Inizia a costruire gratis",
-          tokensLabel: "100K",
-          tokensNote: "token/mese",
           features: [
-            "100K token AI al mese",
+            "100 token AI al mese",
             "Motore Neurale Standard",
             "Accesso Web Editor",
             "Rilevamento errori base",
@@ -248,17 +192,15 @@ const Pricing = () => {
           price: "9.99",
           tagline: "Per sviluppatori in crescita",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
-          tokensLabel: "1,5M",
-          tokensNote: "token/mese",
           features: [
-            "1,5M token AI al mese",
+            "1500 token AI al mese",
             "Review codice approfondite",
             "Upload file (.py, .js, .ts…)",
             "Export report (PDF)",
             "Coda prioritaria",
             "Supporto via Email",
           ],
-          icon: <Sparkles />,
+          icon: <Rocket />,
         },
         {
           id: "pro",
@@ -266,10 +208,8 @@ const Pricing = () => {
           price: "19.99",
           tagline: "Per sviluppatori seri",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
-          tokensLabel: "3M",
-          tokensNote: "token/mese",
           features: [
-            "3M token AI al mese",
+            "3000 token AI al mese",
             "Tutti i tipi di analisi",
             "Upload ZIP e multi-file",
             "Collaborazione in tempo reale",
@@ -277,7 +217,7 @@ const Pricing = () => {
             "Export e condivisione report",
             "Supporto prioritario",
           ],
-          icon: <Star />,
+          icon: <Crown />,
           popular: true,
         },
         {
@@ -286,8 +226,6 @@ const Pricing = () => {
           price: "49.99",
           tagline: "Scala l'intero team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
-          tokensLabel: "∞",
-          tokensNote: "token illimitati",
           features: [
             "Token AI illimitati",
             "Training AI Personalizzato",
@@ -298,7 +236,7 @@ const Pricing = () => {
             "Account Manager Dedicato",
             "Supporto White-label",
           ],
-          icon: <ShieldCheck />,
+          icon: <Building2 />,
         },
       ],
     },
@@ -310,7 +248,7 @@ const Pricing = () => {
       return;
     }
     if (!sessionUser?.email) {
-      window.location.href = `/login?callbackUrl=${encodeURIComponent("/pricing#checkout")}`;
+      window.location.href = `/login?callbackUrl=${encodeURIComponent("/#prezzi")}`;
       return;
     }
     try {
@@ -332,7 +270,7 @@ const Pricing = () => {
       }
     } catch (err) {
       console.error("Checkout failed:", err);
-      alert("Checkout fallito. Riprova.");
+      showToast("Checkout fallito. Riprova.", "error");
     } finally {
       setLoading(null);
     }
@@ -345,44 +283,48 @@ const Pricing = () => {
       id="prezzi"
       className="relative py-24 md:py-32 overflow-hidden bg-[#f8fafc]"
     >
+      {/* Background decor */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] rounded-full" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)" }} />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full" style={{ background: "radial-gradient(circle, rgba(251,113,133,0.04) 0%, transparent 70%)" }} />
-        {/* Grid background */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage:
+            "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }} />
         <div
-          className="absolute inset-0 pointer-events-none opacity-[0.03]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-          }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px]"
+          style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.07) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)" }}
         />
       </div>
 
       <div className="container mx-auto px-6 md:px-12 relative z-10">
+        {/* Header */}
         <div className="text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-5"
-            style={{
-              background: "rgba(16,185,129,0.08)",
-              border: "1px solid rgba(16,185,129,0.25)",
-              color: "#10b981",
-            }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6 relative"
           >
-            <Sparkles size={12} />
-            Piani di Prezzo
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
+            <span className="absolute inset-px rounded-full bg-white" />
+            <Sparkles size={11} className="relative text-emerald-500" />
+            <span className="relative text-emerald-600">Piani di Prezzo</span>
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-bold tracking-tight text-[#0f172a] mb-4"
+            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
           >
-            {current.title}
+            {current.titleA}{" "}
+            <span className="text-gradient">
+              {current.titleB}
+            </span>
           </motion.h2>
 
           <motion.p
@@ -390,12 +332,13 @@ const Pricing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-[#475569] max-w-2xl mx-auto"
+            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
           >
             {current.subtitle}
           </motion.p>
         </div>
 
+        {/* Plans */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
           {current.plans.map((plan, i) => {
             const style = PLAN_STYLES[plan.id];
@@ -404,135 +347,134 @@ const Pricing = () => {
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
-                whileHover={{ y: -6 }}
-                className={`relative flex flex-col rounded-3xl h-full border overflow-hidden transition-all duration-300 bg-white ${
-                  plan.popular
-                    ? "border-emerald-500 shadow-xl shadow-emerald-500/20 ring-2 ring-emerald-500/30 lg:-mt-4 lg:mb-4"
-                    : "border-[#e2e8f0] hover:border-[#cbd5e1] shadow-sm hover:shadow-lg"
-                }`}
+                transition={{ delay: i * 0.08 }}
+                whileHover={{ y: -8 }}
+                className="relative group h-full"
               >
-                {/* Header con gradiente per piano */}
+                {/* Popular floating badge */}
+                {plan.popular && (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-bold text-white shadow-lg shadow-emerald-500/40 bg-gradient-to-r from-emerald-500 to-teal-500"
+                  >
+                    <Sparkles size={11} />
+                    {current.popular}
+                  </motion.span>
+                )}
+
+                {/* Gradient border wrapper */}
                 <div
-                  className={`relative px-6 pt-6 pb-5 bg-gradient-to-br ${style.gradient} ${
-                    plan.popular ? "" : "opacity-[0.97]"
+                  className={`relative h-full rounded-3xl p-px transition-all duration-500 ${
+                    plan.popular
+                      ? "bg-gradient-to-b from-emerald-400 via-teal-300 to-emerald-500 shadow-xl shadow-emerald-500/20"
+                      : "bg-[#e2e8f0] group-hover:bg-gradient-to-br group-hover:from-emerald-300 group-hover:via-teal-300 group-hover:to-emerald-400"
                   }`}
                 >
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: `radial-gradient(circle at 80% -20%, ${style.glow} 0%, transparent 60%)`,
-                    }}
-                  />
-                  <div className="relative flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center ${style.iconBg}`}
-                        style={{ color: style.accent }}
-                      >
-                        {React.cloneElement(plan.icon as React.ReactElement<{ size?: number }>, { size: 18 })}
-                      </div>
-                      <div>
-                        <p className={`font-bold ${style.nameText}`}>
-                          {plan.name}
-                        </p>
-                        <p className={`text-xs mt-0.5 ${style.headerText}`}>
-                          {plan.tagline}
-                        </p>
-                      </div>
-                    </div>
-                    {plan.popular && (
-                      <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-emerald-600 shadow">
-                        <Sparkles size={9} />
-                        {current.popular}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden flex flex-col">
+                    {/* Hover glow */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle at 50% 0%, ${style.glow.replace("0.2", "0.06").replace("0.28", "0.08").replace("0.35", "0.1").replace("0.18", "0.05")} 0%, transparent 70%)`,
+                      }}
+                    />
 
-                {/* Body */}
-                <div className="flex flex-col h-full p-6 pt-5">
-                  {/* Price */}
-                  <div className="flex items-end gap-1 mb-4">
-                    <span className="text-3xl font-extrabold tracking-tight text-[#0f172a]">
-                      {`€${plan.price}`}
-                    </span>
-                    {plan.price !== "0" && (
-                      <span className="mb-1 text-sm text-[#64748b]">
-                        {current.monthly}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Token highlight */}
-                  <div
-                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-2.5 mb-4 ${style.tokensBadge}`}
-                  >
-                    <span className="flex items-center gap-1.5 text-xs font-semibold">
-                      <Coins size={14} />
-                      {current.tokensTitle}
-                    </span>
-                    <span className="text-sm font-extrabold">
-                      {plan.tokensLabel}
-                      <span className="ml-1 text-[10px] font-semibold opacity-70">
-                        {plan.tokensNote}
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="mb-4 h-px w-full bg-[#e2e8f0]" />
-
-                  {/* Features */}
-                  <ul className="space-y-2.5 grow mb-6">
-                    {plan.features.map((feature, j) => (
-                      <li key={j} className="flex items-start gap-3">
-                        <span
-                          className={`mt-0.5 shrink-0 w-5 h-5 rounded-md flex items-center justify-center ${style.featureCheck}`}
+                    {/* Card body */}
+                    <div className="relative flex flex-col h-full p-6 pt-7">
+                      {/* Plan name + icon */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
+                          style={{
+                            background: `${style.accent}14`,
+                            border: `1px solid ${style.accent}28`,
+                            color: style.accent,
+                            boxShadow: `0 8px 20px -8px ${style.glow}`,
+                          }}
                         >
-                          <Check size={11} strokeWidth={3} />
-                        </span>
-                        <span className="text-sm leading-snug text-[#475569]">
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                          {React.cloneElement(plan.icon as React.ReactElement<{ size?: number }>, { size: 20 })}
+                        </div>
+                        <div>
+                          <p className="text-lg font-extrabold text-[#0f172a] leading-tight">
+                            {plan.name}
+                          </p>
+                          <p className="text-xs mt-0.5 text-[#64748b]">
+                            {plan.tagline}
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* CTA */}
-                  <button
-                    onClick={() => handleCheckout(plan)}
-                    disabled={loading !== null}
-                    className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${style.btnClass} disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]`}
-                  >
-                    {isLoading ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <>
-                        {current.getStarted}
-                        <ArrowRight size={14} />
-                      </>
-                    )}
-                  </button>
+                      {/* Price */}
+                      <div className="flex items-end gap-1 mb-6 min-h-[56px]">
+                        <span className="text-xl font-medium text-[#64748b] leading-none mb-1.5">€</span>
+                        <span className="text-5xl font-black tracking-tight text-[#0f172a] leading-none">
+                          {plan.price}
+                        </span>
+                        {plan.price !== "0" && (
+                          <span className="mb-1 text-sm font-medium text-[#64748b]">
+                            {current.monthly}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Features */}
+                      <ul className="space-y-2.5 grow mb-6">
+                        {plan.features.map((feature, j) => (
+                          <li key={j} className="flex items-start gap-3">
+                            <span
+                              className="mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                              style={{ background: `${style.accent}1a`, color: style.accent }}
+                            >
+                              <Check size={11} strokeWidth={3} />
+                            </span>
+                            <span className="text-sm leading-snug text-[#475569]">
+                              {feature}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {/* CTA */}
+                      <button
+                        onClick={() => handleCheckout(plan)}
+                        disabled={loading !== null}
+                        className={`w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${style.btnClass}`}
+                      >
+                        {isLoading ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <>
+                            {current.getStarted}
+                            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             );
           })}
         </div>
 
+        {/* Secure note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
-          className="text-center mt-12 flex items-center justify-center gap-2 text-sm text-[#64748b]"
+          className="text-center mt-14 flex items-center justify-center gap-2 text-sm text-[#64748b]"
         >
           <Lock size={13} />
           {current.secure}
         </motion.p>
       </div>
+      <Toast toast={toast} />
     </section>
   );
 };

@@ -75,8 +75,7 @@ const CTA = () => {
               className="text-lg sm:text-xl mb-10 md:mb-12 max-w-2xl mx-auto"
               style={{ color: "#475569" }}
             >
-              Unisciti a oltre 10.000 sviluppatori che costruiscono più velocemente
-              e meglio con Semplycode.
+              Comincia gratis e costruisci più velocemente e meglio con Semplycode.
             </p>
 
             <motion.button

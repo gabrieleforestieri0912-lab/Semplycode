@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Code2, Brain, Languages, Zap, Shield, FileCode, Upload, LucideIcon } from 'lucide-react';
+import { Code2, Brain, Languages, Zap, FileCode, Upload, Check, LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Feature {
   title: string;
   desc: string;
+  points: string[];
   icon: LucideIcon;
   accent: string;
   glow: string;
@@ -17,6 +18,11 @@ const features: Feature[] = [
   {
     title: "Analisi Intelligente",
     desc: "Incolla codice o carica file: report su errori, spiegazioni e codice corretto in italiano.",
+    points: [
+      "Bug rilevati con spiegazione della causa",
+      "Snippet corretto pronto da copiare",
+      "Analisi incrementale a ogni modifica",
+    ],
     icon: Brain,
     accent: "#10b981",
     glow: "rgba(16,185,129,0.15)",
@@ -25,6 +31,11 @@ const features: Feature[] = [
   {
     title: "Debug con stack trace",
     desc: "Incolla l'errore del terminale insieme al codice per un'analisi mirata alla causa.",
+    points: [
+      "Righe incriminate evidenziate",
+      "Differenza tra sintomo e causa",
+      "Fix testato con le tue variabili",
+    ],
     icon: Zap,
     accent: "#f59e0b",
     glow: "rgba(245,158,11,0.12)",
@@ -33,6 +44,11 @@ const features: Feature[] = [
   {
     title: "20+ Linguaggi",
     desc: "JavaScript, Python, Rust, Go, PHP, SQL e molti altri linguaggi supportati.",
+    points: [
+      "Sintassi e best practice per linguaggio",
+      "Framework frontend e backend",
+      "SQL e script di automazione",
+    ],
     icon: Languages,
     accent: "#60a5fa",
     glow: "rgba(96,165,250,0.12)",
@@ -41,6 +57,11 @@ const features: Feature[] = [
   {
     title: "Carica file e ZIP",
     desc: "Trascina file di codice o un archivio ZIP: l'AI analizza tutto automaticamente.",
+    points: [
+      "Analisi cross-file delle dipendenze",
+      "Progetti multi-file fino a 500 file",
+      "Contesto completo senza incollare nulla",
+    ],
     icon: Upload,
     accent: "#a78bfa",
     glow: "rgba(167,139,250,0.12)",
@@ -49,6 +70,11 @@ const features: Feature[] = [
   {
     title: "Spiegazioni in Italiano",
     desc: "Tutte le analisi e spiegazioni sono in italiano, perfette per imparare.",
+    points: [
+      "Linguaggio semplice, zero gergo",
+      "Analogia pratica per ogni concetto",
+      "Risorse per approfondire ogni tema",
+    ],
     icon: Code2,
     accent: "#34d399",
     glow: "rgba(52,211,153,0.12)",
@@ -57,6 +83,11 @@ const features: Feature[] = [
   {
     title: "Tipi di review",
     desc: "Sicurezza, performance, stile o analisi completa: scegli il focus nella Chat AI.",
+    points: [
+      "Review di sicurezza con CVE",
+      "Ottimizzazioni performance misurate",
+      "Stile coerente con il tuo codebase",
+    ],
     icon: FileCode,
     accent: "#fb7185",
     glow: "rgba(251,113,133,0.12)",
@@ -80,30 +111,36 @@ const Features = () => {
         }}
       />
 
-      <div className="container mx-auto px-8 md:px-16 lg:px-24 relative z-10">
+      <div className="container mx-auto px-6 md:px-12 relative z-10">
         <div className="text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-5 bg-emerald-50 border border-emerald-200 text-emerald-600"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6 relative"
           >
-            Funzionalità
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
+            <span className="absolute inset-px rounded-full bg-white" />
+            <Brain size={11} className="relative text-emerald-500" />
+            <span className="relative text-emerald-600">Funzionalità</span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-5xl font-bold tracking-tight text-[#0f172a] mb-4"
+            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
           >
-            Tutto ciò che ti serve per migliorare il codice
+            Tutto ciò che ti serve{" "}
+            <span className="text-gradient">
+              per migliorare il codice
+            </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg text-[#475569] max-w-2xl mx-auto"
+            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
           >
             Dal primo snippet al progetto multi-file: analisi strutturata, export e condivisione.
           </motion.p>
@@ -149,7 +186,20 @@ const Features = () => {
               <h3 className="text-lg font-bold text-[#0f172a] mb-2 transition-colors duration-200">
                 {f.title}
               </h3>
-              <p className="text-sm text-[#475569] leading-relaxed">{f.desc}</p>
+              <p className="text-sm text-[#475569] leading-relaxed mb-4">{f.desc}</p>
+              <ul className="space-y-2">
+                {f.points.map((point) => (
+                  <li key={point} className="flex items-start gap-2 text-sm text-[#334155]">
+                    <span
+                      className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: `${f.accent}1a`, color: f.accent }}
+                    >
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                    <span className="leading-snug">{point}</span>
+                  </li>
+                ))}
+              </ul>
             </motion.div>
           ))}
         </div>

@@ -69,6 +69,7 @@ export default function SettingsPage() {
   }, [supabaseUser, status, router]);
 
   const handleLogout = async () => {
+    if (!window.confirm("Sei sicuro di voler uscire?")) return;
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/");
@@ -157,11 +158,11 @@ export default function SettingsPage() {
             <p className="text-emerald-400 font-medium">{planLabel}</p>
             <p className="text-sm text-[#64748b]">
               {user.plan === "free"
-                ? "100K token AI al mese"
+                ? "100 token AI al mese"
                 : user.plan === "starter"
-                  ? "1,5M token AI al mese"
+                  ? "1500 token AI al mese"
                   : user.plan === "pro"
-                    ? "3M token AI al mese"
+                    ? "3000 token AI al mese"
                     : "Token AI illimitati"}
             </p>
           </motion.div>
@@ -204,11 +205,11 @@ export default function SettingsPage() {
               <p className="text-emerald-600 font-medium">{planLabel}</p>
               <p className="text-sm text-[#64748b]">
                 {user.plan === "free"
-                  ? "100K token AI al mese"
+                  ? "100 token AI al mese"
                   : user.plan === "starter"
-                    ? "1,5M token AI al mese"
+                    ? "1500 token AI al mese"
                     : user.plan === "pro"
-                      ? "3M token AI al mese"
+                      ? "3000 token AI al mese"
                       : "Token AI illimitati"}
               </p>
             </div>

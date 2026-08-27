@@ -17,29 +17,34 @@ export default function FAQ() {
       <div className="container mx-auto px-6 md:px-12 max-w-3xl">
         <div className="text-center mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs font-bold tracking-widest uppercase mb-5"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6 relative"
           >
-            <Sparkles size={12} />
-            Domande frequenti
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
+            <span className="absolute inset-px rounded-full bg-white" />
+            <Sparkles size={11} className="relative text-emerald-500" />
+            <span className="relative text-emerald-600">Domande frequenti</span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="text-3xl md:text-4xl font-black tracking-tight text-[#0f172a] mb-3"
+            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
           >
-            Tutto quello che devi sapere
+            Tutto quello che{" "}
+            <span className="text-gradient">
+              devi sapere
+            </span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-base text-[#475569] max-w-2xl mx-auto"
+            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
           >
             Risposte chiare su Chat AI, limiti, piani e privacy.
           </motion.p>

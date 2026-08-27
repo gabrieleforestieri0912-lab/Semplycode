@@ -18,26 +18,83 @@ let API_BASE = DEV_API_BASE;
 // un JWT Bearer firmato dal server (usato come Authorization header).
 const DEV_BYPASS_AUTH = false;
 
-// === DASHBOARD DATA (dinamico - sarà popolato dall'API quando riattiveremo il login) ===
-let dashboardData = {
-  analysesToday: 0,
-  analysesLimit: 10,
-  analysesTotal: 0,
-  chatsTotal: 0,
-  timeSaved: "0h 0m",
-  streak: 0,
-  plan: "free",
-  recentActivity: []
-};
-
 // CodeMirror 6 Editor instance
 let codeEditor = null;
 
-// Enhanced fallback textarea (used when real CodeMirror 6 cannot be loaded due to CSP)
+// ===== Helpers =====
+
+function escapeHtml(str) {
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+let toastTimer = null;
+function showToast(message, ms = 2000) {
+  const toast = $("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), ms);
+}
+
+function currentTabUrl() {
+  return new Promise((resolve) => {
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        resolve((tabs && tabs[0] && tabs[0].url) || "");
+      });
+    } catch (e) {
+      resolve("");
+    }
+  });
+}
+
+// ===== Theme =====
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme || "dark");
+  const dark = theme === "dark";
+  const sunIcon = $("theme-icon-sun");
+  const moonIcon = $("theme-icon-moon");
+  if (sunIcon && moonIcon) {
+    sunIcon.style.display = dark ? "block" : "none";
+    moonIcon.style.display = dark ? "none" : "block";
+  }
+}
+
+async function initTheme() {
+  let current = "dark";
+  try {
+    const saved = await storage.get("theme");
+    current = saved.theme || "dark";
+  } catch (e) {
+    current = "dark";
+  }
+  applyTheme(current);
+
+  const toggle = $("theme-toggle");
+  if (toggle) {
+    toggle.onclick = () => {
+      const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      applyTheme(next);
+      storage.set({ theme: next });
+    };
+  }
+}
+
+// ===== Enhanced fallback textarea (used when CodeMirror cannot load) =====
+
 function enhanceFallbackEditor(textarea) {
   if (!textarea) return;
 
-  // Better editor-like behavior
   textarea.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -46,7 +103,6 @@ function enhanceFallbackEditor(textarea) {
       const value = textarea.value;
 
       if (e.shiftKey) {
-        // Shift+Tab → remove indentation
         const before = value.substring(0, start);
         const after = value.substring(end);
         const lineStart = before.lastIndexOf('\n') + 1;
@@ -57,14 +113,12 @@ function enhanceFallbackEditor(textarea) {
         const newPos = lineStart + dedented.length;
         textarea.selectionStart = textarea.selectionEnd = newPos;
       } else {
-        // Tab → insert 2 spaces
         textarea.value = value.substring(0, start) + '  ' + value.substring(end);
         textarea.selectionStart = textarea.selectionEnd = start + 2;
       }
     }
   });
 
-  // Auto-save draft while typing (debounced)
   let draftTimer = null;
   textarea.addEventListener('input', () => {
     clearTimeout(draftTimer);
@@ -75,7 +129,6 @@ function enhanceFallbackEditor(textarea) {
     }, 800);
   });
 
-  // Nice placeholder behavior
   if (!textarea.value.trim()) {
     textarea.value = '// Incolla o scrivi il tuo codice qui...\n\nfunction esempio() {\n  console.log("Hello from Semplycode");\n}\n';
     textarea.selectionStart = textarea.selectionEnd = 0;
@@ -83,10 +136,34 @@ function enhanceFallbackEditor(textarea) {
 }
 
 async function initCodeEditor() {
-  const container = document.getElementById("code-editor");
+  const container = $("code-editor");
   if (!container || codeEditor) return;
 
   const isExtension = typeof chrome !== 'undefined' && !!chrome.runtime && !!chrome.runtime.id;
+
+  if (isExtension && window.__SemplycodeCodeMirror) {
+    const cm = window.__SemplycodeCodeMirror;
+    try {
+      codeEditor = new cm.EditorView({
+        doc: "// Incolla o scrivi il tuo codice qui\n\nfunction esempio() {\n  console.log('Hello from Semplycode');\n}",
+        extensions: [
+          cm.basicSetup,
+          cm.javascript(),
+          cm.oneDark,
+          cm.EditorView.lineWrapping,
+          cm.EditorView.theme({
+            "&": { height: "100%", minHeight: "100%" },
+            ".cm-scroller": { minHeight: "100%" },
+          }),
+        ],
+        parent: container,
+      });
+      console.log('[Semplycode] CodeMirror 6 loaded from local bundle');
+      return;
+    } catch (e) {
+      console.warn('[Semplycode] Bundled CodeMirror failed:', e);
+    }
+  }
 
   if (!isExtension) {
     try {
@@ -96,13 +173,8 @@ async function initCodeEditor() {
 
       codeEditor = new EditorView({
         doc: "// Incolla o scrivi il tuo codice qui\n\nfunction esempio() {\n  console.log('Hello from Semplycode');\n}",
-        extensions: [
-          basicSetup,
-          javascript(),
-          oneDark,
-          EditorView.lineWrapping,
-        ],
-        parent: container
+        extensions: [basicSetup, javascript(), oneDark, EditorView.lineWrapping],
+        parent: container,
       });
       console.log('[Semplycode] CodeMirror 6 loaded from CDN');
       return;
@@ -111,87 +183,40 @@ async function initCodeEditor() {
     }
   }
 
-  if (isExtension) {
-    console.log('[Semplycode] Extension detected, checking for bundled CodeMirror...');
-    if (typeof window !== 'undefined' && window.__SemplycodeCodeMirror) {
-      const cm = window.__SemplycodeCodeMirror;
-      try {
-        codeEditor = new cm.EditorView({
-          doc: "// Incolla o scrivi il tuo codice qui\n\nfunction esempio() {\n  console.log('Hello from Semplycode');\n}",
-          extensions: [
-            cm.basicSetup,
-            cm.javascript(),
-            cm.oneDark,
-            cm.EditorView.lineWrapping,
-            cm.EditorView.theme({
-              "&": { height: "100%", minHeight: "100%" },
-              ".cm-scroller": { minHeight: "100%" },
-            }),
-          ],
-          parent: container,
-        });
-        container.style.display = "flex";
-        container.style.flexDirection = "column";
-        console.log('[Semplycode] CodeMirror 6 loaded from local bundle');
-        return;
-      } catch (e) {
-        console.warn('[Semplycode] Bundled CodeMirror failed:', e);
-      }
-    }
-  }
-
   console.log('[Semplycode] Using enhanced textarea fallback');
-  container.innerHTML = `
-    <textarea id="code-editor-fallback"
-              spellcheck="false"
-              class="code-editor-fallback-inner"></textarea>
-  `;
-  const style = document.createElement("style");
-  style.textContent = `
-    .code-editor-fallback-inner {
-      width:100%; height:100%; min-height:0; flex:1;
-      font-family: Consolas, Menlo, Monaco, monospace;
-      font-size: 13px; line-height: 1.5;
-      background: #0b0f1a; color: #34d399;
-      border: none; border-radius: 10px;
-      padding: 14px; resize: none; outline: none; box-sizing: border-box;
-    }
-  `;
-  if (!document.getElementById("cm-fallback-style")) {
-    style.id = "cm-fallback-style";
-    document.head.appendChild(style);
-  }
-  const ta = document.getElementById('code-editor-fallback');
-
+  container.innerHTML = `<textarea id="code-editor-fallback" spellcheck="false"></textarea>`;
+  const ta = $("code-editor-fallback");
   try {
     const saved = await chrome.storage.local.get('draftCode');
     if (saved.draftCode) {
       ta.value = saved.draftCode;
+      ta.selectionStart = ta.selectionEnd = 0;
     }
   } catch (_) {}
-
   enhanceFallbackEditor(ta);
 }
 
-// Get current code from the editor (supports both CM6 and fallback)
-
-// Get current code from the editor (supports both CM6 and fallback)
 function getEditorValue() {
   if (codeEditor) {
     return codeEditor.state.doc.toString();
   }
-  const fallback = document.getElementById("code-editor-fallback");
+  const fallback = $("code-editor-fallback");
   return fallback ? fallback.value : "";
 }
 
+function setEditorValue(text) {
+  if (codeEditor) {
+    codeEditor.dispatch({
+      changes: { from: 0, to: codeEditor.state.doc.length, insert: text },
+    });
+  } else {
+    const fallback = $("code-editor-fallback");
+    if (fallback) fallback.value = text;
+  }
+}
 
+// ===== API =====
 
-// ===== DEV HELPER =====
-// Durante lo sviluppo usa localhost di default.
-// Per passare in produzione esegui:
-//   setApiBase("https://semplycode.com/api")
-// Per tornare a localhost:
-//   setApiBase("http://localhost:3000/api")
 window.setApiBase = async function (newBase) {
   await storage.set({ apiBase: newBase });
   console.log("[Semplycode] API base salvata. Ricarica il side panel per applicare:", newBase);
@@ -201,20 +226,15 @@ let currentToken = null;
 let currentUser = null;
 let chatMessages = [];
 
-// Ultimo codice analizzato + ultima risposta AI: servono per "Salva nel cassetto"
 let lastAnalyzedCode = "";
 let lastAssistantReply = "";
 
-// Load custom API base from storage (useful for local development)
 async function initApiBase() {
   try {
     const result = await storage.get(['apiBase']);
     if (result.apiBase && typeof result.apiBase === 'string') {
       API_BASE = result.apiBase;
       console.log('[Semplycode] Usando API base personalizzata:', API_BASE);
-    } else {
-      // Default a localhost durante lo sviluppo
-      console.log('[Semplycode] Nessun override → usando default:', API_BASE);
     }
   } catch (e) {
     console.warn('[Semplycode] Errore caricamento API base, uso default', e);
@@ -223,7 +243,6 @@ async function initApiBase() {
 
 const SITE_BASE = () => API_BASE.replace(/\/api\/?$/, "");
 
-// ===== Client API condiviso (bundle da src/lib/apiClient.ts) =====
 let sharedApi = null;
 
 function getSharedApi() {
@@ -240,7 +259,6 @@ function getSharedApi() {
 async function apiFetch(path, options = {}) {
   const api = getSharedApi();
   if (api) return api.fetch(path, options);
-  // Fallback se il bundle non è disponibile
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
@@ -252,60 +270,388 @@ async function apiFetch(path, options = {}) {
   return res;
 }
 
-// Sessione scaduta: ripulisci token e riporta al login senza perdere il contesto
 function handleSessionExpired() {
   if (!currentToken) return;
+  const email = currentUser?.email;
   currentToken = null;
   currentUser = null;
   storage.remove(["token", "user"]).catch(() => {});
-  // Il codice nell'editor e la bozza restano intatti (context preserved)
   showAuth();
-  initAuth();
-  const emailInput = document.getElementById("auth-email");
-  if (emailInput && currentUser?.email) emailInput.value = currentUser.email;
+  const emailInput = $("auth-email");
+  if (emailInput && email) emailInput.value = email;
+  showToast("Sessione scaduta. Accedi di nuovo.");
 }
+
+// ===== Screen management =====
 
 function showApp() {
   document.body.classList.remove("auth-mode");
-  const authScreen = document.getElementById("auth-screen");
-  const appScreen = document.getElementById("app-screen");
-  if (authScreen) authScreen.style.display = "none";
-  if (appScreen) appScreen.classList.add("visible");
 }
 
 function showAuth() {
   document.body.classList.add("auth-mode");
-  const authScreen = document.getElementById("auth-screen");
-  const appScreen = document.getElementById("app-screen");
-  if (authScreen) authScreen.style.display = "flex";
-  if (appScreen) appScreen.classList.remove("visible");
 }
 
-// ===== WEBAPP HUB (link rapidi alla webapp) =====
+// ===== Webapp links =====
+
 function initHubUi() {
   document.querySelectorAll(".dash-action-card").forEach((card) => {
     card.addEventListener("click", () => {
       const action = card.dataset.action;
       const base = SITE_BASE();
-      if (action === "dashboard") chrome.tabs.create({ url: base + "/dashboard" });
       if (action === "notes") chrome.tabs.create({ url: base + "/notes" });
       if (action === "settings") chrome.tabs.create({ url: base + "/settings" });
-      if (action === "pricing") chrome.tabs.create({ url: base + "/#prezzi" });
+      if (action === "webapp") chrome.tabs.create({ url: base });
+      if (action === "login") showAuth();
     });
   });
 }
 
-// ===== AUTH (real working flow) =====
+// ===== Account & plans =====
+
+const ACCOUNT_PLANS = [
+  {
+    id: "free",
+    name: "Gratis",
+    price: "0",
+    tokensLabel: "100",
+    tokensNote: "token/mese",
+    features: [
+      "100 token AI al mese",
+      "Motore Neurale Standard",
+      "Web Editor access",
+      "Rilevamento errori base",
+      "Supporto Community",
+    ],
+    popular: false,
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: "9.99",
+    tokensLabel: "1500",
+    tokensNote: "token/mese",
+    features: [
+      "1500 token AI al mese",
+      "Review codice approfondite",
+      "Upload file (.py, .js, .ts…)",
+      "Export report (PDF)",
+      "Supporto via Email",
+    ],
+    popular: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "19.99",
+    tokensLabel: "3000",
+    tokensNote: "token/mese",
+    features: [
+      "3000 token AI al mese",
+      "Tutti i tipi di analisi",
+      "Upload ZIP e multi-file",
+      "Modelli AI avanzati",
+      "Supporto prioritario",
+    ],
+    popular: true,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: "49.99",
+    tokensLabel: "∞",
+    tokensNote: "token illimitati",
+    features: [
+      "Token AI illimitati",
+      "Training AI Personalizzato",
+      "Collaborazione Team",
+      "Full API Access",
+      "Account Manager Dedicato",
+    ],
+    popular: false,
+  },
+];
+
+function currentPlanId() {
+  if (currentUser?.plan) return currentUser.plan;
+  return "free";
+}
+
+function renderPlans() {
+  const list = $("plans-list");
+  if (!list) return;
+
+  const currentId = currentPlanId();
+
+  list.innerHTML = ACCOUNT_PLANS.map((plan) => {
+    const isCurrent = plan.id === currentId;
+    const popularBadge = plan.popular
+      ? `<span class="plan-card-popular">Più popolare</span>`
+      : "";
+
+    return `
+      <div class="plan-card ${isCurrent ? "current" : ""}">
+        <div class="plan-card-head">
+          <div>
+            <span class="plan-card-name">${plan.name}</span>
+            ${popularBadge}
+            ${isCurrent ? '<span class="plan-card-popular">Piano attuale</span>' : ""}
+          </div>
+          <span class="plan-card-tokens">${plan.tokensLabel} <span style="font-weight:500;color:var(--text-faint);">${plan.tokensNote}</span></span>
+        </div>
+        <div class="plan-card-price">
+          ${plan.price === "0" ? "Sempre gratis" : "€" + plan.price + " /mese"}
+        </div>
+        <ul class="plan-card-features">
+          ${plan.features.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}
+        </ul>
+        <button class="btn btn-primary plan-card-cta" data-plan="${plan.id}">
+          ${isCurrent ? "Piano attuale" : "Gestisci nella webapp"}
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".plan-card-cta").forEach((btn) => {
+    btn.onclick = () => {
+      const planId = btn.dataset.plan;
+      const base = SITE_BASE();
+      if (planId === "free") {
+        chrome.tabs.create({ url: base + "/register" });
+      } else {
+        chrome.tabs.create({ url: base + "/#prezzi" });
+      }
+    };
+  });
+}
+
+async function fetchAccountPlan() {
+  if (!currentUser || !currentToken) return;
+  try {
+    const api = getSharedApi();
+    const res = api
+      ? await api.fetch("/api/usage/stats")
+      : await fetch(`${API_BASE}/api/usage/stats`, {
+          headers: { Authorization: `Bearer ${currentToken}` },
+        });
+    const data = await res.json().catch(() => ({}));
+    if (data?.plan) {
+      currentUser.plan = data.plan;
+      await storage.set({ user: currentUser });
+      updateAccountSummary();
+      renderPlans();
+    }
+  } catch (e) {
+    console.warn("[Semplycode] Impossibile recuperare il piano:", e);
+  }
+}
+
+function updateAccountSummary() {
+  const nameEl = $("account-plan-name");
+  const tokensEl = $("account-plan-tokens");
+  const subtitle = $("account-subtitle");
+  if (!nameEl || !tokensEl) return;
+
+  const plan = ACCOUNT_PLANS.find((p) => p.id === currentPlanId()) || ACCOUNT_PLANS[0];
+
+  nameEl.textContent = plan.id === "free" ? "Piano Gratuito" : "Piano " + plan.name;
+  tokensEl.textContent = `${plan.tokensLabel} ${plan.tokensNote}${
+    currentUser ? ` · ${currentUser.email}` : " · Accedi per sincronizzare"
+  }`;
+  if (subtitle) {
+    subtitle.textContent = currentUser
+      ? "Piano e abbonamento"
+      : "Piano e abbonamento";
+  }
+}
+
+// ===== Guided tour =====
+
+const TOUR_STEPS = [
+  {
+    selector: '.nav-item[data-section="playground"]',
+    title: "Playground",
+    desc: "Incolla qui il tuo codice, premi Analizza e ottieni subito spiegazioni, fix e best practice con l'AI.",
+  },
+  {
+    selector: '.nav-item[data-section="notes"]',
+    title: "Cassetto note",
+    desc: "Salva le spiegazioni utili nel cassetto per rivederle quando vuoi. Accedi per sincronizzarle.",
+  },
+  {
+    selector: '.nav-item[data-section="account"]',
+    title: "Account e piani",
+    desc: "Qui trovi il tuo piano attuale, i token rimanenti e tutti i piani di abbonamento. Le azioni si completano nella webapp.",
+  },
+  {
+    selector: '#tour-btn',
+    title: "Guida sempre disponibile",
+    desc: "Questo pulsante fa ripartire la guida in qualsiasi momento. Premi Avanti per concludere.",
+  },
+  {
+    selector: '#theme-toggle',
+    title: "Tema chiaro/scuro",
+    desc: "Alterna il tema dell'estensione. La tua scelta viene ricordata al prossimo avvio.",
+  },
+];
+
+let tourActive = false;
+let tourIndex = 0;
+
+function positionSpotlight(step) {
+  const overlay = $("tour-overlay");
+  const spotlight = $("tour-spotlight");
+  const tooltip = $("tour-tooltip");
+  if (!overlay || !spotlight || !tooltip) return;
+
+  const target = document.querySelector(step.selector);
+  if (!target) return;
+
+  const rect = target.getBoundingClientRect();
+  const pad = 6;
+  const left = Math.max(4, rect.left - pad);
+  const top = Math.max(4, rect.top - pad);
+  const width = rect.width + pad * 2;
+  const height = rect.height + pad * 2;
+
+  spotlight.style.inset = "auto";
+  spotlight.style.left = left + "px";
+  spotlight.style.top = top + "px";
+  spotlight.style.width = width + "px";
+  spotlight.style.height = height + "px";
+  spotlight.style.background = "rgba(16, 185, 129, 0.06)";
+  spotlight.style.boxShadow =
+    `0 0 0 9999px rgba(2, 6, 23, 0.55), ` +
+    `0 0 0 2px var(--primary), 0 0 0 5px rgba(16, 185, 129, 0.3)`;
+
+  const viewport = { w: window.innerWidth, h: window.innerHeight };
+  const tooltipW = 320;
+  const tooltipH = 200;
+  const gap = 12;
+
+  let leftPos = rect.left + rect.width / 2 - tooltipW / 2;
+  leftPos = Math.max(12, Math.min(viewport.w - tooltipW - 12, leftPos));
+
+  let topPos;
+  if (rect.top > tooltipH + gap * 2) {
+    topPos = rect.top - tooltipH - gap;
+  } else {
+    topPos = rect.bottom + gap;
+  }
+  topPos = Math.max(12, Math.min(viewport.h - tooltipH - 12, topPos));
+
+  tooltip.style.left = leftPos + "px";
+  tooltip.style.top = topPos + "px";
+}
+
+function tourTargetVisible(step) {
+  const target = document.querySelector(step.selector);
+  return target && target.offsetParent !== null;
+}
+
+function showTourStep() {
+  const step = TOUR_STEPS[tourIndex];
+  if (!step) return;
+
+  if (!tourTargetVisible(step)) {
+    nextTourStep();
+    return;
+  }
+
+  const overlay = $("tour-overlay");
+  const titleEl = $("tour-title");
+  const descEl = $("tour-desc");
+  const labelEl = $("tour-step-label");
+  const prevBtn = $("tour-prev");
+  const nextBtn = $("tour-next");
+
+  if (titleEl) titleEl.textContent = step.title;
+  if (descEl) descEl.textContent = step.desc;
+  if (labelEl) labelEl.textContent = `${tourIndex + 1} / ${TOUR_STEPS.length}`;
+  if (prevBtn) prevBtn.style.visibility = tourIndex === 0 ? "hidden" : "visible";
+  if (nextBtn) nextBtn.textContent = tourIndex === TOUR_STEPS.length - 1 ? "Chiudi" : "Avanti";
+
+  if (overlay) overlay.classList.add("show");
+  positionSpotlight(step);
+}
+
+function nextTourStep() {
+  tourIndex += 1;
+  if (tourIndex >= TOUR_STEPS.length) {
+    closeTour();
+    return;
+  }
+  showTourStep();
+}
+
+function prevTourStep() {
+  if (tourIndex <= 0) return;
+  tourIndex -= 1;
+  showTourStep();
+}
+
+function closeTour() {
+  tourActive = false;
+  tourIndex = 0;
+  const overlay = $("tour-overlay");
+  if (overlay) overlay.classList.remove("show");
+  const spotlight = $("tour-spotlight");
+  if (spotlight) spotlight.style.inset = "0";
+}
+
+function startTour() {
+  if (tourActive) return;
+  tourActive = true;
+  tourIndex = 0;
+  showTourStep();
+}
+
+function initTour() {
+  const overlay = $("tour-overlay");
+  if (!overlay) return;
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeTour();
+  });
+
+  const tooltip = $("tour-tooltip");
+  if (tooltip) tooltip.addEventListener("click", (e) => e.stopPropagation());
+
+  const tourBtn = $("tour-btn");
+  if (tourBtn) tourBtn.onclick = startTour;
+
+  const nextBtn = $("tour-next");
+  const prevBtn = $("tour-prev");
+  const skipBtn = $("tour-skip");
+  if (nextBtn) nextBtn.onclick = nextTourStep;
+  if (prevBtn) prevBtn.onclick = prevTourStep;
+  if (skipBtn) skipBtn.onclick = closeTour;
+
+  window.addEventListener("resize", () => {
+    if (tourActive) showTourStep();
+  });
+
+  storage.get("tourSeen").then((r) => {
+    if (!r.tourSeen) {
+      storage.set({ tourSeen: true });
+      setTimeout(startTour, 600);
+    }
+  });
+}
+
+
+// ===== Auth =====
+
 function initAuth() {
-  const emailStep = document.getElementById("auth-email-step");
-  const codeStep = document.getElementById("auth-code-step");
-  const emailInput = document.getElementById("auth-email");
-  const sendBtn = document.getElementById("auth-send-code");
-  const codeInput = document.getElementById("auth-code");
-  const verifyBtn = document.getElementById("auth-verify");
-  const resendBtn = document.getElementById("auth-resend");
-  const errorBox = document.getElementById("auth-error");
-  const emailDisplay = document.getElementById("auth-email-display");
+  const emailStep = $("auth-email-step");
+  const codeStep = $("auth-code-step");
+  const emailInput = $("auth-email");
+  const sendBtn = $("auth-send-code");
+  const codeInput = $("auth-code");
+  const verifyBtn = $("auth-verify");
+  const resendBtn = $("auth-resend");
+  const errorBox = $("auth-error");
+  const emailDisplay = $("auth-email-display");
 
   let emailForCode = "";
 
@@ -316,7 +662,6 @@ function initAuth() {
     }
   };
 
-  // Step 1: Send login code
   sendBtn.onclick = async () => {
     const email = emailInput.value.trim();
     if (!email) {
@@ -347,45 +692,40 @@ function initAuth() {
       if (!res.ok) {
         const msg = data.error || data.message || `Errore ${res.status} durante l'invio del codice`;
         console.error("Send login code failed:", msg, data);
-        
-        // Better messages for common server errors
+
         if (res.status === 500) {
           throw new Error("Errore interno del server (500). Controlla il terminale di 'npm run dev' per il dettaglio dell'errore.");
         }
         if (res.status === 429) {
           throw new Error("Troppi tentativi. Aspetta un minuto prima di riprovare.");
         }
-        
+
         throw new Error(msg);
       }
 
       emailForCode = email;
       if (emailDisplay) emailDisplay.textContent = email;
 
-      // Switch to code step
       if (emailStep) emailStep.style.display = "none";
-      if (codeStep) codeStep.style.display = "block";
+      if (codeStep) codeStep.style.display = "flex";
 
-      // Start 60-second code validity timer
       startCodeExpiryTimer(60);
 
-      // Start resend cooldown timer if backend gave reset time
       if (data.reset) {
         startCooldownTimer(data.reset);
       } else {
-        // fallback 60s cooldown for resend
         startCooldownTimer(Date.now() + 60 * 1000);
       }
     } catch (err) {
       console.error("Errore invio codice:", err);
       const isLocal = API_BASE.includes("localhost");
-      
+
       let userMessage = err.message || "Errore sconosciuto durante l'invio del codice.";
-      
+
       if (isLocal && !err.message?.includes("500")) {
         userMessage = "Impossibile contattare il server locale. Assicurati che 'npm run dev' sia in esecuzione su http://localhost:3000";
       }
-      
+
       showError(userMessage);
     } finally {
       sendBtn.disabled = false;
@@ -393,7 +733,6 @@ function initAuth() {
     }
   };
 
-  // Step 2: Verify code → il server restituisce il JWT Bearer
   verifyBtn.onclick = async () => {
     const code = codeInput.value.trim();
     if (!code) {
@@ -417,7 +756,6 @@ function initAuth() {
         throw new Error(data.error || data.message || "Codice non valido o scaduto");
       }
 
-      // Salva token + utente per le chiamate autenticate
       currentToken = data.token || null;
       currentUser = { email: data.user?.email || emailForCode };
       if (currentToken) {
@@ -425,6 +763,7 @@ function initAuth() {
       }
 
       enterApp();
+      fetchAccountPlan();
     } catch (err) {
       console.error("Errore verifica codice:", err);
       showError(err.message || "Errore durante la verifica del codice.");
@@ -434,11 +773,10 @@ function initAuth() {
     }
   };
 
-  // Timer di validità del codice (60s)
   let codeExpiryInterval = null;
 
   function startCodeExpiryTimer(seconds = 60) {
-    const expiryEl = document.getElementById("auth-code-expiry");
+    const expiryEl = $("auth-code-expiry");
     if (!expiryEl) return;
     clearInterval(codeExpiryInterval);
 
@@ -458,9 +796,8 @@ function initAuth() {
     codeExpiryInterval = setInterval(tick, 1000);
   }
 
-  // Timer di cooldown per il reinvio
   function startCooldownTimer(endTime) {
-    const cooldownEl = document.getElementById("auth-cooldown");
+    const cooldownEl = $("auth-cooldown");
     if (!cooldownEl) return;
     const end = typeof endTime === "number" ? endTime : Date.now() + 60 * 1000;
     cooldownEl.style.display = "block";
@@ -482,9 +819,8 @@ function initAuth() {
     }, 1000);
   }
 
-  // Helper to reset code step UI (used on resend)
   function resetCodeStepUI() {
-    const expiryEl = document.getElementById("auth-code-expiry");
+    const expiryEl = $("auth-code-expiry");
     if (expiryEl) {
       expiryEl.style.display = "none";
       expiryEl.textContent = "";
@@ -496,11 +832,10 @@ function initAuth() {
     if (verifyBtn) verifyBtn.disabled = false;
   }
 
-  // Resend code
   resendBtn.onclick = async () => {
     if (!emailForCode) return;
 
-    resetCodeStepUI(); // clear old expiry + input
+    resetCodeStepUI();
     resendBtn.disabled = true;
 
     try {
@@ -511,10 +846,7 @@ function initAuth() {
       });
 
       if (res.ok) {
-        // Successfully resent → restart 60s validity timer
         startCodeExpiryTimer(60);
-
-        // Restart resend cooldown
         startCooldownTimer(Date.now() + 60 * 1000);
       } else {
         const data = await res.json().catch(() => ({}));
@@ -526,25 +858,62 @@ function initAuth() {
       showError("Impossibile inviare il codice. Controlla la connessione.");
       resendBtn.disabled = false;
     }
-    // Nota: se l'invio è andato a buon fine, il bottone resta disabilitato
-    // finché non scade il cooldown (startCooldownTimer lo riabilita).
   };
 }
 
-// ===== PLAYGROUND (Editor top + Chat full height bottom) =====
+// ===== Chat / messages =====
+
+function renderMarkdown(text) {
+  if (!text) return "";
+  let html = escapeHtml(text);
+
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/^### (.+)$/gm, "<h4>$1</h4>");
+  html = html.replace(/^## (.+)$/gm, "<h3>$1</h3>");
+  html = html.replace(/^# (.+)$/gm, "<h2>$1</h2>");
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>");
+  html = html.replace(/^---$/gm, "<hr>");
+
+  html = html.replace(/^(?:- (.+)\n?)+/gm, (match) => {
+    const items = match
+      .split("\n")
+      .filter((l) => l.startsWith("- "))
+      .map((l) => `<li>${l.slice(2)}</li>`)
+      .join("");
+    return `<ul>${items}</ul>`;
+  });
+
+  html = html.replace(/^(?:\d+\. (.+)\n?)+/gm, (match) => {
+    const items = match
+      .split("\n")
+      .filter((l) => /^\d+\. /.test(l))
+      .map((l) => `<li>${l.replace(/^\d+\. /, "")}</li>`)
+      .join("");
+    return `<ol>${items}</ol>`;
+  });
+
+  html = html.replace(/\n\n/g, "</p><p>");
+  html = html.replace(/\n/g, "<br>");
+
+  if (!html.startsWith("<")) {
+    html = `<p>${html}</p>`;
+  }
+
+  return `<div class="markdown">${html}</div>`;
+}
+
 function addMessage(role, text) {
-  const container = document.getElementById("chat-messages");
+  const container = $("chat-messages");
   if (!container) return;
 
   const div = document.createElement("div");
-  div.style.marginBottom = "10px";
-  div.style.fontSize = "13px";
-  div.style.lineHeight = "1.4";
-
+  div.className = role === "user" ? "msg msg-user" : "msg msg-ai";
   if (role === "user") {
-    div.innerHTML = `<div style="background:#ecfdf5;padding:8px 12px;border-radius:10px;color:#0f172a;"><strong style="color:#059669;">Tu:</strong> ${text}</div>`;
+    div.textContent = text;
   } else {
-    div.innerHTML = `<div style="background:#f8fafc;padding:9px 12px;border-radius:10px;border:1px solid #e2e8f0;border-left:3px solid #059669;color:#0f172a;">${text}</div>`;
+    div.innerHTML = renderMarkdown(text);
   }
 
   container.appendChild(div);
@@ -552,8 +921,18 @@ function addMessage(role, text) {
   chatMessages.push({ role, content: text });
 }
 
+function addLoadingMessage() {
+  const container = $("chat-messages");
+  const div = document.createElement("div");
+  div.className = "msg msg-loading";
+  div.innerHTML = `Analisi in corso<span class="dots"></span>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
 function clearChat() {
-  const container = document.getElementById("chat-messages");
+  const container = $("chat-messages");
   if (container) container.innerHTML = "";
   chatMessages = [];
   lastAssistantReply = "";
@@ -571,37 +950,29 @@ async function sendToAI(messages) {
 }
 
 function initPlayground() {
-  const analyzeBtn = document.getElementById("analyze-btn");
-  const chatInput = document.getElementById("chat-input");
-  const chatSend = document.getElementById("chat-send");
+  const analyzeBtn = $("analyze-btn");
+  const chatInput = $("chat-input");
+  const chatSend = $("chat-send");
 
   if (!analyzeBtn) return;
 
-  // Restore draft is already handled in initCodeEditor
-
-  // Auto-save draft when editor changes (for CM6 we can add update listener later)
-  // For now we save on analyze
-
-  // Save current analysis into the Cassetto delle Note
-  const saveNoteBtn = document.getElementById("save-note-btn");
+  const saveNoteBtn = $("save-note-btn");
   if (saveNoteBtn) {
     saveNoteBtn.onclick = () => {
       if (!currentToken) {
-        alert("Devi accedere per salvare le note nel cassetto.");
+        showToast("Accedi per salvare le note nel cassetto.");
         showAuth();
-        initAuth();
         return;
       }
       saveCurrentNote();
     };
   }
 
-  // Micro-azione: copia l'ultima risposta AI
-  const copyNoteBtn = document.getElementById("copy-note-btn");
+  const copyNoteBtn = $("copy-note-btn");
   if (copyNoteBtn) {
     copyNoteBtn.onclick = async () => {
       if (!lastAssistantReply) {
-        alert("Nessuna risposta da copiare.");
+        showToast("Nessuna risposta da copiare.");
         return;
       }
       try {
@@ -609,30 +980,24 @@ function initPlayground() {
         copyNoteBtn.textContent = "Copiato ✓";
         setTimeout(() => (copyNoteBtn.textContent = "Copia"), 1500);
       } catch (e) {
-        alert("Impossibile copiare: " + e.message);
+        showToast("Impossibile copiare: " + e.message);
       }
     };
   }
 
-  // Analyze button - now uses the real editor
   analyzeBtn.onclick = async () => {
     const code = getEditorValue().trim();
     if (!code) {
-      alert("Inserisci del codice nell'editor");
+      showToast("Inserisci del codice nell'editor");
       return;
     }
 
     lastAnalyzedCode = code;
-
-    // Save draft
     storage.set({ draftCode: code });
 
     clearChat();
     addMessage("user", "Analizza questo codice");
-
-    const loadingDiv = document.createElement("div");
-    loadingDiv.textContent = "Analisi in corso...";
-    document.getElementById("chat-messages").appendChild(loadingDiv);
+    const loadingDiv = addLoadingMessage();
 
     try {
       const reply = await sendToAI([
@@ -645,17 +1010,14 @@ function initPlayground() {
       ]);
 
       lastAssistantReply = reply;
-      const container = document.getElementById("chat-messages");
-      container.removeChild(loadingDiv);
+      loadingDiv.remove();
       addMessage("assistant", reply);
     } catch (e) {
-      const container = document.getElementById("chat-messages");
-      container.removeChild(loadingDiv);
+      loadingDiv.remove();
       addMessage("assistant", "Errore: " + e.message);
     }
   };
 
-  // Chat send
   const sendChat = async () => {
     const question = chatInput.value.trim();
     if (!question) return;
@@ -663,10 +1025,7 @@ function initPlayground() {
     const code = getEditorValue().trim();
     addMessage("user", question);
     chatInput.value = "";
-
-    const loading = document.createElement("div");
-    loading.textContent = "...";
-    document.getElementById("chat-messages").appendChild(loading);
+    const loading = addLoadingMessage();
 
     try {
       const reply = await sendToAI([
@@ -679,12 +1038,10 @@ function initPlayground() {
 
       lastAnalyzedCode = code;
       lastAssistantReply = reply;
-      const container = document.getElementById("chat-messages");
-      container.removeChild(loading);
+      loading.remove();
       addMessage("assistant", reply);
     } catch (e) {
-      const container = document.getElementById("chat-messages");
-      container.removeChild(loading);
+      loading.remove();
       addMessage("assistant", "Errore: " + e.message);
     }
   };
@@ -695,56 +1052,30 @@ function initPlayground() {
   };
 }
 
-// Load code sent via context menu (from background.js)
+// ===== Context menu code =====
+
 async function loadSelectedCodeFromContextMenu(autoAnalyze = false) {
   const data = await storage.get("selectedCode");
   if (data.selectedCode) {
-    if (codeEditor) {
-      codeEditor.dispatch({
-        changes: { from: 0, to: codeEditor.state.doc.length, insert: data.selectedCode }
-      });
-    } else {
-      const fallback = document.getElementById("code-editor-fallback");
-      if (fallback) fallback.value = data.selectedCode;
-    }
-
+    setEditorValue(data.selectedCode);
     await storage.remove("selectedCode");
 
     if (autoAnalyze) {
       setTimeout(() => {
-        const btn = document.getElementById("analyze-btn");
+        const btn = $("analyze-btn");
         if (btn) btn.click();
       }, 400);
     }
   }
 }
 
-// ===== CASSETTO DELLE NOTE =====
-function escapeHtml(str) {
-  return String(str == null ? "" : str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function currentTabUrl() {
-  return new Promise((resolve) => {
-    try {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        resolve((tabs && tabs[0] && tabs[0].url) || "");
-      });
-    } catch (e) {
-      resolve("");
-    }
-  });
-}
+// ===== Notes (Cassetto) =====
 
 async function saveCurrentNote() {
   const code = lastAnalyzedCode || getEditorValue().trim();
   const explanation = lastAssistantReply;
   if (!code || !explanation) {
-    alert("Analizza prima un codice per poterlo salvare nel cassetto.");
+    showToast("Analizza prima un codice per poterlo salvare nel cassetto.");
     return;
   }
 
@@ -763,31 +1094,28 @@ async function saveCurrentNote() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Errore salvataggio nota");
 
-    // Categorizzazione asincrona (non blocca il salvataggio)
     apiFetch(`/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
-    lastAssistantReply = ""; // evita salvataggi doppi dello stesso contenuto
-    alert("Nota salvata nel cassetto ✓");
+    lastAssistantReply = "";
+    showToast("Nota salvata nel cassetto ✓");
   } catch (err) {
-    alert("Errore: " + err.message);
+    showToast("Errore: " + err.message);
   }
 }
 
 async function loadNotes() {
-  const listEl = document.getElementById("notes-list");
-  const detailEl = document.getElementById("notes-detail");
-  const subtitle = document.getElementById("notes-subtitle");
+  const listEl = $("notes-list");
+  const detailEl = $("notes-detail");
+  const subtitle = $("notes-subtitle");
   if (!listEl) return;
 
   detailEl.style.display = "none";
   listEl.style.display = "flex";
 
-  // Il cassetto richiede l'account: invita al login (onboarding minimo)
   if (!currentToken) {
     listEl.innerHTML =
-      '<div class="notes-empty">Accedi per usare il cassetto delle note.<br/><button id="notes-login-prompt" class="btn-primary" style="margin-top:10px; padding:8px 16px; font-size:12px; width:auto;">Accedi ora</button></div>';
-    document.getElementById("notes-login-prompt")?.addEventListener("click", () => {
+      '<div class="notes-empty">Accedi per usare il cassetto delle note.<br/><button id="notes-login-prompt" class="btn btn-primary">Accedi ora</button></div>';
+    $("notes-login-prompt")?.addEventListener("click", () => {
       showAuth();
-      initAuth();
     });
     return;
   }
@@ -801,7 +1129,6 @@ async function loadNotes() {
     const notes = data.notes || [];
     if (subtitle) subtitle.textContent = `${notes.length} note salvate`;
 
-    // Batch di categorizzazione delle note rimaste in "pending"
     apiFetch("/notes/categorize-pending", { method: "POST" }).catch(() => {});
 
     if (!notes.length) {
@@ -833,8 +1160,8 @@ async function loadNotes() {
 }
 
 async function openNoteDetail(noteId) {
-  const listEl = document.getElementById("notes-list");
-  const detailEl = document.getElementById("notes-detail");
+  const listEl = $("notes-list");
+  const detailEl = $("notes-detail");
   if (!listEl || !detailEl) return;
 
   listEl.style.display = "none";
@@ -849,31 +1176,31 @@ async function openNoteDetail(noteId) {
     const sourceHost = n.source_url ? (() => { try { return new URL(n.source_url).hostname; } catch (e) { return ""; } })() : "";
 
     detailEl.innerHTML = `
-      <button id="notes-back" class="btn-secondary" style="width:auto; padding:6px 12px; font-size:12px; margin-bottom:12px;">← Torna al cassetto</button>
+      <button id="notes-back" class="btn btn-soft" style="width:auto; padding:6px 14px; font-size:12px; margin-bottom:12px;">← Torna al cassetto</button>
       <div class="notes-detail-card">
-        <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:4px;">${escapeHtml(n.title || "Nota di codice")}</div>
-        <div style="font-size:11px;color:#64748b;margin-bottom:10px;">${escapeHtml(n.language)} · ${new Date(n.created_at).toLocaleDateString("it-IT")}${sourceHost ? ` · da ${escapeHtml(sourceHost)}` : ""}</div>
+        <div class="note-title">${escapeHtml(n.title || "Nota di codice")}</div>
+        <div class="note-meta">${escapeHtml(n.language)} · ${new Date(n.created_at).toLocaleDateString("it-IT")}${sourceHost ? ` · da ${escapeHtml(sourceHost)}` : ""}</div>
         ${(n.categories || []).length ? `<div style="margin-bottom:10px;">${n.categories.map((c) => `<span class="notes-chip">${escapeHtml(c.name)}</span>`).join("")}</div>` : ""}
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin-bottom:6px;">Codice originale</div>
+        <div class="notes-label">Codice originale</div>
         <pre class="notes-code">${escapeHtml(n.snippet_code)}</pre>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin:14px 0 6px;">Spiegazione</div>
+        <div class="notes-label">Spiegazione</div>
         <div class="notes-explain">${escapeHtml(n.explanation).replace(/\n/g, "<br/>")}</div>
-        ${n.related && n.related.length ? `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#059669;margin:14px 0 6px;">Note correlate</div>${n.related.map((r) => `<div class="notes-related">${escapeHtml(r.title)}</div>`).join("")}` : ""}
-        <div style="display:flex; gap:8px; margin-top:14px;">
-          <button id="notes-open-webapp" class="btn-primary" style="flex:1; font-size:12px; padding:8px;">Apri nel cassetto (webapp)</button>
-          <button id="notes-delete" class="btn-outline" style="flex:1; font-size:12px; padding:8px; margin:0;">Elimina nota</button>
+        ${n.related && n.related.length ? `<div class="notes-label">Note correlate</div>${n.related.map((r) => `<div class="notes-related">${escapeHtml(r.title)}</div>`).join("")}` : ""}
+        <div class="note-actions">
+          <button id="notes-open-webapp" class="btn btn-primary">Apri nel cassetto (webapp)</button>
+          <button id="notes-delete" class="btn btn-danger">Elimina</button>
         </div>
       </div>`;
 
-    document.getElementById("notes-back").addEventListener("click", () => {
+    $("notes-back").addEventListener("click", () => {
       detailEl.style.display = "none";
       listEl.style.display = "flex";
       loadNotes();
     });
-    document.getElementById("notes-open-webapp").addEventListener("click", () => {
+    $("notes-open-webapp").addEventListener("click", () => {
       chrome.tabs.create({ url: `${SITE_BASE()}/notes?note=${noteId}` });
     });
-    document.getElementById("notes-delete").addEventListener("click", async () => {
+    $("notes-delete").addEventListener("click", async () => {
       if (!confirm("Eliminare questa nota?")) return;
       const del = await apiFetch(`/notes/${noteId}`, { method: "DELETE" });
       if (del.ok) {
@@ -887,14 +1214,14 @@ async function openNoteDetail(noteId) {
   }
 }
 
-// ===== Polling note (la nota salvata in webapp appare qui) =====
+// ===== Polling note =====
+
 let notesRefreshTimer = null;
 
 function startNotesPolling() {
   stopNotesPolling();
   notesRefreshTimer = setInterval(() => {
-    const detailEl = document.getElementById("notes-detail");
-    // Non ricaricare mentre è aperto il dettaglio
+    const detailEl = $("notes-detail");
     if (detailEl && detailEl.style.display === "none") {
       loadNotes();
     }
@@ -908,70 +1235,90 @@ function stopNotesPolling() {
   }
 }
 
-// Navigation between Playground / Dashboard / Account + active styling
+// ===== Navigation =====
+
 function initNavigation() {
   const navItems = document.querySelectorAll(".nav-item");
   const sections = {
-    playground: document.getElementById("section-playground"),
-    notes: document.getElementById("section-notes"),
-    webapp: document.getElementById("section-webapp"),
-    settings: document.getElementById("section-settings"),
+    playground: $("section-playground"),
+    notes: $("section-notes"),
+    account: $("section-account"),
   };
 
   function activate(sectionName) {
-    // Update nav active states
     navItems.forEach((item) => {
-      if (item.dataset.section === sectionName) {
-        item.classList.add("active");
-        item.style.color = "#059669";
-      } else {
-        item.classList.remove("active");
-        item.style.color = "#64748b";
-      }
+      item.classList.toggle("active", item.dataset.section === sectionName);
     });
 
-    // Show/hide sections
     Object.keys(sections).forEach((key) => {
       const el = sections[key];
       if (!el) return;
-      const active = key === sectionName;
-      el.classList.toggle("active-panel", active && key === "playground");
-      el.style.display = active ? (key === "playground" ? "flex" : "block") : "none";
+      el.classList.toggle("active", key === sectionName);
     });
   }
 
   navItems.forEach((item) => {
+    // Theme/lang/tour hanno classe nav-item ma NON sono sezioni: non devono
+    // sovrascrivere l'onclick impostato da initTheme()/initTour().
+    if (!item.dataset.section) return;
     item.onclick = () => {
       const target = item.dataset.section;
-      if (target) {
-        activate(target);
-        if (target === "playground") {
-          if (!codeEditor && !document.getElementById("code-editor-fallback")) {
-            initCodeEditor();
-          }
-          requestAnimationFrame(() => {
-            if (codeEditor?.requestMeasure) codeEditor.requestMeasure();
-          });
+      if (!target) return;
+      activate(target);
+      if (target === "playground") {
+        if (!codeEditor && !$("code-editor-fallback")) {
+          initCodeEditor();
         }
-        if (target === "notes") {
-          loadNotes();
-          startNotesPolling();
-        } else {
-          stopNotesPolling();
-        }
+        requestAnimationFrame(() => {
+          if (codeEditor?.requestMeasure) codeEditor.requestMeasure();
+        });
+      }
+      if (target === "notes") {
+        loadNotes();
+        startNotesPolling();
+      } else {
+        stopNotesPolling();
       }
     };
   });
 
-  // Ensure initial active state matches the HTML (playground by default)
-  const initial = document.querySelector('.nav-item.active') || navItems[0];
+  const initial = document.querySelector(".nav-item.active") || navItems[0];
   if (initial) {
-    const startSection = initial.dataset.section || "playground";
-    activate(startSection);
+    activate(initial.dataset.section || "playground");
   }
 }
 
-// ===== MAIN INIT =====
+// ===== Account =====
+
+function populateAccount() {
+  const chip = $("user-chip");
+  const userEmailEl = $("user-email");
+  const logoutBtn = $("logout-btn");
+
+  if (chip) chip.style.display = "inline-flex";
+  if (userEmailEl) userEmailEl.textContent = currentUser?.email || "Ospite";
+  if (logoutBtn) logoutBtn.style.display = currentUser ? "inline-flex" : "none";
+
+  updateAccountSummary();
+}
+
+function initSettings() {
+  const logoutBtn = $("logout-btn");
+
+  const logout = async () => {
+    if (!confirm("Sei sicuro di voler uscire?")) return;
+    await storage.remove(["token", "user"]);
+    currentToken = null;
+    currentUser = null;
+    populateAccount();
+    showAuth();
+  };
+
+  if (logoutBtn) logoutBtn.onclick = logout;
+}
+
+// ===== Main init =====
+
 function enterApp() {
   showApp();
   initNavigation();
@@ -980,150 +1327,40 @@ function enterApp() {
   loadSelectedCodeFromContextMenu(true);
   initCodeEditor();
   initSettings();
+  initTour();
   populateAccount();
+  fetchAccountPlan();
 }
 
 async function init() {
   await initApiBase();
+  await initTheme();
+  initAuth();
 
   if (DEV_BYPASS_AUTH) {
-    // Dev only: salta completamente il login
     currentUser = { email: "dev@local" };
     enterApp();
     return;
   }
 
-  // Flusso guest-first: l'estensione è utilizzabile subito (analisi con
-  // quota ospite); il login serve solo per salvare nel cassetto e per le note.
+  // Flusso auth-first: senza sessione salvata l'estensione resta sulla
+  // schermata di accesso (login con codice email).
   const saved = await storage.get(["token", "user"]);
   if (saved.token && saved.user) {
     currentToken = saved.token;
     currentUser = saved.user;
     enterApp();
-  } else {
-    enterApp();
-  }
-}
-
-function populateAccount() {
-  const email = currentUser?.email || "";
-  const userNameEl = document.getElementById("webapp-user-name");
-  if (userNameEl) {
-    userNameEl.innerHTML = email
-      ? `Benvenuto, <span class="accent">${escapeHtml(email.split("@")[0] || "Utente")}</span>!`
-      : "Benvenuto! Accedi dalla webapp o dalle impostazioni per salvare le note.";
-  }
-
-  const loginBtn = document.getElementById("settings-login-btn");
-  const logoutBtn = document.getElementById("settings-logout-btn");
-  if (loginBtn) loginBtn.style.display = currentUser ? "none" : "block";
-  if (logoutBtn) logoutBtn.style.display = currentUser ? "block" : "none";
-}
-
-function initSettings() {
-  const loginBtn = document.getElementById("settings-login-btn");
-  const logoutBtn = document.getElementById("settings-logout-btn");
-  const apiBaseInput = document.getElementById("settings-api-base");
-  const saveApiBtn = document.getElementById("settings-save-api");
-
-  // ── Collega account webapp (link-code) ──
-  const openLinkBtn = document.getElementById("settings-open-link");
-  const linkCodeInput = document.getElementById("settings-link-code");
-  const linkSubmitBtn = document.getElementById("settings-link-submit");
-  const linkFeedback = document.getElementById("settings-link-feedback");
-
-  const setLinkFeedback = (text, isError) => {
-    if (!linkFeedback) return;
-    linkFeedback.textContent = text;
-    linkFeedback.style.color = isError ? "#dc2626" : "#059669";
-    linkFeedback.style.display = "block";
-  };
-
-  if (openLinkBtn) {
-    openLinkBtn.onclick = () => chrome.tabs.create({ url: `${SITE_BASE()}/extension-link` });
-  }
-  if (linkSubmitBtn) {
-    linkSubmitBtn.onclick = async () => {
-      const code = linkCodeInput ? linkCodeInput.value.trim() : "";
-      if (!code) {
-        setLinkFeedback("Incolla il codice dalla webapp.", true);
-        return;
-      }
-      linkSubmitBtn.disabled = true;
-      linkSubmitBtn.textContent = "Collegamento...";
-      try {
-        const res = await apiFetch("/auth/link-code", {
-          method: "POST",
-          body: JSON.stringify({ code }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Codice non valido");
-        currentToken = data.token;
-        currentUser = data.user;
-        await storage.set({ token: currentToken, user: currentUser });
-        if (linkCodeInput) linkCodeInput.value = "";
-        setLinkFeedback("Account collegato! Ora puoi salvare nel cassetto.", false);
-        populateAccount();
-      } catch (err) {
-        setLinkFeedback(err.message || "Errore di collegamento.", true);
-      } finally {
-        linkSubmitBtn.disabled = false;
-        linkSubmitBtn.textContent = "Collega";
-      }
-    };
-  }
-
-  // API base input
-  if (apiBaseInput) apiBaseInput.value = API_BASE;
-
-  // Login button - redirect to auth
-  if (loginBtn) {
-    loginBtn.onclick = () => {
-      document.querySelector('.nav-item[data-section="playground"]')?.click();
-      showAuth();
-    };
-  }
-
-  // Logout button
-  if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-      await storage.remove(["token", "user"]);
-      currentToken = null;
-      currentUser = null;
-      showAuth();
-      initAuth();
-    };
-  }
-
-  // Save API base
-  if (saveApiBtn && apiBaseInput) {
-    saveApiBtn.onclick = async () => {
-      const newBase = apiBaseInput.value.trim();
-      if (newBase) {
-        await storage.set({ apiBase: newBase });
-        API_BASE = newBase;
-        saveApiBtn.textContent = "Salvato";
-        setTimeout(() => saveApiBtn.textContent = "Salva", 1500);
-      }
-    };
   }
 }
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.action === "start-analysis" && msg.code) {
     const apply = async () => {
-      if (codeEditor) {
-        codeEditor.dispatch({
-          changes: { from: 0, to: codeEditor.state.doc.length, insert: msg.code },
-        });
-      } else {
-        const fallback = document.getElementById("code-editor-fallback");
-        if (fallback) fallback.value = msg.code;
-        if (!codeEditor) await initCodeEditor();
-      }
+      setEditorValue(msg.code);
+      if (!codeEditor) await initCodeEditor();
       const nav = document.querySelector('.nav-item[data-section="playground"]');
       if (nav) nav.click();
-      setTimeout(() => document.getElementById("analyze-btn")?.click(), 500);
+      setTimeout(() => $("analyze-btn")?.click(), 500);
     };
     apply();
   }

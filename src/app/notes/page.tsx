@@ -402,25 +402,38 @@ export default function NotesPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white dark:bg-[#080d14]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
+
+      <section className="w-full max-w-7xl mx-auto px-6 md:px-12 py-8 md:py-12 bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 my-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-linear-to-br from-primary/10 via-emerald-500/5 to-transparent rounded-full blur-[150px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-linear-to-tr from-emerald-500/5 to-transparent rounded-full blur-[120px] pointer-events-none translate-y-1/2 -translate-x-1/3"></div>
+
+        <div className="relative z-10 space-y-8">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-extrabold text-[#0f172a] flex items-center gap-3">
-                <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Bookmark className="text-white w-6 h-6" />
-                </span>
-                Il mio Cassetto
-              </h1>
-              <p className="text-sm text-[#64748b] mt-2">
-                {notes.length} note salvate · {categories.length} categorie
-                {dueNotes.length > 0 && (
-                  <span className="ml-2 inline-flex items-center gap-1 text-[#b45309] bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 text-xs font-semibold">
-                    <Clock size={12} /> {dueNotes.length} da ripassare
-                  </span>
-                )}
-              </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+          >
+            <div className="flex items-center gap-4">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl blur-lg opacity-40 animate-pulse"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-primary to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+                  <Bookmark className="text-white w-7 h-7" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-[#0f172a]">
+                  Il mio Cassetto
+                </h1>
+                <p className="text-sm text-[#64748b] mt-1">
+                  {notes.length} note salvate · {categories.length} categorie
+                  {dueNotes.length > 0 && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-[#b45309] bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 text-xs font-semibold">
+                      <Clock size={12} /> {dueNotes.length} da ripassare
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] w-4 h-4" />
@@ -432,7 +445,7 @@ export default function NotesPage() {
                 className="w-full bg-white border border-[#e2e8f0] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Banner suggerimento percorso (leggero e dismissibile) */}
           <AnimatePresence>
@@ -598,7 +611,7 @@ export default function NotesPage() {
             </section>
           </div>
         </div>
-      </main>
+      </section>
 
       {/* Dettaglio nota */}
       <AnimatePresence>

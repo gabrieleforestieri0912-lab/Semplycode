@@ -48,6 +48,7 @@ import {
   ThumbsDown,
   RefreshCw,
   Loader2,
+  PenLine,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
@@ -100,6 +101,11 @@ interface ChatHistoryItem {
   title: string;
   messages?: Message[];
   language?: string;
+}
+
+interface RenameState {
+  chatId: string;
+  title: string;
 }
 
 interface UserInfo {
@@ -548,7 +554,7 @@ export default function Chat() {
   const [code, setCode] = useState("");
   const [detectedLang, setDetectedLang] = useState("javascript");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [output, setOutput] = useState("Pronto. In attesa del codice...");
+
   const [isLoading, setIsLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
@@ -558,7 +564,7 @@ export default function Chat() {
   const [chatInput, setChatInput] = useState("");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
-  const [activeMobilePanel, setActiveMobilePanel] = useState<"editor" | "insights" | "log">("editor");
+  const [activeMobilePanel, setActiveMobilePanel] = useState<"editor" | "insights">("editor");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -573,6 +579,7 @@ export default function Chat() {
 
   const [insightsTab, setInsightsTab] = useState<"full" | "files">("full");
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
   const [analysisType, setAnalysisType] = useState("full");
   const [errorContext, setErrorContext] = useState("");
@@ -583,9 +590,11 @@ export default function Chat() {
   const [applyModal, setApplyModal] = useState<ApplyModalState | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [confirmDeleteChatId, setConfirmDeleteChatId] = useState<string | null>(null);
+  const [renameChat, setRenameChat] = useState<RenameState | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<{ scrollToLine: (line: number) => void; getLineCount: () => number }>(null);
 
   useEffect(() => {
     if (sessionUser) {
@@ -628,7 +637,6 @@ export default function Chat() {
       setCode(suggested);
       setDetectedLang(detectLanguage(suggested));
       setUploadedFiles([]);
-      setOutput("Suggerimento applicato all'editor.");
       performAutoAnalysisRef.current?.(suggested);
     };
     window.addEventListener("semplycode:previewApply", onPreview);
@@ -667,8 +675,6 @@ export default function Chat() {
         if (isMobileSidebarOpen) setIsMobileSidebarOpen(false);
         if (isSidebarExpanded) setIsSidebarExpanded(false);
         if (isProfileOpen) setIsProfileOpen(false);
-        if (activeMobilePanel === "log") setActiveMobilePanel("editor");
-        setIsOutputSidebarOpen(false);
       }
     };
     document.addEventListener("keydown", handler);
@@ -693,9 +699,8 @@ export default function Chat() {
               savedAt: Date.now(),
             }),
           );
-          setOutput("Bozza salvata localmente.");
         } catch {
-          setOutput("Impossibile salvare.");
+          // niente da mostrare: la bozza viene salvata localmente
         }
       }
     };
@@ -708,8 +713,13 @@ export default function Chat() {
     setIsHistoryLoading(true);
     try {
       const res = await fetch("/api/chat/history");
-      const data: { chats?: ChatHistoryItem[] } = await res.json();
-      if (data.chats) setChatHistory(data.chats);
+      const data: { chats?: Array<ChatHistoryItem & { id?: string }> } = await res.json();
+      if (data.chats) {
+        const normalized = data.chats
+          .filter(Boolean)
+          .map((c) => ({ ...c, _id: c._id || c.id || "" }));
+        setChatHistory(normalized);
+      }
     } catch (err) {
       console.error("Failed to load history:", err);
     } finally {
@@ -719,10 +729,11 @@ export default function Chat() {
 
   const loadChat = (chat: ChatHistoryItem) => {
     setCode("");
+    setUploadedFiles([]);
+    setActiveFileIndex(0);
     setMessages(chat.messages || []);
     setCurrentChatId(chat._id);
     setDetectedLang(chat.language || "javascript");
-    setOutput("Chat caricato dalla cronologia.");
   };
 
   const deleteChat = async (e: ReactMouseEvent, chatId: string) => {
@@ -742,10 +753,41 @@ export default function Chat() {
         setCurrentChatId(null);
         setMessages([]);
         setCode("");
+        setUploadedFiles([]);
+        setActiveFileIndex(0);
       }
       loadChatHistory();
     } catch (err) {
       console.error("Failed to delete chat:", err);
+    }
+  };
+
+  const submitRenameChat = async () => {
+    if (!renameChat || !user?.email) return;
+    const { chatId, title } = renameChat;
+    const trimmed = title.trim();
+    if (!trimmed) {
+      setRenameChat(null);
+      return;
+    }
+    setRenameChat(null);
+    try {
+      const current = chatHistory.find((c) => c._id === chatId);
+      await fetch("/api/chat/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatId,
+          title: trimmed,
+          messages: current?.messages?.length
+            ? current.messages
+            : [{ role: "user", content: trimmed }],
+          language: current?.language || "javascript",
+        }),
+      });
+      loadChatHistory();
+    } catch (err) {
+      console.error("Failed to rename chat:", err);
     }
   };
 
@@ -771,7 +813,8 @@ export default function Chat() {
     setCurrentChatId(null);
     setMessages([]);
     setCode("");
-    setOutput("Pronto. In attesa del codice...");
+    setUploadedFiles([]);
+    setActiveFileIndex(0);
   };
 
   const handleLogout = async () => {
@@ -786,36 +829,77 @@ export default function Chat() {
     const trimmed = codeSnippet.trim();
     if (!trimmed) return "javascript";
 
+    if (/fun\s+\w+\s*\(|val\s+\w+\s*:|var\s+\w+\s*:/.test(trimmed))
+      return "kotlin";
+
     if (
       /:\s*(string|number|boolean|any|void|never|unknown)\s*[=;)]/i.test(
         trimmed,
       ) ||
       /interface\s+\w+/.test(trimmed) ||
-      (/<\w+>/.test(trimmed) && /:\s*\w+/.test(trimmed))
+      /\bimport\s+type\s+/.test(trimmed) ||
+      (/<\w+>/.test(trimmed) && /(?<!:):\s*\w+/.test(trimmed))
     )
       return "typescript";
 
-    if (
-      /^\s*[{[\[]/.test(trimmed) &&
-      /[{[\[]\s*[\]}]\s*$/.test(trimmed) &&
-      /^[^"']*\s*"/.test(trimmed)
-    ) {
+    if (/^\s*[{\[]/.test(trimmed) && /[}\]]\s*$/.test(trimmed)) {
       try {
         JSON.parse(trimmed);
         return "json";
       } catch {}
     }
 
-    if (/fn\s+\w+\s*\(|<impl|pub\s+fn|let\s+mut|use\s+std::/.test(trimmed))
+    if (
+      /\bfn\s+\w+\s*\(|\bpub\s+fn\b|\blet\s+mut\b|\buse\s+std::|impl\s+\w+/.test(
+        trimmed,
+      )
+    )
       return "rust";
 
-    if (/func\s+\w+|package\s+\w+|import\s+"|fmt\./.test(trimmed)) return "go";
+    if (/^\s*<\?xml|<\w+:\w+\s+/.test(trimmed)) return "xml";
+    if (/^\s*<\/?[a-zA-Z]+[^>]*>/.test(trimmed)) return "markup";
+
+    if (/^\s*#!/.test(trimmed) && /bash|sh|env/.test(trimmed)) return "shell";
 
     if (
-      /<\?php|\$\w+\s*=/.test(trimmed) ||
-      (/function\s+\w+\s*\(.*\)\s*{/.test(trimmed) && /\$\w+/.test(trimmed))
+      /\bpackage\s+\w+;|System\.out\.println\(|public\s+static\s+void\s+main/.test(
+        trimmed,
+      )
     )
-      return "php";
+      return "java";
+    if (
+      /#include\s*<(iostream|vector|string|map|algorithm|bits\/)|std::|template\s*<|using\s+namespace\s+\w+;/.test(
+        trimmed,
+      )
+    )
+      return "cpp";
+    if (
+      /#include\s*<[a-z0-9]+\.h>|printf\s*\(|scanf\s*\(|int\s+main\s*\(/.test(
+        trimmed,
+      )
+    )
+      return "c";
+    if (
+      /using\s+System;|namespace\s+\w+;|Console\.WriteLine\(|public\s+class\s+/i.test(
+        trimmed,
+      )
+    )
+      return "csharp";
+    if (/func\s+\w+\s*\(|fmt\.|:=|import\s+"/.test(trimmed)) return "go";
+
+    if (
+      /\bimport\s+[^;\n]*?\s+from\s+['"]|\brequire\s*\(|\bconst\b|\blet\b|\bvar\s+\w+|=>|\.then\(|async\s+function|\bswitch\s*\(|\bclass\s+\w+\s*\{/.test(
+        trimmed,
+      )
+    )
+      return "javascript";
+
+    if (
+      /\bdef\s+\w+\s*\([^)]*\)\s*:|\bclass\s+\w+\s*:|\bfrom\s+\w+\s+import|(?<!@)\bimport\s+\w+(?!\s*\()|print\s*\(/.test(
+        trimmed,
+      )
+    )
+      return "python";
 
     if (
       /SELECT\s+.*FROM|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|CREATE\s+TABLE/i.test(
@@ -824,20 +908,47 @@ export default function Chat() {
     )
       return "sql";
 
+    if (/\bBEGIN\b.*\bEND\b|\bsub\s+\w+\b|\buse\s+strict;/.test(trimmed))
+      return "perl";
+
     if (
-      /def\s+\w+\s*\(.*\):|import\s+\w+|from\s+\w+\s+import|print\s*\(/.test(
+      /^\s*<\?php|\$\w+\s*=/.test(trimmed) ||
+      (/function\s+\w+\s*\(.*\)\s*{/.test(trimmed) && /\$\w+/.test(trimmed))
+    )
+      return "php";
+
+    if (
+      /\bdef\s+\w+[\s(][\s\S]*\bend\b|require\s+['"]|attr_(accessor|reader|writer)|puts\s+/.test(
         trimmed,
       )
     )
-      return "python";
+      return "ruby";
 
-    if (/[.#][\w-]+\s*{|@media|@keyframes|:\s*[^;]+;/.test(trimmed))
+    if (
+      /\bfunction\s+\w+\s*\(|\blocal\s+\w+\s*=/.test(trimmed) &&
+      /then|do|end/.test(trimmed)
+    )
+      return "lua";
+
+    if (
+      /\bprogram\s+\w+;|begin\s+end\.|\bvar\s+\w+\s*:|:\s*integer\b/i.test(
+        trimmed,
+      )
+    )
+      return "pascal";
+    if (/^\s*PROGRAM\s+|REAL\s+|INTEGER\s+|END\s+PROGRAM/i.test(trimmed))
+      return "fortran";
+    if (/^\s*IDENTIFICATION\s+DIVISION\b|DISPLAY\s+|ACCEPT\s+/i.test(trimmed))
+      return "cobol";
+
+    if (
+      /[.#][\w-]+\s*\{|@media|@keyframes|@import|@font-face|:\s*[^;}]+;/.test(
+        trimmed,
+      )
+    )
       return "css";
 
-    if (/<[a-z][^>]*>/i.test(trimmed)) return "markup";
-
-    if (/const|let|var|function|=>\s*{|\.then\(|async\s+function/.test(trimmed))
-      return "javascript";
+    if (/^\s*---\s*\n|^#\s+\w+/.test(trimmed)) return "markdown";
 
     return "javascript";
   };
@@ -852,16 +963,15 @@ export default function Chat() {
         : detectLanguage(combined);
 
     setUploadedFiles(fileData);
+    setActiveFileIndex(0);
     setCode(combined);
     setDetectedLang(lang);
     setMessages([]);
     setInsightsTab("full");
-    setOutput(
-      `Caricati ${fileData.length} file. ${autoAnalyze ? "Analisi in corso..." : "Pronto per l'analisi."}`,
-    );
 
-    if (autoAnalyze && combined.trim().length > 5) {
-      performAutoAnalysisRef.current?.(combined, lang, fileData);
+    const firstFile = fileData[0];
+    if (autoAnalyze && firstFile && firstFile.content.trim().length > 5) {
+      performAutoAnalysisRef.current?.(firstFile.content, firstFile.language, fileData);
     }
   };
 
@@ -872,13 +982,11 @@ export default function Chat() {
       if (uploadedFiles.length + validFiles.length >= MAX_UPLOAD_FILES) break;
 
       if (file.size > MAX_UPLOAD_FILE_SIZE) {
-        setOutput(`File troppo grande: ${file.name} (max 100KB).`);
         continue;
       }
 
       const ext = file.name.split(".").pop()?.toLowerCase() || "";
       if (!ALLOWED_CODE_EXTENSIONS.includes(ext)) {
-        setOutput(`Formato non supportato: ${file.name}`);
         continue;
       }
 
@@ -914,7 +1022,6 @@ export default function Chat() {
       })
       .catch((err) => {
         console.error(err);
-        setOutput("Errore durante il caricamento dei file.");
       });
   };
 
@@ -922,19 +1029,20 @@ export default function Chat() {
     const next = uploadedFiles.filter((_, i) => i !== index);
     if (next.length === 0) {
       setUploadedFiles([]);
+      setActiveFileIndex(0);
       setCode("");
       setMessages([]);
-      setOutput("Tutti i file rimossi.");
       return;
     }
+    setActiveFileIndex(Math.min(activeFileIndex, next.length - 1));
     applyFilesToEditor(next, { autoAnalyze: true });
   };
 
   const clearUploadedFiles = () => {
     setUploadedFiles([]);
+    setActiveFileIndex(0);
     setCode("");
     setMessages([]);
-    setOutput("File rimossi. In attesa di nuovo codice...");
   };
 
   const saveToNotes = async (explanationOverride?: string) => {
@@ -947,11 +1055,10 @@ export default function Chat() {
         ? explanationOverride
         : ([...messages].reverse().find((m) => m.role === "assistant")?.content || "");
     if (!explanation) {
-      setOutput("Nessuna analisi da salvare nel cassetto.");
       return;
     }
-    if (!code.trim()) {
-      setOutput("Nessun codice da salvare nel cassetto.");
+    const snippetCode = activeFile?.content ?? code;
+    if (!snippetCode.trim()) {
       return;
     }
     try {
@@ -959,27 +1066,25 @@ export default function Chat() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          snippet_code: code,
+          snippet_code: snippetCode,
           explanation,
-          language: detectedLang,
+          language: activeFile?.language || detectedLang,
           source_type: "webapp",
           source_ref: currentChatId || undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Errore salvataggio");
-      setOutput("Nota salvata nel cassetto ✓ Categorizzazione in corso...");
       // Categorizzazione asincrona (non blocca la UX)
       fetch(`/api/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
     } catch (error) {
-      setOutput((error as Error).message || "Impossibile salvare la nota.");
+      console.error("Impossibile salvare la nota.", error);
     }
   };
 
   const exportAnalysisReport = () => {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last?.content) {
-      setOutput("Nessuna analisi da esportare.");
       return;
     }
     const md = `# Report Semplycode\n\n**Linguaggio:** ${getLanguageLabel(detectedLang)}\n**Tipo:** ${ANALYSIS_TYPE_LABELS[analysisType as keyof typeof ANALYSIS_TYPE_LABELS] || analysisType}\n**Data:** ${new Date().toLocaleString("it-IT")}\n\n---\n\n${last.content}`;
@@ -989,13 +1094,11 @@ export default function Chat() {
     a.download = `semplycode-report-${Date.now()}.md`;
     a.click();
     URL.revokeObjectURL(a.href);
-    setOutput("Report esportato in Markdown.");
   };
 
   const shareAnalysis = async () => {
     const last = [...messages].reverse().find((m) => m.role === "assistant");
     if (!last?.content) {
-      setOutput("Nessuna analisi da condividere.");
       return;
     }
     try {
@@ -1015,9 +1118,8 @@ export default function Chat() {
       if (!res.ok) throw new Error(data.error);
       setShareUrl(data.url);
       await navigator.clipboard.writeText(data.url);
-      setOutput("Link condivisibile copiato negli appunti.");
     } catch {
-      setOutput("Impossibile creare il link di condivisione.");
+      console.error("Impossibile creare il link di condivisione.");
     }
   };
 
@@ -1043,9 +1145,8 @@ export default function Chat() {
         { autoAnalyze: true },
       );
       setGithubUrl("");
-      setOutput(`Importato da GitHub: ${data.repo}`);
     } catch (e) {
-      setOutput((e as Error).message || "Errore import GitHub.");
+      console.error("Errore import GitHub.", e);
     } finally {
       setIsGithubLoading(false);
     }
@@ -1066,7 +1167,7 @@ export default function Chat() {
       applyFilesToEditor(data.files, { autoAnalyze: true });
       setInsightsTab("full");
     } catch (e) {
-      setOutput((e as Error).message || "Errore lettura ZIP.");
+      console.error("Errore lettura ZIP.", e);
     } finally {
       setIsZipLoading(false);
     }
@@ -1079,12 +1180,10 @@ export default function Chat() {
   ) => {
     if (!currentCode || !currentCode.trim() || currentCode.length < 5) {
       setIsLoading(false);
-      setOutput("Pronto. In attesa del codice...");
       return;
     }
 
     setIsLoading(true);
-    setOutput("Esecuzione analisi neurale...");
     setMessages([{ role: "assistant", content: "" }]);
 
     const lang = langOverride || detectedLang;
@@ -1131,9 +1230,6 @@ export default function Chat() {
         (fullContent) => {
           setIsLoading(false);
           window.dispatchEvent(new Event("semplycode:stats:refresh"));
-          setOutput(
-            `Successo: Analizzato codice ${lang}.\nImpronta memoria: minima\nLatenza: 12ms`,
-          );
 
           if (user?.email && code.trim()) {
             const title =
@@ -1168,7 +1264,6 @@ export default function Chat() {
             setLimitModal({ message: errMsg });
           }
           setMessages([{ role: "assistant", content: `**${errMsg}**` }]);
-          setOutput(errMsg);
         },
       );
     } catch (error) {
@@ -1185,7 +1280,6 @@ export default function Chat() {
           content: `**${formatApiError(err as Error)}**`,
         },
       ]);
-      setOutput(formatApiError(err as Error));
       setIsLoading(false);
     }
   };
@@ -1206,7 +1300,8 @@ export default function Chat() {
     let accumulatedContent = "";
 
     try {
-      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. Il codice corrente è:\n\n\`\`\`${detectedLang}\n${code}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
+      const currentCode = activeFile?.content ?? code;
+      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
 
       postChatStream(
         [
@@ -1354,6 +1449,26 @@ export default function Chat() {
   }, []);
 
   const handleCodeChange = (newCode: string) => {
+    if (uploadedFiles.length > 0) {
+      const updated = uploadedFiles.map((f, i) =>
+        i === activeFileIndex ? { ...f, content: newCode } : f,
+      );
+      setUploadedFiles(updated);
+      setCode(buildCombinedCodeFromFiles(updated));
+      setDetectedLang(updated[activeFileIndex]?.language || detectLanguage(newCode));
+
+      if (!newCode.trim()) {
+        debouncedRef.current.cancel();
+        setMessages([]);
+        return;
+      }
+      if (newCode.trim().length > 5) {
+        debouncedRef.current(newCode);
+      }
+      autosaveRef.current(newCode, detectLanguage(newCode));
+      return;
+    }
+
     setCode(newCode);
     setDetectedLang(detectLanguage(newCode));
     if (uploadedFiles.length > 0) setUploadedFiles([]);
@@ -1361,7 +1476,6 @@ export default function Chat() {
     if (!newCode.trim()) {
       debouncedRef.current.cancel();
       setMessages([]);
-      setOutput("Pronto. In attesa del codice...");
       return;
     }
 
@@ -1372,22 +1486,33 @@ export default function Chat() {
     autosaveRef.current(newCode, detectLanguage(newCode));
   };
 
+  const selectFileTab = (index: number) => {
+    if (index < 0 || index >= uploadedFiles.length) return;
+    setActiveFileIndex(index);
+    setDetectedLang(uploadedFiles[index].language);
+    setHighlightedLine(null);
+  };
+
   const handleLineClick = (lineNumber: number) => {
     setHighlightedLine(lineNumber);
 
-    const lineCount = code.split("\n").length;
+    const lineCount = (activeFile?.content ?? code).split("\n").length;
     if (lineNumber > 0 && lineNumber <= lineCount) {
-      const editorElement = document.querySelector(".cm-editor");
-      if (editorElement) {
-        const lines = editorElement.querySelectorAll(".cm-line");
-        if (lines[lineNumber - 1]) {
-          lines[lineNumber - 1].scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-          lines[lineNumber - 1].classList.add("line-highlight");
+      // Su mobile mostriamo sempre il tab editor quando si clicca una riga
+      if (!isDesktop && activeMobilePanel !== "editor") setActiveMobilePanel("editor");
+
+      editorRef.current?.scrollToLine(lineNumber);
+
+      // Evidenziazione visiva (fallback sul DOM se il ref non è ancora pronto)
+      setTimeout(() => {
+        const editorElement = document.querySelector(".cm-editor");
+        if (editorElement) {
+          const lines = editorElement.querySelectorAll(".cm-line");
+          if (lines[lineNumber - 1]) {
+            lines[lineNumber - 1].classList.add("line-highlight");
+          }
         }
-      }
+      }, 50);
     }
 
     setTimeout(() => {
@@ -1408,11 +1533,10 @@ export default function Chat() {
     ? "opacity-100 max-w-[200px] delay-100"
     : "opacity-0 max-w-0 delay-0";
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isOutputSidebarOpen, setIsOutputSidebarOpen] = useState(false);
+  const activeFile = uploadedFiles[activeFileIndex] ?? null;
 
   return (
-    <div className="flex h-screen bg-[#0a0c10] text-gray-300 overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#0a0c10] text-gray-300 overflow-hidden font-sans -mt-16">
       <AnimatePresence>
         {isDesktop && isSidebarExpanded && (
           <motion.div
@@ -1465,7 +1589,7 @@ export default function Chat() {
           }}
           className={`h-full bg-[#0d1117] border-r border-emerald-900/30 ${
             isDesktop
-              ? "absolute left-0 top-0 shadow-2xl overflow-visible"
+              ? "absolute left-0 top-0 shadow-2xl overflow-hidden"
               : "relative overflow-hidden"
           }`}
         >
@@ -1538,26 +1662,81 @@ export default function Chat() {
                         </p>
                       ) : (
                         chatHistory
-                          .filter((chat) =>
+                          .filter((chat) => chat && (
                             !historySearch ||
                             chat.title?.toLowerCase().includes(historySearch.toLowerCase())
-                          )
+                          ))
                           .map((chat) => (
                           <div
                             key={chat._id}
-                            onClick={() => loadChat(chat)}
-                            className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer text-xs ${currentChatId === chat._id ? "bg-emerald-900/30 text-primary" : "text-gray-500 hover:bg-emerald-900/20 hover:text-primary"}`}
+                            role={renameChat?.chatId === chat._id ? undefined : "button"}
+                            tabIndex={renameChat?.chatId === chat._id ? undefined : 0}
+                            aria-current={currentChatId === chat._id ? "true" : undefined}
+                            onClick={() => {
+                              if (renameChat?.chatId !== chat._id) loadChat(chat);
+                            }}
+                            onKeyDown={(e) => {
+                              if (renameChat?.chatId === chat._id) return;
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                loadChat(chat);
+                              }
+                            }}
+                            className={`group flex items-center justify-between gap-1 p-2 rounded-lg cursor-pointer text-xs outline-none focus-visible:ring-1 focus-visible:ring-emerald-500/50 ${currentChatId === chat._id ? "bg-emerald-900/30 text-primary" : "text-gray-500 hover:bg-emerald-900/20 hover:text-primary"}`}
                           >
-                            <span className="truncate flex-1 pr-1">
-                              {chat.title}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
-                              className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 shrink-0"
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            {renameChat?.chatId === chat._id ? (
+                              <form
+                                className="flex items-center gap-1 flex-1 min-w-0"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  submitRenameChat();
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={renameChat.title}
+                                  onChange={(e) => setRenameChat({ chatId: chat._id, title: e.target.value })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Escape") setRenameChat(null);
+                                  }}
+                                  className="flex-1 min-w-0 bg-[#010409] border border-emerald-500/40 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                                />
+                                <button
+                                  type="submit"
+                                  className="p-1 text-emerald-400 hover:text-emerald-300 shrink-0"
+                                  aria-label="Salva nome"
+                                >
+                                  <Check size={12} />
+                                </button>
+                              </form>
+                            ) : (
+                              <>
+                                <span className="truncate flex-1 pr-1">
+                                  {chat.title}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={(e: ReactMouseEvent) => {
+                                    e.stopPropagation();
+                                    setRenameChat({ chatId: chat._id, title: chat.title || "" });
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:text-emerald-400 shrink-0"
+                                  aria-label="Rinomina chat"
+                                >
+                                  <PenLine size={12} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
+                                  className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-1 hover:text-red-400 shrink-0"
+                                  aria-label="Elimina chat"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         ))
                       )}
@@ -1717,17 +1896,7 @@ export default function Chat() {
                     : "text-gray-400 hover:bg-emerald-900/20"
                 }`}
               >
-                Insights
-              </button>
-              <button
-                onClick={() => setActiveMobilePanel("log")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                  activeMobilePanel === "log"
-                    ? "bg-primary text-white"
-                    : "text-gray-400 hover:bg-emerald-900/20"
-                }`}
-              >
-                Log
+                Chat AI
               </button>
             </div>
           </div>
@@ -1737,11 +1906,11 @@ export default function Chat() {
           className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0a0c10] md:flex ${activeMobilePanel === "editor" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}
         >
           <div className="h-16 border-b border-emerald-900/20 flex items-center justify-between px-6 bg-[#0d1117]/50 gap-4">
-            {code.trim() ? (
+            {code.trim() || activeFile ? (
               <div className="flex items-center gap-2 min-w-0">
                 <Cpu size={14} className="text-primary shrink-0" />
                 <span className="text-xs font-semibold text-primary tracking-wide truncate">
-                  {getLanguageLabel(detectedLang)}
+                  {activeFile ? getLanguageLabel(activeFile.language) : getLanguageLabel(detectedLang)}
                 </span>
               </div>
             ) : (
@@ -1773,15 +1942,6 @@ export default function Chat() {
                   e.target.value = "";
                 }}
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 bg-[#0d1117]/80 border border-emerald-900/30 px-3 py-1.5 rounded-xl text-[10px] font-bold text-gray-400 uppercase tracking-wider hover:text-primary hover:border-primary/40 transition-colors"
-                title="Carica file di codice da analizzare"
-              >
-                <Upload size={12} className="text-primary" />
-                Carica file
-              </button>
               {uploadedFiles.length > 0 && (
                 <span className="text-[10px] text-primary font-mono">
                   {uploadedFiles.length} file
@@ -1789,6 +1949,37 @@ export default function Chat() {
               )}
             </div>
           </div>
+          {uploadedFiles.length > 0 && (
+            <div className="flex items-center border-b border-emerald-900/20 bg-[#0d1117]/60 overflow-x-auto custom-scrollbar shrink-0" role="tablist" aria-label="File aperti">
+              {uploadedFiles.map((file, i) => (
+                <div
+                  key={`${file.name}-${i}`}
+                  role="tab"
+                  aria-selected={activeFileIndex === i}
+                  onClick={() => selectFileTab(i)}
+                  className={`group flex items-center gap-2 px-3 py-2 text-[11px] font-mono whitespace-nowrap border-r border-emerald-900/20 transition-colors cursor-pointer ${
+                    activeFileIndex === i
+                      ? "bg-[#010409] text-primary border-t-2 border-t-emerald-400"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-[#0a0c10]"
+                  }`}
+                >
+                  <FileText size={12} className="shrink-0 text-primary/70" />
+                  <span className="max-w-[140px] truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    aria-label={`Chiudi ${file.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeUploadedFile(i);
+                    }}
+                    className="shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-gray-600 hover:text-red-400 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           {!sessionUser && (
             <div className="px-4 py-2 bg-primary/10 border-b border-primary/20 flex items-center justify-between gap-2 text-xs shrink-0">
               <span className="text-gray-400">
@@ -1808,14 +1999,15 @@ export default function Chat() {
           >
             {typeof window !== "undefined" && window.innerWidth < 640 ? (
               <textarea
-                value={code}
+                value={activeFile?.content ?? code}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleCodeChange(e.target.value)}
                 className="w-full h-full p-4 bg-[#010409] text-sm font-mono text-gray-100 outline-none"
                 placeholder="Scrivi o incolla il codice qui..."
               />
             ) : (
               <EditorWrapper
-                value={code}
+                ref={editorRef}
+                value={activeFile?.content ?? code}
                 onChange={handleCodeChange}
                 detectedLang={detectedLang}
               />
@@ -2144,19 +2336,24 @@ export default function Chat() {
           </div>
 
           <div className="p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
-            <div className="flex gap-2">
-              <input
-                type="text"
+            <div className="flex gap-2 items-end">
+              <textarea
                 value={chatInput}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setChatInput(e.target.value)}
-                onKeyDown={(e: ReactKeyboardEvent<HTMLInputElement>) => {
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
+                onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     sendChatMessage(chatInput);
                   }
                 }}
+                rows={1}
+                onInput={(e) => {
+                  const el = e.currentTarget;
+                  el.style.height = "auto";
+                  el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+                }}
                 placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
-                className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary"
+                className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading}
               />
               <button
@@ -2174,7 +2371,7 @@ export default function Chat() {
               </button>
             </div>
             <p className="text-[10px] text-gray-600 mt-1.5 text-center">
-              L&apos;AI ha sempre il contesto del codice corrente
+              Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
             </p>
           </div>
         </section>
@@ -2196,7 +2393,6 @@ export default function Chat() {
             setDetectedLang(detectLanguage(newCode));
             setUploadedFiles([]);
             setApplyModal(null);
-            setOutput("Modifiche applicate.");
             performAutoAnalysisRef.current?.(newCode);
           }}
         />

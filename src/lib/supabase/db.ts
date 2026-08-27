@@ -1,10 +1,10 @@
-import { createClient } from './server';
+import { getServiceClient } from './service';
 import type { User, ChatHistory, ShareLink } from './types';
 
 // ─── USERS ───────────────────────────────────────────
 
 export async function findUserByEmail(email: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -15,7 +15,7 @@ export async function findUserByEmail(email: string) {
 }
 
 export async function findUserByResetToken(token: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from('users')
@@ -28,7 +28,7 @@ export async function findUserByResetToken(token: string) {
 }
 
 export async function findUserByStripeCustomerId(customerId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -39,7 +39,7 @@ export async function findUserByStripeCustomerId(customerId: string) {
 }
 
 export async function findUserById(id: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -50,7 +50,7 @@ export async function findUserById(id: string) {
 }
 
 export async function createUser(user: Partial<User>) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .insert({
@@ -69,7 +69,7 @@ export async function createUser(user: Partial<User>) {
 }
 
 export async function updateUser(email: string, updates: Partial<User>) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .update(updates)
@@ -81,7 +81,7 @@ export async function updateUser(email: string, updates: Partial<User>) {
 }
 
 export async function getUserStats(email: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -94,7 +94,7 @@ export async function getUserStats(email: string) {
 // ─── CHAT HISTORY ────────────────────────────────────
 
 export async function findChatsByUserId(userId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('chat_history')
     .select('*')
@@ -106,7 +106,7 @@ export async function findChatsByUserId(userId: string) {
 }
 
 export async function findChatById(chatId: string, userId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('chat_history')
     .select('*')
@@ -123,7 +123,7 @@ export async function createChat(chat: {
   messages?: unknown[];
   language?: string;
 }) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('chat_history')
     .insert({
@@ -143,7 +143,7 @@ export async function updateChat(
   userId: string,
   updates: Partial<ChatHistory>,
 ) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('chat_history')
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -156,7 +156,7 @@ export async function updateChat(
 }
 
 export async function deleteChat(chatId: string, userId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { error } = await supabase
     .from('chat_history')
     .delete()
@@ -166,7 +166,7 @@ export async function deleteChat(chatId: string, userId: string) {
 }
 
 export async function countChatsByUserId(userId: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { count, error } = await supabase
     .from('chat_history')
     .select('*', { count: 'exact', head: true })
@@ -178,7 +178,7 @@ export async function countChatsByUserId(userId: string) {
 // ─── SHARED LINKS ────────────────────────────────────
 
 export async function findShareLinkByToken(token: string) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('shared_links')
     .select('*')
@@ -193,7 +193,7 @@ export async function createShareLink(params: {
   userId?: string;
   days?: number;
 }) {
-  const supabase = await createClient();
+  const supabase = getServiceClient();
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + (params.days || 7) * 24 * 60 * 60 * 1000).toISOString();
 

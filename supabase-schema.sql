@@ -1,8 +1,24 @@
 -- ═══════════════════════════════════════════════════════════════
--- SemplyCode — "Cassetto delle Note"
--- Esegui questo script nel SQL Editor di Supabase (una volta sola).
--- Richiesto dalle API /api/notes* e dalla pagina /notes.
+-- SemplyCode — SCHEMA COMPLETO SUPABASE
+-- Esegui questo script nel SQL Editor di Supabase UNA sola volta.
+-- Contiene: sistema token (chat AI) + Cassetto delle Note + RLS.
 -- ═══════════════════════════════════════════════════════════════
+
+-- ─────────────────────────────────────────────────────────────
+-- 1) SISTEMA A TOKEN PER LA CHAT AI
+-- Budget mensili: Free 100K · Starter 1,5M · Pro 3M · Enterprise illimitati.
+-- Gli ospiti (no account) hanno un budget giornaliero di 30K token
+-- gestito lato server via Redis (nessuna colonna necessaria).
+-- ─────────────────────────────────────────────────────────────
+
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS tokens_used_month BIGINT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS tokens_period_start TIMESTAMPTZ;
+
+-- ─────────────────────────────────────────────────────────────
+-- 2) CASSETTO DELLE NOTE
+-- Richiesto dalle API /api/notes* e dalla pagina /notes.
+-- ─────────────────────────────────────────────────────────────
 
 -- ── NOTE (core) ─────────────────────────────────────────────────
 create table if not exists public.notes (
@@ -33,9 +49,13 @@ create table if not exists public.categories (
   id         uuid primary key default gen_random_uuid(),
   user_id    text not null,
   name       text not null,
-  created_at timestamptz not null default now(),
-  unique (user_id, lower(name))
+  created_at timestamptz not null default now()
 );
+
+-- Unicità case-insensitive per utente (le constraint UNIQUE inline non
+-- accettano espressioni come lower(name), serve un indice unico).
+create unique index if not exists categories_user_name_uq
+  on public.categories (user_id, lower(name));
 
 -- ── RELAZIONE NOTE ↔ CATEGORIE ──────────────────────────────────
 create table if not exists public.note_categories (
@@ -63,10 +83,12 @@ create table if not exists public.learning_path_notes (
   primary key (path_id, note_id)
 );
 
--- ── ROW LEVEL SECURITY (difesa in profondità) ───────────────────
--- Nota: le API del Cassetto usano la service role key e filtrano sempre
--- per user_id nel codice. L'RLS qui sotto impedisce comunque l'accesso
--- diretto via anon key a chi non possiede i dati.
+-- ─────────────────────────────────────────────────────────────
+-- 3) ROW LEVEL SECURITY (difesa in profondità)
+-- Nota: le API usano la service role key e filtrano sempre
+-- per user_id nel codice. L'RLS qui sotto impedisce comunque
+-- l'accesso diretto via anon key a chi non possiede i dati.
+-- ─────────────────────────────────────────────────────────────
 alter table public.notes               enable row level security;
 alter table public.categories          enable row level security;
 alter table public.note_categories     enable row level security;

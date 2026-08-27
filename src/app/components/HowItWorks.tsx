@@ -9,7 +9,6 @@ import { useLanguage } from '@/context/LanguageContext';
 const MotionLink = motion.create(Link);
 
 interface Step {
-  step: string;
   title: string;
   desc: string;
   icon: LucideIcon;
@@ -19,7 +18,8 @@ interface Step {
 
 interface Translation {
   badge: string;
-  headline: string;
+  headlineA: string;
+  headlineB: string;
   subtitle: string;
   steps: Step[];
   cta: string;
@@ -36,64 +36,60 @@ const HowItWorks = () => {
   const t: Translations = {
     en: {
       badge: "How It Works",
-      headline: "Simple as 1-2-3",
+      headlineA: "Simple as",
+      headlineB: "step by step",
       subtitle: "Three simple steps to transform your coding skills",
       steps: [
         {
-          step: "01",
           title: "Paste Your Code",
           desc: "Simply copy and paste any code snippet you're struggling with into our intelligent editor.",
           icon: Code2,
           accent: "#10b981",
-          glow: "rgba(16,185,129,0.3)",
+          glow: "rgba(16,185,129,0.5)",
         },
         {
-          step: "02",
           title: "AI Analysis",
           desc: "Our advanced AI analyzes logic, identifies bugs, and explains complex patterns in plain language.",
           icon: Sparkles,
-          accent: "#a78bfa",
-          glow: "rgba(167,139,250,0.3)",
+          accent: "#2dd4bf",
+          glow: "rgba(45,212,191,0.5)",
         },
         {
-          step: "03",
           title: "Learn & Apply",
           desc: "Get optimized code with one click and learn the reasoning behind every change.",
           icon: GraduationCap,
-          accent: "#60a5fa",
-          glow: "rgba(96,165,250,0.3)",
+          accent: "#14b8a6",
+          glow: "rgba(20,184,166,0.5)",
         },
       ],
       cta: "Try it now",
     },
     it: {
       badge: "Come Funziona",
-      headline: "Semplice come 1-2-3",
+      headlineA: "Semplice come",
+      headlineB: "un passo dopo l'altro",
       subtitle: "Tre semplici passi per trasformare le tue abilità di coding",
       steps: [
         {
-          step: "01",
           title: "Incolla il Codice",
           desc: "Copia e incolla qualsiasi frammento di codice nel nostro editor intelligente.",
           icon: Code2,
           accent: "#10b981",
-          glow: "rgba(16,185,129,0.3)",
+          glow: "rgba(16,185,129,0.5)",
         },
         {
-          step: "02",
           title: "Analisi AI",
           desc: "La nostra AI avanzata analizza la logica, identifica i bug e spiega i pattern complessi.",
           icon: Sparkles,
-          accent: "#a78bfa",
-          glow: "rgba(167,139,250,0.3)",
+          accent: "#2dd4bf",
+          glow: "rgba(45,212,191,0.5)",
         },
         {
-          step: "03",
           title: "Impara & Applica",
           desc: "Ottieni codice ottimizzato con un click e comprendi il ragionamento dietro ogni cambiamento.",
           icon: GraduationCap,
-          accent: "#60a5fa",
-          glow: "rgba(96,165,250,0.3)",
+          accent: "#14b8a6",
+          glow: "rgba(20,184,166,0.5)",
         },
       ],
       cta: "Provalo ora",
@@ -107,119 +103,150 @@ const HowItWorks = () => {
       id="come-funziona"
       className="relative pt-12 md:pt-16 pb-24 md:pb-32 overflow-hidden"
     >
+      {/* Background decor */}
       <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage:
+            "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }} />
         <div
-          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)" }}
+          className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)" }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(167,139,250,0.05) 0%, transparent 70%)" }}
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(45,212,191,0.07) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-1/3 left-0 w-[300px] h-[300px] rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(20,184,166,0.05) 0%, transparent 70%)" }}
         />
       </div>
 
       <div className="container mx-auto px-6 md:px-12 relative z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-16 md:mb-20"
         >
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-5 bg-emerald-50 border border-emerald-200 text-emerald-600"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6 relative"
           >
-            <Zap size={11} fill="currentColor" />
-            {current.badge}
-          </div>
-          <h2
-            className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-[#0f172a]"
-          >
-            {current.headline}
+            <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
+            <span className="absolute inset-px rounded-full bg-white" />
+            <Zap size={11} fill="currentColor" className="relative text-emerald-500" />
+            <span className="relative text-emerald-600">{current.badge}</span>
+          </motion.div>
+
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-5 text-[#0f172a]">
+            {current.headlineA}{" "}
+            <span className="text-gradient">
+              {current.headlineB}
+            </span>
           </h2>
-          <p className="text-lg max-w-2xl mx-auto text-[#475569]">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-[#475569]">
             {current.subtitle}
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {current.steps.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.12, type: "spring", stiffness: 70 }}
-              className="relative group"
-            >
-              <div
-                className="relative rounded-3xl p-8 h-full flex flex-col transition-all duration-400 bg-white border border-[#e2e8f0]"
+        {/* Steps */}
+        <div className="relative max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-5">
+            {current.steps.map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ delay: i * 0.15, type: "spring", stiffness: 70 }}
+                className="relative group"
               >
-                <div
-                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                  style={{
-                    background: `radial-gradient(circle at 50% 0%, ${item.glow.replace("0.3", "0.06")} 0%, transparent 70%)`,
-                  }}
-                />
+                {/* Gradient border wrapper */}
+                <div className="relative h-full rounded-3xl p-px bg-[#e2e8f0] transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-emerald-400 group-hover:via-teal-400 group-hover:to-emerald-500 group-hover:shadow-xl group-hover:shadow-emerald-500/10">
+                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden p-7">
+                    {/* Hover radial glow */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(circle at 50% 0%, ${item.glow.replace("0.5", "0.08")} 0%, transparent 70%)`,
+                      }}
+                    />
 
-                <div className="flex items-center justify-between mb-7">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-400"
-                    style={{
-                      background: `${item.accent}18`,
-                      border: `1px solid ${item.accent}30`,
-                    }}
-                  >
-                    <item.icon size={24} style={{ color: item.accent }} />
+                    {/* Icon + step chip */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="relative">
+                        <div
+                          className="absolute inset-0 rounded-2xl blur-md opacity-40 group-hover:opacity-70 transition-opacity duration-500"
+                          style={{ background: item.glow }}
+                        />
+                        <motion.div
+                          animate={{ y: [0, -5, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
+                          className="relative w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-400"
+                          style={{
+                            background: `${item.accent}14`,
+                            border: `1px solid ${item.accent}30`,
+                            color: item.accent,
+                            boxShadow: `0 8px 24px -8px ${item.glow}`,
+                          }}
+                        >
+                          <item.icon size={24} />
+                        </motion.div>
+                      </div>
+
+                      <span
+                        className="text-sm font-bold tracking-widest px-2.5 py-1 rounded-full"
+                        style={{ background: `${item.accent}12`, color: item.accent, border: `1px solid ${item.accent}22` }}
+                      >
+                        <ArrowRight size={13} style={{ display: "inline", verticalAlign: "-2px" }} />
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold mb-3 text-[#0f172a]">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-[#64748b]">
+                      {item.desc}
+                    </p>
+
+                    {/* Bottom accent bar */}
+                    <div
+                      className="absolute bottom-0 left-7 right-7 h-[3px] rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"
+                      style={{ background: `linear-gradient(90deg, ${item.accent}, transparent)` }}
+                    />
                   </div>
-                  <span
-                    className="text-5xl font-black select-none"
-                    style={{ color: "color-mix(in srgb, var(--foreground) 8%, transparent)" }}
-                  >
-                    {item.step}
-                  </span>
                 </div>
+              </motion.div>
+            ))}
+          </div>
 
-                <h3 className="text-xl font-bold mb-3 text-[#0f172a]">
-                  {item.title}
-                </h3>
-                <p className="text-sm leading-relaxed flex-grow text-[#64748b]">
-                  {item.desc}
-                </p>
-
-                {i < 2 && (
-                  <div className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full items-center justify-center shadow-lg shadow-emerald-500/15"
-                    style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.25))", border: "1px solid rgba(16,185,129,0.35)" }}
-                  >
-                    <ArrowRight size={16} className="text-emerald-600 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-14 text-center"
-        >
-          <MotionLink
-            href="#demo"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm transition-all group"
-            style={{
-              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-              color: "#fff",
-              boxShadow: "0 0 30px rgba(16,185,129,0.25)",
-            }}
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-16 text-center"
           >
-            {current.cta}
-            <ArrowRight size={15} className="group-hover:translate-x-1 text-emerald-200 transition-transform" />
-          </MotionLink>
-        </motion.div>
+            <div className="inline-flex p-px rounded-full bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400 shadow-[0_0_40px_rgba(16,185,129,0.25)]">
+              <MotionLink
+                href="#demo"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm text-white transition-all group bg-gradient-to-r from-emerald-500 to-teal-500"
+              >
+                {current.cta}
+                <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform text-emerald-200" />
+              </MotionLink>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

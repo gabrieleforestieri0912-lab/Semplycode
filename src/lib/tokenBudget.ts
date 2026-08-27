@@ -45,18 +45,10 @@ export function isNewMonth(periodStart?: string | null): boolean {
   return monthKey(periodStart) !== monthKey();
 }
 
-/** Formatta un numero di token in modo leggibile (es. "100K", "1,5M", "∞"). */
+/** Formatta un numero di token in migliaia (es. 100.000 → "100", 1.500.000 → "1500", "∞"). */
 export function formatTokens(tokens: number | null | undefined): string {
   if (tokens == null || tokens === Infinity) return '∞';
-  if (tokens >= 1_000_000) {
-    const millions = tokens / 1_000_000;
-    return `${millions % 1 === 0 ? millions : millions.toFixed(1).replace('.', ',')}M`;
-  }
-  if (tokens >= 1_000) {
-    const thousands = tokens / 1_000;
-    return `${thousands % 1 === 0 ? thousands : thousands.toFixed(1).replace('.', ',')}K`;
-  }
-  return `${tokens}`;
+  return `${Math.round(tokens / 1_000)}`;
 }
 
 /** Residuo (con arrotondamento a intero), utile per le barre di avanzamento. */

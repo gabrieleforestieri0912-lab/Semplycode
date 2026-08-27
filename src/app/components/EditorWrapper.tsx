@@ -1,7 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 
+export interface EditorWrapperHandle {
+  scrollToLine: (lineNumber: number) => void;
+  getLineCount: () => number;
+}
 interface EditorWrapperProps {
   value?: string;
   onChange?: (value: string) => void;
@@ -9,11 +13,16 @@ interface EditorWrapperProps {
   onLineChange?: (lineNumber: number, text: string) => void;
 }
 
-export default function EditorWrapper({ value, onChange, detectedLang, onLineChange }: EditorWrapperProps) {
+export default forwardRef<EditorWrapperHandle, EditorWrapperProps>(function EditorWrapper(
+  { value, onChange, detectedLang, onLineChange },
+  ref,
+) {
   const [CM, setCM] = useState<React.ComponentType<Record<string, unknown>> | null>(null);
   const [baseExtensions, setBaseExtensions] = useState<unknown[]>([]);
   const [langExtension, setLangExtension] = useState<unknown>(null);
   const [themeObj, setThemeObj] = useState<unknown>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorViewRef = React.useRef<any>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -121,6 +130,38 @@ export default function EditorWrapper({ value, onChange, detectedLang, onLineCha
     return () => { cancelled = true; };
   }, [detectedLang, CM]);
 
+  useImperativeHandle(ref, () => ({
+    scrollToLine: (lineNumber: number) => {
+      const view = editorViewRef.current;
+      if (!view) return;
+      try {
+        const line = view.state.doc.line(Math.max(1, lineNumber));
+        view.dispatch({
+          selection: { anchor: line.from },
+          scrollIntoView: true,
+        });
+        const editorEl = view.dom.closest(".cm-editor");
+        if (editorEl) {
+          const scroller = editorEl.querySelector(".cm-scroller");
+          const lineEl = editorEl.querySelectorAll(".cm-line")[lineNumber - 1];
+          if (scroller && lineEl) {
+            const target =
+              lineEl.getBoundingClientRect().top -
+              scroller.getBoundingClientRect().top -
+              scroller.clientHeight / 2 +
+              lineEl.clientHeight / 2;
+            scroller.scrollTop += target;
+          }
+        }
+      } catch {
+        // line out of range
+      }
+    },
+    getLineCount: () => {
+      return editorViewRef.current?.state.doc.lines ?? 0;
+    },
+  }));
+
   if (!CM) {
     return <div className="h-full w-full flex items-center justify-center text-sm text-gray-500">Caricamento editor...</div>;
   }
@@ -132,7 +173,8 @@ export default function EditorWrapper({ value, onChange, detectedLang, onLineCha
     <CodeMirrorComp
       value={value}
       onChange={onChange}
-      onUpdate={(update: { selectionSet?: boolean; docChanged?: boolean; state: { selection: { main: { head: number } }; doc: { lineAt: (pos: number) => { number: number; text: string } } } }) => {
+      onUpdate={(update: { selectionSet?: boolean; docChanged?: boolean; state: { selection: { main: { head: number } }; doc: { lineAt: (pos: number) => { number: number; text: string } } }; view?: unknown }) => {
+        if (update.view) editorViewRef.current = update.view;
         if (onLineChange && (update.selectionSet || update.docChanged)) {
           try {
             const pos = update.state.selection.main.head;
@@ -150,4 +192,4 @@ export default function EditorWrapper({ value, onChange, detectedLang, onLineCha
       className="h-full"
     />
   );
-}
+});

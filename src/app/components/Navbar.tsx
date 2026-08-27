@@ -15,7 +15,7 @@ import {
   Code2,
   Bookmark,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import ThemeToggle from "./ThemeToggle";
@@ -72,6 +72,7 @@ const Navbar = () => {
   }, [isMobileMenuOpen]);
 
   const handleLogout = async () => {
+    if (!window.confirm("Sei sicuro di voler uscire?")) return;
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
     const supabase = createClient();
@@ -98,6 +99,36 @@ const Navbar = () => {
     { href: "/#funzionalita", label: "Funzionalità" },
     { href: "/#estensione", label: "Estensione" },
     { href: "/#prezzi", label: "Prezzi" },
+  ];
+
+  const profileMenuVariants: Variants = {
+    hidden: { opacity: 0, y: 8, scale: 0.96 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring",
+        damping: 26,
+        stiffness: 380,
+        mass: 0.9,
+        staggerChildren: 0.04,
+        delayChildren: 0.02,
+      },
+    },
+    exit: { opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.15 } },
+  };
+
+  const profileItemVariants: Variants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 },
+  };
+
+  const profileItems = [
+    { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
+    { icon: Code2, label: t.editor, href: "/chat" },
+    { icon: Bookmark, label: "Il mio Cassetto", href: "/notes" },
+    { icon: Settings, label: t.settings, href: "/settings" },
   ];
 
   const navLinkClass = `relative font-medium transition-all duration-200 text-[#475569] hover:text-[#0f172a] text-sm`;
@@ -153,40 +184,21 @@ return (
           })}
         </div>
 
-        {/* Right side: Playground + Dashboard buttons (lg+) + Account + Hamburger */}
+        {/* Right side: Account / Auth + Hamburger */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Playground + Dashboard buttons - solo se autenticato */}
-          {sessionUser && (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/chat"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
-            >
-              <Code2 size={16} />
-              Chat AI
-            </Link>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
-            >
-              <BarChart3 size={16} />
-              Dashboard
-            </Link>
-            <Link
-              href="/notes"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
-            >
-              <Bookmark size={16} />
-              Note
-            </Link>
-          </div>
-          )}
 
-          {/* Theme toggle — a sinistra dei bottoni di accesso */}
           <ThemeToggle />
 
-          {/* Account / Auth */}
-          {sessionUser ? (
+          {sessionUser && (
+            <Link
+              href="/chat"
+              className="hidden sm:flex items-center px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
+            >
+              Chat AI
+            </Link>
+          )}
+
+          {sessionUser && (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -218,76 +230,66 @@ return (
                     />
 
                     <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      transition={{ type: "spring", damping: 26, stiffness: 380, mass: 0.9 }}
-                      className="absolute right-0 mt-3 w-56 bg-white backdrop-blur-xl border border-[#e2e8f0] rounded-2xl shadow-2xl shadow-black/10 z-95 overflow-hidden"
+                      variants={profileMenuVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute right-0 mt-3 w-60 bg-white backdrop-blur-xl border border-[#e2e8f0] rounded-2xl shadow-2xl shadow-black/10 z-95 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-[#e2e8f0]">
-                        <p className="text-sm font-semibold text-[#0f172a]">
-                          {sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || "Utente"}
-                        </p>
-                        <p className="text-xs text-[#64748b] truncate mt-0.5">
-                          {sessionUser.email}
-                        </p>
+                      <div className="relative px-4 py-3.5 border-b border-[#e2e8f0] bg-linear-to-br from-primary/[0.06] to-emerald-500/[0.06]">
+                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+                        <div className="relative flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-[#0f172a] truncate">
+                              {sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || "Utente"}
+                            </p>
+                            <p className="text-xs text-[#64748b] truncate mt-0.5">
+                              {sessionUser.email}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                       <div className="py-1.5">
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            router.push("/dashboard");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] transition-colors"
-                        >
-                          <BarChart3 className="w-4 h-4 text-[#64748b]" />
-                          Dashboard
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            router.push("/chat");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] transition-colors"
-                        >
-                          <Code2 className="w-4 h-4 text-[#64748b]" />
-                          {t.editor}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            router.push("/notes");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] transition-colors"
-                        >
-                          <Bookmark className="w-4 h-4 text-[#64748b]" />
-                          Il mio Cassetto
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            router.push("/settings");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] transition-colors"
-                        >
-                          <Settings className="w-4 h-4 text-[#64748b]" />
-                          {t.settings}
-                        </button>
+                        {profileItems.map((item) => (
+                          <motion.button
+                            key={item.href}
+                            variants={profileItemVariants}
+                            onClick={() => {
+                              setIsProfileOpen(false);
+                              router.push(item.href);
+                            }}
+                            className="group w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#475569] hover:text-[#0f172a] hover:bg-black/[0.03] transition-colors"
+                          >
+                            <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all">
+                              <item.icon className="w-4 h-4 text-primary group-hover:text-white transition-colors" />
+                            </span>
+                            {item.label}
+                          </motion.button>
+                        ))}
                         <div className="my-1.5 border-t border-[#e2e8f0]/60" />
-                        <button
+                        <motion.button
+                          variants={profileItemVariants}
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600/80 hover:bg-red-500/[0.07] hover:text-red-600 transition-colors"
+                          className="group w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600/80 hover:text-red-600 hover:bg-red-500/[0.07] transition-colors"
                         >
-                          <LogOut className="w-4 h-4" />
+                          <span className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center group-hover:bg-red-500 transition-all">
+                            <LogOut className="w-4 h-4 text-red-500 group-hover:text-white transition-colors" />
+                          </span>
                           {t.logout}
-                        </button>
+                        </motion.button>
                       </div>
                     </motion.div>
                   </>
                 )}
               </AnimatePresence>
             </div>
-          ) : (
+          )}
+
+          {/* Account / Auth */}
+          {!sessionUser && (
             <>
               <Link
                 href="/login"

@@ -66,12 +66,16 @@ const DemoSection = () => {
     const trimmed = codeSnippet.trim();
     if (!trimmed) return "";
 
+    if (/fun\s+\w+\s*\(|val\s+\w+\s*:|var\s+\w+\s*:/.test(trimmed))
+      return "kotlin";
+
     if (
       /:\s*(string|number|boolean|any|void|never|unknown)\s*[=;)]/i.test(
         trimmed,
       ) ||
       /interface\s+\w+/.test(trimmed) ||
-      (/<\w+>/.test(trimmed) && /:\s*\w+/.test(trimmed))
+      /\bimport\s+type\s+/.test(trimmed) ||
+      (/<\w+>/.test(trimmed) && /(?<!:):\s*\w+/.test(trimmed))
     )
       return "typescript";
 
@@ -82,75 +86,99 @@ const DemoSection = () => {
       } catch {}
     }
 
+    if (/^\s*<\?xml|<\w+:\w+\s+/.test(trimmed)) return "xml";
+    if (/^\s*<\/?[a-zA-Z]+[^>]*>/.test(trimmed)) return "markup";
+
+    if (/^\s*#!/.test(trimmed) && /bash|sh|env/.test(trimmed)) return "shell";
+
     if (
-      /\bpackage\s+\w+;|\bclass\s+\w+\b|System\.out\.println\(|public\s+static\s+void\s+main/.test(
+      /\bpackage\s+\w+;|System\.out\.println\(|public\s+static\s+void\s+main/.test(
         trimmed,
       )
     )
       return "java";
-    if (/\b#include\s+<|printf\(|scanf\(|int\s+main\s*\(/.test(trimmed))
-      return "c";
     if (
-      /#include\s+<iostream>|std::cout|std::vector<|template\s*</.test(trimmed)
+      /#include\s*<(iostream|vector|string|map|algorithm|bits\/)|std::|template\s*<|using\s+namespace\s+\w+;/.test(
+        trimmed,
+      )
     )
       return "cpp";
+    if (
+      /#include\s*<[a-z0-9]+\.h>|printf\s*\(|scanf\s*\(|int\s+main\s*\(/.test(
+        trimmed,
+      )
+    )
+      return "c";
     if (
       /using\s+System;|namespace\s+\w+;|Console\.WriteLine\(|public\s+class\s+/i.test(
         trimmed,
       )
     )
       return "csharp";
-    if (/fun\s+\w+\(|val\s+\w+\:|package\s+\w+\b/.test(trimmed))
-      return "kotlin";
-    if (/func\s+\w+\(|package\s+\w+|fmt\./.test(trimmed)) return "go";
+    if (/func\s+\w+\s*\(|fmt\.|:=/.test(trimmed)) return "go";
+
     if (
-      /def\s+\w+\s*\(|import\s+\w+|from\s+\w+\s+import|print\s*\(/.test(trimmed)
+      /\bimport\s+[^;\n]*?\s+from\s+['"]|\brequire\s*\(|\bconst\b|\blet\b|\bvar\s+\w+|=>|\.then\(|async\s+function|\bswitch\s*\(|\bclass\s+\w+\s*\{/.test(
+        trimmed,
+      )
+    )
+      return "javascript";
+
+    if (
+      /\bdef\s+\w+\s*\([^)]*\)\s*:|\bclass\s+\w+\s*:|\bfrom\s+\w+\s+import|(?<!@)\bimport\s+\w+(?!\s*\()|print\s*\(/.test(
+        trimmed,
+      )
     )
       return "python";
-    if (
-      /^\s*<\?php|\$\w+\s*=/.test(trimmed) ||
-      (/function\s+\w+\s*\(.*\)\s*{/.test(trimmed) && /\$\w+/.test(trimmed))
-    )
-      return "php";
+
     if (
       /SELECT\s+.*FROM|INSERT\s+INTO|UPDATE\s+\w+|DELETE\s+FROM|CREATE\s+TABLE/i.test(
         trimmed,
       )
     )
       return "sql";
-    if (/^\s*<\/?[a-zA-Z]+[^>]*>/.test(trimmed)) return "markup";
-    if (/[.#][\w-]+\s*\{|@media|@keyframes|:\s*[^;]+;/.test(trimmed))
-      return "css";
-    if (/^\s*<\?xml|<\w+:\w+\s+/.test(trimmed)) return "xml";
-    if (/^\s*---\s*\n|^#\s+\w+/.test(trimmed)) return "markdown";
 
-    if (/^\s*#!/.test(trimmed) && /bash|sh|env/.test(trimmed)) return "shell";
-    if (/\bBEGIN\b.*\bEND\b|sub\s+\w+\b|use\s+strict;/.test(trimmed))
+    if (/\bBEGIN\b.*\bEND\b|\bsub\s+\w+\b|\buse\s+strict;/.test(trimmed))
       return "perl";
+
     if (
-      (/ruby/.test(trimmed)) ||
-      (/def\s+\w+\s*/.test(trimmed) && /end\b/.test(trimmed))
+      /^\s*<\?php|\$\w+\s*=/.test(trimmed) ||
+      (/function\s+\w+\s*\(.*\)\s*{/.test(trimmed) && /\$\w+/.test(trimmed))
+    )
+      return "php";
+
+    if (
+      /\bdef\s+\w+[\s(][\s\S]*\bend\b|require\s+['"]|attr_(accessor|reader|writer)|puts\s+/.test(
+        trimmed,
+      )
     )
       return "ruby";
+
     if (
-      /function\s+\w+\s*\(|local\s+\w+\s*=/.test(trimmed) &&
+      /\bfunction\s+\w+\s*\(|\blocal\s+\w+\s*=/.test(trimmed) &&
       /then|do|end/.test(trimmed)
     )
       return "lua";
+
+    if (
+      /\bprogram\s+\w+;|begin\s+end\.|\bvar\s+\w+\s*:|:\s*integer\b/i.test(
+        trimmed,
+      )
+    )
+      return "pascal";
     if (/^\s*PROGRAM\s+|REAL\s+|INTEGER\s+|END\s+PROGRAM/i.test(trimmed))
       return "fortran";
     if (/^\s*IDENTIFICATION\s+DIVISION\b|DISPLAY\s+|ACCEPT\s+/i.test(trimmed))
       return "cobol";
 
     if (
-      /\bprogram\s+\w+;|begin\s+end\.|\bvar\s+\w+\:|:\s*integer\b/i.test(
+      /[.#][\w-]+\s*\{|@media|@keyframes|@import|@font-face|:\s*[^;}]+;/.test(
         trimmed,
       )
     )
-      return "pascal";
+      return "css";
 
-    if (/\bconst\b|\blet\b|\bvar\b|=>|\.then\(|async\s+function/.test(trimmed))
-      return "javascript";
+    if (/^\s*---\s*\n|^#\s+\w+/.test(trimmed)) return "markdown";
 
     return "javascript";
   };
@@ -347,18 +375,11 @@ const DemoSection = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {isLoading ? (
+          {isLoading && (
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2">
               <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
               <span className="text-xs font-medium text-emerald-600">
                 Analizzando...
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-              <span className="text-xs font-medium text-emerald-600">
-                Ready
               </span>
             </div>
           )}

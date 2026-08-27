@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       if (!rl.allowed || inputTokens >= rl.remaining) {
         return new Response(
           JSON.stringify({
-            error: 'Hai esaurito i 30K token gratuiti di oggi. Crea un account gratuito per 100K token al mese.',
+            error: 'Hai esaurito i 30 token gratuiti di oggi. Crea un account gratuito per 100 token al mese.',
             code: 'GUEST_LIMIT',
             remainingTokens: Math.max(0, rl.remaining - inputTokens),
           }),
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
             JSON.stringify({
               error:
                 plan === 'free'
-                  ? `Hai esaurito i 100K token mensili del piano Free. Passa a un piano superiore per più token.`
+                  ? `Hai esaurito i 100 token mensili del piano Free. Passa a un piano superiore per più token.`
                   : `Hai esaurito i token mensili del tuo piano.`,
               code: 'PLAN_LIMIT',
               remainingTokens: 0,

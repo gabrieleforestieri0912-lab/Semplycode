@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6 py-8 font-sans relative">
+    <div className="min-h-screen bg-white flex items-center justify-center p-6 font-sans relative">
       <Link href="/" className="fixed top-5 left-5 z-50 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-emerald-400 transition-colors">
         <ArrowRight className="w-4 h-4 rotate-180" />
         Home

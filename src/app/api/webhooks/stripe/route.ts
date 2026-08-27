@@ -2,8 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { findUserById, findUserByStripeCustomerId, updateUser } from '@/lib/supabase/db';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+let stripe: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY non configurata');
+    }
+    stripe = new Stripe(key);
+  }
+  return stripe;
+}
+
+/** Estrae l'id della subscription dall'evento checkout.session.completed. */
+function subscriptionIdFromSession(session: Stripe.Checkout.Session): string | null {
+  if (typeof session.subscription === 'string') return session.subscription;
+  if (session.subscription && typeof session.subscription === 'object') {
+    return session.subscription.id;
+  }
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, sig, endpointSecret);
+      event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET as string);
     } catch (err) {
       console.error('Webhook signature verification failed:', (err as Error).message);
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
@@ -31,11 +50,13 @@ export async function POST(req: NextRequest) {
         if (userId && userId !== 'guest') {
           const user = await findUserById(userId);
           if (user) {
-            await updateUser(user.email, {
-              subscription_id: session.subscription as string,
+            const subscriptionId = subscriptionIdFromSession(session);
+            const updates: Record<string, unknown> = {
               subscription_status: 'active',
               plan: planId || 'pro',
-            });
+            };
+            if (subscriptionId) updates.subscription_id = subscriptionId;
+            await updateUser(user.email, updates);
           }
         }
         break;
@@ -49,11 +70,12 @@ export async function POST(req: NextRequest) {
         if (user) {
           const updates: Record<string, unknown> = {
             subscription_status: subscription.status,
-            plan: (subscription.metadata?.planId) || user.plan,
+            plan: subscription.metadata?.planId || user.plan,
           };
-          const sub = subscription as unknown as Record<string, unknown>;
-          if (sub.current_period_end) {
-            updates.subscription_end_date = new Date((sub.current_period_end as number) * 1000).toISOString();
+          // In Stripe v20 il periodo corrente sta sul subscription item.
+          const periodEnd = subscription.items?.data?.[0]?.current_period_end;
+          if (periodEnd) {
+            updates.subscription_end_date = new Date(periodEnd * 1000).toISOString();
           }
           await updateUser(user.email, updates);
         }

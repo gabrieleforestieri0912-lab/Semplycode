@@ -4,6 +4,7 @@ import React, { useState, useCallback, DragEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, FileText, X, Play } from "lucide-react";
 import { motion } from "framer-motion";
+import Toast, { useToast } from "./Toast";
 
 interface FileData {
   name: string;
@@ -17,6 +18,7 @@ const MAX_FILE_SIZE = 100 * 1024;
 export default function ImportCodeSection() {
   const [files, setFiles] = useState<FileData[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const { toast, showToast } = useToast();
   const router = useRouter();
 
   const detectLanguageFromExt = (filename: string): string => {
@@ -36,14 +38,14 @@ export default function ImportCodeSection() {
       if (files.length + validFiles.length >= MAX_FILES) break;
 
       if (file.size > MAX_FILE_SIZE) {
-        alert(`Il file ${file.name} è troppo grande (max 100KB)`);
+        showToast(`Il file ${file.name} è troppo grande (max 100KB)`, "error");
         continue;
       }
 
       const ext = file.name.split('.').pop()?.toLowerCase() || '';
       const allowed = ['js', 'jsx', 'ts', 'tsx', 'py', 'java', 'cpp', 'c', 'go', 'rs', 'php', 'sql', 'css', 'html', 'json'];
       if (!allowed.includes(ext)) {
-        alert(`Formato non supportato: ${file.name}`);
+        showToast(`Formato non supportato: ${file.name}`, "error");
         continue;
       }
 
@@ -231,6 +233,7 @@ export default function ImportCodeSection() {
           Verrai reindirizzato a Chat AI. L&apos;AI analizzerà tutti i file e mostrerà i risultati.
         </p>
       </div>
+      <Toast toast={toast} />
     </motion.section>
   );
 }

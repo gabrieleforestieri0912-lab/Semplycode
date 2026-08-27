@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { ArrowRight } from "lucide-react";
 import ChromeLogo from "./ChromeLogo";
+import CodeFloatBackground from "./CodeFloatBackground";
 import { CHROME_STORE_URL } from "@/lib/extension";
 
 const Hero = () => {
@@ -34,6 +35,9 @@ const Hero = () => {
           }}
         />
       </div>
+
+      {/* Background codice fluttuante (decorativo, aria-hidden) */}
+      <CodeFloatBackground />
 
        <div className="container mx-auto px-6 md:px-12 relative z-10">
          <div className="max-w-4xl mx-auto text-center">
@@ -88,7 +92,7 @@ const Hero = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleMainButtonClick}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-base font-bold transition-all"
+              className="w-full sm:w-72 inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 rounded-full text-base font-bold transition-all"
               style={{
                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                 color: "#fff",
@@ -99,17 +103,19 @@ const Hero = () => {
               <ArrowRight size={16} />
             </motion.button>
 
-            <motion.a
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+            <a
               href={CHROME_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full text-base font-semibold border border-[#e2e8f0] text-[#475569] hover:text-[#0f172a] hover:border-[#cbd5e1] hover:bg-black/[0.02] transition-all"
+              className="w-full sm:w-72 inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 rounded-full text-base font-bold text-white transition-all duration-200 hover:scale-[1.04] hover:bg-[#1e293b] active:scale-95"
+              style={{
+                background: "#0f172a",
+                boxShadow: "0 0 40px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.25)",
+              }}
             >
-              <ChromeLogo className="w-4.5 h-4.5" />
+              <ChromeLogo className="w-5 h-5" />
               Aggiungi a Chrome
-            </motion.a>
+            </a>
           </motion.div>
 
           {/* Social proof */}
@@ -121,7 +127,7 @@ const Hero = () => {
             style={{ color: "#475569" }}
           >
             <span className="flex items-center gap-1.5">
-              <span style={{ color: "#10b981" }}>✦</span> 10K+ sviluppatori
+              <span style={{ color: "#10b981" }}>✦</span> In italiano
             </span>
             <span className="text-[#475569]">·</span>
             <span className="flex items-center gap-1.5">
