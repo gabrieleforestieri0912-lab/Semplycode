@@ -15,6 +15,18 @@ import FAQ from "./components/FAQ";
 import ImportCodeSection from "./components/ImportCodeSection";
 import ExtensionSection from "./components/ExtensionSection";
 
+const belowFoldLoaders = {
+  HowItWorks: dynamic(() => import("./components/HowItWorks"), { ssr: true }),
+  Features: dynamic(() => import("./components/Features"), { ssr: true }),
+  ImportCodeSection: dynamic(() => import("./components/ImportCodeSection"), { ssr: true }),
+  Pricing: dynamic(() => import("./components/Pricing"), { ssr: true }),
+  ExtensionSection: dynamic(() => import("./components/ExtensionSection"), { ssr: true }),
+  FAQ: dynamic(() => import("./components/FAQ"), { ssr: true }),
+  Footer: dynamic(() => import("./components/Footer"), { ssr: true }),
+};
+
+const { HowItWorks: HowItWorksLazy, Features: FeaturesLazy, ImportCodeSection: ImportCodeSectionLazy, Pricing: PricingLazy, ExtensionSection: ExtensionSectionLazy, FAQ: FaqLazy, Footer: FooterLazy } = belowFoldLoaders;
+
 const DemoSection = dynamic(() => import("./components/Demo"), {
   ssr: false,
   loading: () => (
@@ -62,17 +74,17 @@ export default function Home() {
           <MagneticPlaygroundButton />
         </div>
 
-        <HowItWorks />
+        <HowItWorksLazy />
 
-        <Features />
+        <FeaturesLazy />
 
-        <ImportCodeSection />
-        <Pricing />
-        <ExtensionSection />
-        <FAQ />
+        <ImportCodeSectionLazy />
+        <PricingLazy />
+        <ExtensionSectionLazy />
+        <FaqLazy />
       </main>
 
-      <Footer />
+      <FooterLazy />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import StyledJsxRegistry from "./registry";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/lib/auth";
+import { MotionConfig } from "framer-motion";
 import Analytics from "@/app/components/Analytics";
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -135,6 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <LanguageProvider>
             <AuthProvider>
+            <MotionConfig reducedMotion="user">
             <StyledJsxRegistry>
               <div className="app-shell">
                 <main id="main" className="content pt-16" role="main">
@@ -142,6 +144,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </main>
               </div>
             </StyledJsxRegistry>
+            </MotionConfig>
           </AuthProvider>
         </LanguageProvider>
         </ThemeProvider>
