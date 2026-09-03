@@ -12,95 +12,71 @@ export interface ChatResult {
   content: string;
 }
 
-function getOpenAiBaseUrl(): string {
-  return (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
+function getGeminiModel(): string {
+  return process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 }
 
-function getOpenAiModel(): string {
-  return process.env.OPENAI_MODEL || 'gpt-4o';
+function getGeminiApiKey(): string {
+  return process.env.GEMINI_API_KEY || '';
 }
 
-function getOllamaUrl(): string {
-  return process.env.OLLAMA_URL || 'http://localhost:11434';
+function toGeminiContent(messages: ChatMessage[]): { role: string; parts: { text: string }[] }[] {
+  const systemText = messages
+    .filter((m) => m.role === 'system')
+    .map((m) => m.content)
+    .join('\n');
+
+  const userMessages = messages.filter((m) => m.role !== 'system');
+
+  if (systemText) {
+    return [{ role: 'user', parts: [{ text: systemText }] }, ...userMessages.map(toPart)];
+  }
+  return userMessages.map(toPart);
 }
 
-function getOllamaModel(): string {
-  return process.env.OLLAMA_MODEL || 'llama3';
-}
-
-function isOpenAIEnabled(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
-}
-
-function resolveModel(requested?: string): string {
-  if (requested) return requested;
-  if (isOpenAIEnabled()) return getOpenAiModel();
-  return getOllamaModel();
+function toPart(message: ChatMessage): { role: string; parts: { text: string }[] } {
+  return { role: message.role === 'assistant' ? 'model' : 'user', parts: [{ text: message.content }] };
 }
 
 export async function chatWithAI(options: ChatOptions): Promise<ChatResult> {
-  const { messages, model } = options;
-  const resolvedModel = resolveModel(model);
-
-  if (isOpenAIEnabled()) {
-    return chatOpenAI({ messages, model: resolvedModel });
-  }
-
-  return chatOllama({ messages, model: resolvedModel });
-}
-
-export async function chatWithAIStream(options: ChatOptions): Promise<Response> {
-  const { messages, model } = options;
-  const resolvedModel = resolveModel(model);
-
-  if (isOpenAIEnabled()) {
-    return chatOpenAIStreamResponse({ messages, model: resolvedModel });
-  }
-
-  return chatOllamaStreamResponse({ messages, model: resolvedModel });
-}
-
-async function chatOpenAI(options: ChatOptions): Promise<ChatResult> {
-  const response = await fetch(`${getOpenAiBaseUrl()}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  const model = options.model || getGeminiModel();
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${getGeminiApiKey()}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: toGeminiContent(options.messages),
+      }),
     },
-    body: JSON.stringify({
-      model: options.model,
-      messages: options.messages,
-      stream: false,
-    }),
-  });
+  );
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
-    throw new Error(`OpenAI error: ${response.statusText} ${errText}`);
+    throw new Error(`Gemini error: ${response.statusText} ${errText}`);
   }
 
   const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content || '';
+  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
   return { content };
 }
 
-async function chatOpenAIStreamResponse(options: ChatOptions): Promise<Response> {
-  const response = await fetch(`${getOpenAiBaseUrl()}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+export async function chatWithAIStream(options: ChatOptions): Promise<Response> {
+  const model = options.model || getGeminiModel();
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${getGeminiApiKey()}${'&alt=sse'}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: toGeminiContent(options.messages),
+      }),
     },
-    body: JSON.stringify({
-      model: options.model,
-      messages: options.messages,
-      stream: true,
-    }),
-  });
+  );
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
-    throw new Error(`OpenAI error: ${response.statusText} ${errText}`);
+    throw new Error(`Gemini error: ${response.statusText} ${errText}`);
   }
 
   const encoder = new TextEncoder();
@@ -115,21 +91,25 @@ async function chatOpenAIStreamResponse(options: ChatOptions): Promise<Response>
       }
 
       try {
+        let buffer = '';
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n').filter(Boolean);
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             const trimmed = line.slice(6).trim();
-            if (trimmed === '[DONE]') continue;
+            if (!trimmed) continue;
 
             try {
               const parsed = JSON.parse(trimmed);
-              const delta = parsed.choices?.[0]?.delta?.content || '';
+              const delta = parsed?.candidates?.[0]?.content?.parts?.[0]?.text
+                || parsed?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
+                || '';
               if (delta) {
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta })}\n\n`));
               }
@@ -140,97 +120,7 @@ async function chatOpenAIStreamResponse(options: ChatOptions): Promise<Response>
         }
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
-          console.error('OpenAI stream error:', err);
-        }
-      } finally {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
-        controller.close();
-        reader.releaseLock();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'content-type': 'text/event-stream',
-      'cache-control': 'no-cache',
-      connection: 'keep-alive',
-    },
-  });
-}
-
-async function chatOllama(options: ChatOptions): Promise<ChatResult> {
-  const response = await fetch(`${getOllamaUrl()}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: options.model,
-      messages: options.messages,
-      stream: false,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text().catch(() => '');
-    throw new Error(`Ollama error: ${response.statusText} ${errText}`);
-  }
-
-  const data = await response.json();
-  const content = data?.message?.content || data?.response || '';
-  return { content };
-}
-
-async function chatOllamaStreamResponse(options: ChatOptions): Promise<Response> {
-  const response = await fetch(`${getOllamaUrl()}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: options.model,
-      messages: options.messages,
-      stream: true,
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text().catch(() => '');
-    throw new Error(`Ollama error: ${response.statusText} ${errText}`);
-  }
-
-  const encoder = new TextEncoder();
-  const reader = response.body?.getReader();
-  const decoder = new TextDecoder();
-
-  const stream = new ReadableStream({
-    async start(controller) {
-      if (!reader) {
-        controller.close();
-        return;
-      }
-
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n').filter(Boolean);
-
-          for (const line of lines) {
-            try {
-              const parsed = JSON.parse(line);
-              const delta = parsed.message?.content || parsed.response || '';
-              if (delta) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta })}\n\n`));
-              }
-              if (parsed.done) break;
-            } catch {
-              // skip malformed JSON
-            }
-          }
-        }
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Ollama stream error:', err);
+          console.error('Gemini stream error:', err);
         }
       } finally {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));

@@ -2,7 +2,7 @@
 
 // API Bases
 const DEV_API_BASE  = "http://localhost:3000/api";
-const PROD_API_BASE = "https://semplycode.com/api";
+const PROD_API_BASE = "https://semplycode.vercel.app/api";
 
 // Storage helpers
 const storage = {

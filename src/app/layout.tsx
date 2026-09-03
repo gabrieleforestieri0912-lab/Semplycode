@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://semplycode.com"),
+  metadataBase: new URL("https://semplycode.vercel.app"),
   title: {
     default: "Semplycode | Analisi Intelligente del Codice",
     template: "%s | Semplycode",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "it_IT",
-    url: "https://semplycode.com",
+    url: "https://semplycode.vercel.app",
     siteName: "Semplycode",
     title: "Semplycode | Analisi Intelligente del Codice",
     description:
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     creator: "@semplycode",
   },
   alternates: {
-    canonical: "https://semplycode.com",
+    canonical: "https://semplycode.vercel.app",
   },
   icons: {
     icon: "/semplycode.png",

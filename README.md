@@ -15,7 +15,7 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 | Linguaggio | TypeScript |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (email/password, OAuth Google/GitHub, OTP via email) |
-| AI Engine | OpenAI-compatible (default `gpt-4o`) oppure Ollama locale (`llama3` su `localhost:11434`) |
+| AI Engine | Google Gemini (default `gemini-2.0-flash`) |
 | Pagamenti | Stripe (subscription model) |
 | Email | SMTP (login code OTP), Nodemailer (password reset) |
 | Rate Limiting | Redis (`ioredis`, fallback in-memory) |
@@ -61,7 +61,7 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 │   │   ├── chat/ · dashboard/ · notes/ · settings/ · share/[token]/ · feedback/ · privacy/ · terms/
 │   ├── lib/
 │   │   ├── supabase/              # client.ts (browser) · server.ts · middleware.ts · db.ts · types.ts · service.ts
-│   │   ├── ai-provider.ts         # chatWithAI() — OpenAI/Ollama, unico cervello
+│   │   ├── ai-provider.ts         # chatWithAI() — Google Gemini, unico cervello
 │   │   ├── api-auth.ts            # getAuthUser(): cookie session O Bearer JWT
 │   │   ├── apiClient.ts           # Client tipizzato (webapp) + apiClient.extension.ts (bundle estensione)
 │   │   ├── auth.tsx               # Context React per Supabase
@@ -249,7 +249,7 @@ Il prompt system viene costruito in `analysisPrompts.ts`:
 
 ## Chrome Extension
 
-- **MV3**, permessi minimi: `activeTab`, `contextMenus`, `sidePanel`, `storage` (+ `scripting` rimosso, non usato). `host_permissions` ristretti a `localhost:3000` e `semplycode.com`. Content script su `<all_urls>` per l'highlight della selezione (mai accede al token).
+- **MV3**, permessi minimi: `activeTab`, `contextMenus`, `sidePanel`, `storage` (+ `scripting` rimosso, non usato). `host_permissions` ristretti a `localhost:3000` e `semplycode.vercel.app`. Content script su `<all_urls>` per l'highlight della selezione (mai accede al token).
 - **Sidepanel**: Playground (editor CodeMirror + chat AI), Cassetto note (lista + dettaglio), hub Webapp (account/piani, impostazioni, login).
 - **Tour guidato**: overlay con spotlight su 5 step (Playground, Cassetto, Webapp, guida, tema), auto-avvio al primo uso, replay dal pulsante `?`.
 - **Sezione account**: piani di abbonamento identici al Pricing webapp (Gratis/Starter/Pro/Enterprise), piano corrente evidenziato via `/api/usage/stats`.
@@ -289,14 +289,9 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# AI Provider (preferito: OpenAI-compatible)
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-4o
-
-# Fallback AI locale (solo se OPENAI_API_KEY non è impostata)
-OLLAMA_URL=http://localhost:11434
-OLLAMA_MODEL=llama3
+# AI Provider (Google Gemini)
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
 
 # Opzionale Redis (rate limiting multi-instanza)
 REDIS_URL=redis://localhost:6379

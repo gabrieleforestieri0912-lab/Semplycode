@@ -11,7 +11,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://semplycode.com/*"
+    "https://semplycode.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js"

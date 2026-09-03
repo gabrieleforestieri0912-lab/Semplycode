@@ -1,6 +1,6 @@
 import { faqs } from "@/lib/faq";
 
-const SITE_URL = "https://semplycode.com";
+const SITE_URL = "https://semplycode.vercel.app";
 
 const organizationSchema = {
   "@context": "https://schema.org",

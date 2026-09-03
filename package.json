@@ -8,7 +8,6 @@
     "build": "next build",
     "build:extension-api": "esbuild src/lib/apiClient.extension.ts --bundle --format=iife --platform=browser --target=es2020 --outfile=chrome-extension/api-client.js",
     "build:extension-codemirror": "esbuild chrome-extension/codemirror-entry.js --bundle --minify --format=iife --platform=browser --target=es2020 --outfile=chrome-extension/codemirror-bundle.js",
-    "test:extension-codemirror": "node scripts/test-codemirror-bundle.js",
     "start": "next start",
     "lint": "eslint"
   },

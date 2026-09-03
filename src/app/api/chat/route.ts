@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const model = requestedModel || process.env.OPENAI_MODEL || process.env.OLLAMA_MODEL || 'gpt-4o';
+    const model = requestedModel || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
     let setGuestCookie: string | null = null;
     let plan: string | null = null;
 

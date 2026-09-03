@@ -35,7 +35,7 @@ export default function robots(): MetadataRoute.Robots {
       // Bot AI: accesso alle pagine pubbliche (non alle aree private/API)
       ...AI_CRAWLERS.map((userAgent) => ({ userAgent, ...PUBLIC_RULES })),
     ],
-    sitemap: 'https://semplycode.com/sitemap.xml',
-    host: 'https://semplycode.com',
+    sitemap: 'https://semplycode.vercel.app/sitemap.xml',
+    host: 'https://semplycode.vercel.app',
   };
 }

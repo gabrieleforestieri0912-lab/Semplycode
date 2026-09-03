@@ -101,7 +101,7 @@ export function formatApiError(error: ApiError): string {
   if (error?.status === 429) {
     return error.message;
   }
-  if (error?.code === 'OLLAMA_ERROR' || error?.code === 'AI_ERROR' || error?.status === 500) {
+  if (error?.code === 'GEMINI_ERROR' || error?.code === 'AI_ERROR' || error?.status === 500) {
     return 'Motore AI non disponibile. Verifica la configurazione o riprova.';
   }
   if (error?.status === 401) {
