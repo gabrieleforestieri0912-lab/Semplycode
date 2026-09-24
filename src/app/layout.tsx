@@ -139,7 +139,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <MotionConfig reducedMotion="user">
             <StyledJsxRegistry>
               <div className="app-shell">
-                <main id="main" className="content pt-16" role="main">
+                <main id="main" className="content" role="main">
                   {children}
                 </main>
               </div>
