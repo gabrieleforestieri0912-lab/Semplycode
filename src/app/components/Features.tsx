@@ -99,7 +99,7 @@ const Features = () => {
   return (
     <section
       id="funzionalita"
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-20 md:py-28 lg:py-32 overflow-hidden"
     >
       {/* Grid background */}
       <div
@@ -111,8 +111,8 @@ const Features = () => {
         }}
       />
 
-      <div className="container mx-auto px-6 md:px-12 relative z-10">
-        <div className="text-center mb-16">
+      <div className="container mx-auto relative z-10 max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px]">
+        <div className="text-center mb-12 sm:mb-16">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -128,7 +128,7 @@ const Features = () => {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
+            className="text-[clamp(1.75rem,4vw,4rem)] 3xl:text-[4.5rem] font-black tracking-tight text-[#0f172a] mb-4 sm:mb-5"
           >
             Tutto ciò che ti serve{" "}
             <span className="text-gradient">
@@ -140,13 +140,13 @@ const Features = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
+            className="text-base sm:text-lg md:text-xl text-[#475569] max-w-2xl mx-auto px-2 sm:px-0"
           >
             Dal primo snippet al progetto multi-file: analisi strutturata, export e condivisione.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-3 gap-4 sm:gap-6 2xl:gap-8 3xl:gap-10">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
@@ -154,7 +154,7 @@ const Features = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="group relative p-6 rounded-2xl border border-[#e2e8f0] bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-900/10"
+              className="group relative p-5 sm:p-6 xl:p-7 rounded-2xl border border-[#e2e8f0] bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-900/10"
               style={{
                 boxShadow: `0 0 40px ${f.glow}`,
               }}

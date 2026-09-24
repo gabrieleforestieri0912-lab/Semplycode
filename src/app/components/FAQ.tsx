@@ -13,9 +13,9 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="w-full py-16 md:py-24 bg-[#f8fafc]">
-      <div className="container mx-auto px-6 md:px-12 max-w-3xl">
-        <div className="text-center mb-12">
+    <section id="faq" className="w-full py-16 md:py-24 3xl:py-32 bg-[#f8fafc]">
+      <div className="container mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-5xl 4xl:max-w-6xl">
+        <div className="text-center mb-10 sm:mb-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -32,7 +32,7 @@ export default function FAQ() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
+            className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 3xl:text-7xl font-black tracking-tight text-[#0f172a] mb-4 sm:mb-5"
           >
             Tutto quello che{" "}
             <span className="text-gradient">
@@ -44,7 +44,7 @@ export default function FAQ() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
+            className="text-sm xs:text-base sm:text-lg md:text-xl 3xl:text-2xl text-[#475569] max-w-2xl 3xl:max-w-3xl mx-auto px-2 sm:px-0"
           >
             Risposte chiare su Chat AI, limiti, piani e privacy.
           </motion.p>
@@ -71,10 +71,10 @@ export default function FAQ() {
                   onClick={() => toggle(index)}
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${index}`}
-                  className="w-full flex items-center justify-between gap-4 px-5 md:px-6 py-4 text-left cursor-pointer"
+                  className="w-full min-h-[52px] flex items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 md:px-6 py-3.5 sm:py-4 text-left cursor-pointer"
                 >
                   <span
-                    className={`font-semibold text-sm md:text-base pr-2 transition-colors duration-300 ${
+                    className={`font-semibold text-sm sm:text-base 3xl:text-lg pr-2 transition-colors duration-300 ${
                       isOpen ? "text-emerald-700" : "text-[#0f172a]"
                     }`}
                   >

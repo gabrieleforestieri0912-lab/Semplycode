@@ -11,8 +11,8 @@ const storage = {
   remove: (keys) => new Promise(resolve => chrome.storage.local.remove(keys, resolve)),
 };
 
-// Default to localhost during development
-let API_BASE = DEV_API_BASE;
+// Default to production
+let API_BASE = PROD_API_BASE;
 
 // L'autenticazione è attiva: l'utente accede con codice email e riceve
 // un JWT Bearer firmato dal server (usato come Authorization header).
@@ -60,7 +60,7 @@ function currentTabUrl() {
 // ===== Theme =====
 
 function applyTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme || "dark");
+  document.documentElement.setAttribute("data-theme", theme || "light");
   const dark = theme === "dark";
   const sunIcon = $("theme-icon-sun");
   const moonIcon = $("theme-icon-moon");
@@ -71,12 +71,13 @@ function applyTheme(theme) {
 }
 
 async function initTheme() {
-  let current = "dark";
+  let current = "light";
   try {
     const saved = await storage.get("theme");
-    current = saved.theme || "dark";
+    // Se non è mai stato salvato nulla usa 'light' come default
+    current = saved.theme || "light";
   } catch (e) {
-    current = "dark";
+    current = "light";
   }
   applyTheme(current);
 
@@ -328,7 +329,7 @@ const ACCOUNT_PLANS = [
   {
     id: "starter",
     name: "Starter",
-    price: "9.99",
+    price: "4.99",
     tokensLabel: "1500",
     tokensNote: "token/mese",
     features: [
@@ -343,7 +344,7 @@ const ACCOUNT_PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: "19.99",
+    price: "7.99",
     tokensLabel: "3000",
     tokensNote: "token/mese",
     features: [
@@ -358,7 +359,7 @@ const ACCOUNT_PLANS = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "49.99",
+    price: "9.99",
     tokensLabel: "∞",
     tokensNote: "token illimitati",
     features: [

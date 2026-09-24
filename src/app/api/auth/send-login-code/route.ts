@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!email) return NextResponse.json({ error: 'Email obbligatoria' }, { status: 400 });
 
     const normalized = email.toLowerCase().trim();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
     const supabase = await createClient();
 
     const { error: otpError } = await supabase.auth.signInWithOtp({

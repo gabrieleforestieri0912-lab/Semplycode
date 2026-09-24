@@ -5,9 +5,9 @@ import { Github, Twitter, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="py-20 bg-[#080d14] border-t border-white/10">
-      <div className="container mx-auto px-8 md:px-16">
-        <div className="flex flex-col lg:flex-row justify-between gap-14 lg:gap-20 mb-16">
+    <footer className="py-12 sm:py-16 md:py-20 3xl:py-28 bg-[#080d14] border-t border-white/10">
+      <div className="container mx-auto max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px]">
+        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-20 3xl:gap-28 mb-16">
           {/* Brand */}
           <div className="max-w-sm">
             <div className="flex items-center gap-2.5 mb-5">
@@ -32,7 +32,7 @@ const Footer = () => {
           </div>
 
           {/* Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-12 gap-y-12 lg:gap-x-16">
+          <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 gap-x-6 sm:gap-x-12 3xl:gap-x-20 gap-y-8 sm:gap-y-12 lg:gap-x-16">
             {/* Prodotto */}
             <div>
               <h4 className="font-semibold mb-4 text-xs uppercase tracking-[1.5px] text-emerald-400 flex items-center gap-2">

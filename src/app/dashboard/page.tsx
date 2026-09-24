@@ -98,7 +98,7 @@ export default function DashboardPage() {
     <>
       <Navbar />
 
-      <section className="w-full max-w-7xl mx-auto px-6 md:px-12 py-8 md:py-12 bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 my-8 relative overflow-hidden">
+      <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-12 py-6 sm:py-8 md:py-12 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 mt-20 sm:mt-24 mb-8 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-linear-to-br from-primary/10 via-emerald-500/5 to-transparent rounded-full blur-[150px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-linear-to-tr from-emerald-500/5 to-transparent rounded-full blur-[120px] pointer-events-none translate-y-1/2 -translate-x-1/3"></div>
 
@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
           </motion.div>
 
-          <motion.div variants={itemVariants} className="grid md:grid-cols-3 gap-6">
+          <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="relative group">
               <div className="absolute inset-0 bg-linear-to-br from-primary to-emerald-500 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
               <div className="relative bg-white border border-[#e2e8f0] rounded-2xl p-6 text-[#0f172a] overflow-hidden shadow-sm">
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                 </div>
               </Link>
 
-              <Link href="/pricing">
+              <Link href="/#prezzi">
                 <div className="group relative bg-white border border-[#e2e8f0] rounded-2xl p-6 hover:border-amber-300 transition-all duration-200 cursor-pointer flex items-center gap-4 shadow-sm">
                   <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center group-hover:bg-amber-500 transition-all">
                      <CreditCard className="w-5 h-5 text-amber-500 group-hover:text-white transition-colors" />
@@ -365,7 +365,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <Link href="/pricing" className="text-sm text-primary hover:underline flex items-center gap-1 whitespace-nowrap">
+              <Link href="/#prezzi" className="text-sm text-primary hover:underline flex items-center gap-1 whitespace-nowrap">
                 Gestisci piano <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
               <p className="text-sm text-[#64748b]">Incolla più file o un intero modulo per feedback architetturale.</p>
             </div>
 
-            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 group cursor-pointer transition-all shadow-sm" onClick={() => router.push('/pricing')}>
+            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 group cursor-pointer transition-all shadow-sm" onClick={() => router.push('/#prezzi')}>
               <Target className="w-6 h-6 text-amber-500 mb-3" />
               <h4 className="font-semibold text-[#0f172a] mb-1 group-hover:text-amber-500 transition-colors">Passa a Pro</h4>
               <p className="text-sm text-[#64748b]">Sblocca più token al mese e modelli più potenti.</p>

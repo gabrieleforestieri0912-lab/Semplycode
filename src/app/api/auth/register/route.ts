@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
     const supabase = await createClient();
     const { error: authError } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),

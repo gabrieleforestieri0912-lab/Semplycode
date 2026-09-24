@@ -16,7 +16,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative pt-16 md:pt-28 pb-16 md:pb-24 overflow-hidden">
+    <section className="relative pt-14 sm:pt-20 md:pt-28 lg:pt-32 pb-14 sm:pb-20 md:pb-24 lg:pb-32 overflow-hidden">
       {/* Background orbs */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
@@ -39,7 +39,7 @@ const Hero = () => {
       {/* Background codice fluttuante (decorativo, aria-hidden) */}
       <CodeFloatBackground />
 
-       <div className="container mx-auto px-6 md:px-12 relative z-10">
+       <div className="container mx-auto relative z-10 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl 4xl:max-w-[1400px]">
          <div className="max-w-4xl mx-auto text-center">
 
            {/* Headline */}
@@ -47,11 +47,11 @@ const Hero = () => {
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl xs:text-5xl md:text-7xl font-black tracking-tight mb-6 md:mb-8 leading-[1.08] relative text-[#0f172a]"
+              className="text-[clamp(1.9rem,5vw,5.5rem)] 3xl:text-[6rem] 4xl:text-[7rem] font-black tracking-tight mb-5 sm:mb-6 md:mb-8 leading-[1.1] relative text-[#0f172a]"
             >
               <span className="relative z-[1]">Smetti di combattere</span>
               <br className="hidden sm:block" />
-              <span className="relative z-[1]">con il codice.{" "}</span>
+              <span className="relative z-[1]"> con il codice.{" "}</span>
              <motion.span
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
@@ -75,7 +75,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.25 }}
-            className="text-base xs:text-lg md:text-xl mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0 text-[#64748b]"
+            className="text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 md:mb-12 max-w-2xl 3xl:max-w-3xl mx-auto leading-relaxed text-[#64748b]"
           >
             Semplycode scompone la logica complessa, trova i bug istantaneamente
             e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.
@@ -86,13 +86,13 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 max-w-3xl mx-auto"
+            className="flex flex-col xs:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 max-w-3xl mx-auto w-full"
           >
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleMainButtonClick}
-              className="w-full sm:w-72 inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 rounded-full text-base font-bold transition-all"
+              className="w-full xs:w-auto min-w-[200px] sm:min-w-[240px] inline-flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-8 md:px-10 py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold transition-all"
               style={{
                 background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                 color: "#fff",
@@ -107,7 +107,7 @@ const Hero = () => {
               href={CHROME_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-72 inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 rounded-full text-base font-bold text-white transition-all duration-200 hover:scale-[1.04] hover:bg-[#1e293b] active:scale-95"
+              className="w-full xs:w-auto min-w-[200px] sm:min-w-[240px] inline-flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-8 md:px-10 py-3.5 sm:py-4 rounded-full text-sm sm:text-base font-bold text-white transition-all duration-200 hover:scale-[1.04] hover:bg-[#1e293b] active:scale-95"
               style={{
                 background: "#0f172a",
                 boxShadow: "0 0 40px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.25)",
@@ -123,17 +123,17 @@ const Hero = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="mt-10 flex items-center justify-center gap-6 text-sm"
+            className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm 3xl:text-base"
             style={{ color: "#475569" }}
           >
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> In italiano
             </span>
-            <span className="text-[#475569]">·</span>
+            <span className="text-[#475569] hidden xs:inline">·</span>
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> 20+ linguaggi
             </span>
-            <span className="text-[#475569]">·</span>
+            <span className="text-[#475569] hidden xs:inline">·</span>
             <span className="flex items-center gap-1.5">
               <span style={{ color: "#10b981" }}>✦</span> Gratis per sempre
             </span>

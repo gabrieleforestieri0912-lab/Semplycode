@@ -122,43 +122,43 @@ export default function ImportCodeSection() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.5 }}
-      className="w-full py-28 bg-[#f8fafc] relative overflow-hidden"
+      className="w-full py-16 sm:py-24 md:py-28 bg-[#f8fafc] relative overflow-hidden"
     >
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.05) 0%, transparent 70%)" }} />
       </div>
-        <div className="container mx-auto px-6 md:px-12 max-w-5xl">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-sm font-semibold mb-4">
+        <div className="container mx-auto max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl 4xl:max-w-[1600px]">
+          <div className="text-center mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs sm:text-sm font-semibold mb-4">
               PROVA CON I TUOI FILE
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#0f172a] mb-4">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-bold tracking-tight text-[#0f172a] mb-4">
               Analizza i tuoi file di codice
             </h2>
-            <p className="text-lg text-[#475569] max-w-2xl mx-auto">Carica uno o più file. L&apos;AI li analizzerà tutti insieme e ti mostrerà i risultati in Chat AI.</p>
+            <p className="text-sm xs:text-base sm:text-lg 3xl:text-xl text-[#475569] max-w-2xl 3xl:max-w-3xl mx-auto px-2 sm:px-0">Carica uno o più file. L&apos;AI li analizzerà tutti insieme e ti mostrerà i risultati in Chat AI.</p>
           </div>
 
         <div
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`border-2 border-dashed rounded-3xl p-10 text-center transition-all ${
+          className={`border-2 border-dashed rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-10 3xl:p-14 text-center transition-all ${
             isDragging 
               ? 'border-emerald-400 bg-emerald-500/10' 
               : 'border-[#1e293b]/30 hover:border-emerald-500/50'
           }`}
           style={{ background: 'linear-gradient(135deg, #0a0c10 0%, #14181f 100%)' }}
         >
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/20">
-            <Upload className="w-8 h-8 text-emerald-400" />
+          <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-5 sm:mb-6 border border-emerald-500/20">
+            <Upload className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400" />
           </div>
 
-          <p className="text-xl font-semibold text-white mb-2">
+          <p className="text-lg xs:text-xl 3xl:text-2xl font-semibold text-white mb-2">
             Trascina i file qui
           </p>
-          <p className="text-[#94a3b8] mb-6">oppure</p>
+          <p className="text-sm xs:text-base text-[#94a3b8] mb-5 sm:mb-6">oppure</p>
 
-          <label className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-colors text-sm font-medium text-[#cbd5e1]">
+          <label className="inline-flex items-center justify-center gap-2 px-5 xs:px-6 py-3 min-h-[48px] max-w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl cursor-pointer transition-colors text-xs xs:text-sm 3xl:text-base font-medium text-[#cbd5e1]">
             <FileText size={16} />
             Scegli file dal computer
             <input
@@ -170,7 +170,7 @@ export default function ImportCodeSection() {
             />
           </label>
 
-          <p className="text-xs text-[#64748b] mt-4" style={{color: '#64748b'}}>
+          <p className="text-[11px] xs:text-xs 3xl:text-sm text-[#64748b] mt-4 px-2" style={{color: '#64748b'}}>
             Max {MAX_FILES} file &bull; 100KB per file &bull; JS, TS, Python, Java, Go, Rust...
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function ImportCodeSection() {
           <button
             onClick={handleAnalyze}
             disabled={files.length === 0}
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-linear-to-r from-emerald-500 to-teal-500 text-white font-semibold text-lg shadow-lg shadow-emerald-500/20 hover:brightness-105 active:scale-[0.985] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 w-full xs:w-auto min-h-[48px] rounded-2xl bg-linear-to-r from-emerald-500 to-teal-500 text-white font-semibold text-base sm:text-lg 3xl:text-xl shadow-lg shadow-emerald-500/20 hover:brightness-105 active:scale-[0.985] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play className="w-5 h-5" />
             Analizza {files.length > 0 ? `${files.length} file` : ''} con AI

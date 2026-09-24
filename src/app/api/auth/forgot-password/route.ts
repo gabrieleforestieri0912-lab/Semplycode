@@ -23,14 +23,14 @@ export async function POST(req: NextRequest) {
 
     await updateUser(normalizedEmail, { reset_token: resetToken, reset_token_expiry: resetTokenExpiry });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
     const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`;
 
     const smtpHost = process.env.SMTP_HOST;
     const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
     const smtpUser = process.env.SMTP_USER;
     const smtpPass = process.env.SMTP_PASS;
-    const smtpFrom = process.env.SMTP_FROM || `no-reply@${siteUrl.replace(/^https?:\/\//, '') || 'localhost'}`;
+    const smtpFrom = process.env.SMTP_FROM || `no-reply@${siteUrl.replace(/^https?:\/\//, '') || 'semplycode.vercel.app'}`;
 
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
       try {

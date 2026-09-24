@@ -84,7 +84,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-white flex items-start sm:items-center justify-center px-4 font-sans text-[#0f172a] relative overflow-x-hidden -mt-16">
+    <div className="min-h-dvh bg-white flex items-center justify-center px-4 py-12 font-sans text-[#0f172a] relative overflow-x-hidden">
       <CodeFloatBackground variant="sides" />
       <Link href="/" className="fixed top-5 left-5 z-50 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-emerald-400 transition-colors">
         <ArrowRight className="w-4 h-4 rotate-180" />

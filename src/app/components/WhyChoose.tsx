@@ -40,14 +40,14 @@ const WhyChoose = () => {
         />
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 relative z-10">
-        <div className="max-w-5xl mx-auto">
+      <div className="container mx-auto relative z-10 max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl">
+        <div className="max-w-5xl 3xl:max-w-6xl mx-auto">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-5"
@@ -61,17 +61,17 @@ const WhyChoose = () => {
               Perché Semplycode
             </div>
             <h2
-              className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-[#0f172a]"
+              className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-black tracking-tight mb-4 text-[#0f172a]"
             >
               La differenza che conta
             </h2>
-            <p className="text-lg max-w-xl mx-auto" style={{ color: "#475569" }}>
+            <p className="text-sm xs:text-base sm:text-lg 3xl:text-xl max-w-xl 3xl:max-w-2xl mx-auto px-2 sm:px-0" style={{ color: "#475569" }}>
               In un mondo pieno di AI che scrivono codice da sole, noi facciamo qualcosa di diverso.
             </p>
           </motion.div>
 
           {/* Reasons grid */}
-          <div className="grid md:grid-cols-2 gap-5 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 3xl:gap-8 mb-12">
             {reasons.map((reason, i) => (
               <motion.div
                 key={i}
@@ -80,7 +80,7 @@ const WhyChoose = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -3 }}
-                className="flex gap-4 rounded-2xl p-6 transition-all duration-300"
+                className="flex gap-4 rounded-2xl p-5 sm:p-6 3xl:p-8 transition-all duration-300"
                 style={{
                   background: "#ffffff",
                   border: "1px solid rgba(0,0,0,0.08)",
@@ -95,10 +95,10 @@ const WhyChoose = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold mb-1.5" style={{ color: "#0f172a" }}>
+                  <h3 className="text-sm xs:text-base 3xl:text-lg font-bold mb-1.5" style={{ color: "#0f172a" }}>
                     {reason.title}
                   </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#64748b" }}>
+                  <p className="text-xs xs:text-sm 3xl:text-base leading-relaxed" style={{ color: "#64748b" }}>
                     {reason.desc}
                   </p>
                 </div>
@@ -112,17 +112,17 @@ const WhyChoose = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
-            className="rounded-2xl p-8 text-center"
+            className="rounded-2xl p-5 sm:p-8 3xl:p-12 text-center"
             style={{
               background: "linear-gradient(135deg, rgba(16,185,129,0.08), rgba(52,211,153,0.04))",
               border: "1px solid rgba(16,185,129,0.15)",
             }}
           >
-            <p className="text-lg font-medium mb-2" style={{ color: "#475569" }}>
+            <p className="text-base sm:text-lg 3xl:text-xl font-medium mb-2" style={{ color: "#475569" }}>
               <span style={{ color: "#0f172a", fontWeight: 600 }}>Copilot, ChatGPT, Claude</span>{" "}
               <span style={{ color: "#475569" }}>scrivono codice al posto tuo.</span>
             </p>
-            <p className="text-xl font-bold" style={{ color: "#0f172a" }}>
+            <p className="text-lg xs:text-xl sm:text-2xl 3xl:text-3xl font-bold" style={{ color: "#0f172a" }}>
               <span
                 style={{
                   background: "linear-gradient(135deg, #10b981, #34d399)",
@@ -134,7 +134,7 @@ const WhyChoose = () => {
               </span>{" "}
               ti insegna a farlo.
             </p>
-            <p className="mt-4 text-sm" style={{ color: "#475569" }}>
+            <p className="mt-4 text-xs xs:text-sm 3xl:text-base" style={{ color: "#475569" }}>
               La differenza tra un developer che usa AI e uno che la{" "}
               <span style={{ color: "#059669", fontWeight: 600 }}>capisce</span>?{" "}
               <span style={{ color: "#0f172a", fontWeight: 700 }}>Semplycode.</span>

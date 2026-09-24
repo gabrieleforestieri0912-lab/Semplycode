@@ -30,7 +30,8 @@ const { HowItWorks: HowItWorksLazy, Features: FeaturesLazy, ImportCodeSection: I
 const DemoSection = dynamic(() => import("./components/Demo"), {
   ssr: false,
   loading: () => (
-    <div className="container mx-auto px-4 md:px-6 -mt-8 md:-mt-16 mb-12">      <div className="w-full h-[500px] md:h-[600px] rounded-3xl animate-pulse flex items-center justify-center"
+    <div className="container mx-auto -mt-8 md:-mt-16 mb-12 max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px]">
+      <div className="w-full h-[400px] xs:h-[500px] md:h-[600px] rounded-3xl animate-pulse flex items-center justify-center"
         style={{ background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.08)" }}
       >
         <span className="text-[#475569]" style={{ fontFamily: "monospace" }}>Caricamento AI Core...</span>
@@ -51,10 +52,10 @@ interface Particle {
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-white text-[#0f172a]">
+    <div className="flex flex-col min-h-screen font-sans bg-white text-[#0f172a] overflow-x-hidden">
       <Navbar />
 
-      <main className="grow">
+      <div className="grow">
         <Hero />
 
         <Suspense fallback={null}>
@@ -64,13 +65,13 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.5 }}
-            className="container mx-auto px-6 md:px-12 pt-8 pb-4 md:pt-12 md:pb-6"
+            className="container mx-auto max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] pt-4 sm:pt-8 pb-4 md:pt-12 md:pb-6"
           >
             <DemoSection />
           </motion.div>
         </Suspense>
 
-        <div className="flex justify-center pt-4 md:pt-6 pb-12 md:pb-16">
+        <div className="flex justify-center px-4 pt-4 md:pt-6 pb-12 md:pb-16">
           <MagneticPlaygroundButton />
         </div>
 
@@ -82,7 +83,7 @@ export default function Home() {
         <PricingLazy />
         <ExtensionSectionLazy />
         <FaqLazy />
-      </main>
+      </div>
 
       <FooterLazy />
     </div>
@@ -94,7 +95,7 @@ function MagneticPlaygroundButton() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const buttonClass = "relative flex items-center justify-center gap-3 px-10 py-4 rounded-2xl font-semibold text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-2xl shadow-emerald-500/30 border border-white/10 overflow-visible transition-all group-hover:shadow-emerald-500/50 group-hover:scale-[1.03]";
+  const buttonClass = "relative flex items-center justify-center gap-2.5 sm:gap-3 px-6 sm:px-10 py-3.5 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-2xl shadow-emerald-500/30 border border-white/10 overflow-visible transition-all group-hover:shadow-emerald-500/50 group-hover:scale-[1.03]";
 
   const createParticle = (): Particle => {
     const side = Math.floor(Math.random() * 4);

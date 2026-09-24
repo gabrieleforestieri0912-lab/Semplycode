@@ -95,7 +95,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           name="viewport"
           content="width=device-width, initial-scale=1, maximum-scale=5"
         />
-        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -126,7 +126,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SpeedInsights />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
         />
       </head>

@@ -28,10 +28,16 @@ interface PlanStyle {
   btnClass: string;
 }
 
+interface PlanPrice {
+  monthly: string;
+  annual: string;
+  annualBilled: string;
+}
+
 interface Plan {
   id: string;
   name: string;
-  price: string;
+  price: PlanPrice;
   tagline: string;
   priceId?: string;
   features: string[];
@@ -43,7 +49,14 @@ interface SectionTranslation {
   titleA: string;
   titleB: string;
   subtitle: string;
-  monthly: string;
+  badge: string;
+  monthlyToggle: string;
+  annualToggle: string;
+  annualDiscount: string;
+  monthlySuffix: string;
+  billedMonthlyNote: string;
+  billedAnnuallyNote: string;
+  freeNote: string;
   getStarted: string;
   popular: string;
   secure: string;
@@ -80,6 +93,7 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
 const Pricing = () => {
   const { language } = useLanguage();
   const [loading, setLoading] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const { user: sessionUser } = useSupabaseSession();
   const { toast, showToast } = useToast();
 
@@ -87,8 +101,15 @@ const Pricing = () => {
     en: {
       titleA: "Simple,",
       titleB: "transparent pricing",
-      subtitle: "Pick the plan that fits your coding journey.",
-      monthly: "/mo",
+      subtitle: "Pick the plan that fits your coding journey. Flexible monthly or discounted annual billing.",
+      badge: "Pricing Plans",
+      monthlyToggle: "Monthly",
+      annualToggle: "Annual",
+      annualDiscount: "Save 20%",
+      monthlySuffix: "/mo",
+      billedMonthlyNote: "Billed monthly",
+      billedAnnuallyNote: "/year billed annually",
+      freeNote: "Free forever, no card needed",
       getStarted: "Get Started",
       popular: "Most Popular",
       secure: "Secure payments via Stripe · Cancel anytime",
@@ -96,7 +117,11 @@ const Pricing = () => {
         {
           id: "free",
           name: "Free",
-          price: "0",
+          price: {
+            monthly: "0",
+            annual: "0",
+            annualBilled: "0",
+          },
           tagline: "Start building for free",
           features: [
             "100 AI tokens per month",
@@ -111,7 +136,11 @@ const Pricing = () => {
         {
           id: "starter",
           name: "Starter",
-          price: "9.99",
+          price: {
+            monthly: "4.99",
+            annual: "3.99",
+            annualBilled: "47.88",
+          },
           tagline: "For growing developers",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
@@ -127,7 +156,11 @@ const Pricing = () => {
         {
           id: "pro",
           name: "Pro",
-          price: "19.99",
+          price: {
+            monthly: "7.99",
+            annual: "6.39",
+            annualBilled: "76.68",
+          },
           tagline: "For serious developers",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
@@ -145,7 +178,11 @@ const Pricing = () => {
         {
           id: "enterprise",
           name: "Enterprise",
-          price: "49.99",
+          price: {
+            monthly: "9.99",
+            annual: "7.99",
+            annualBilled: "95.88",
+          },
           tagline: "Scale your entire team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
           features: [
@@ -165,8 +202,15 @@ const Pricing = () => {
     it: {
       titleA: "Prezzi semplici,",
       titleB: "senza sorprese",
-      subtitle: "Scegli il piano adatto al tuo percorso di programmazione.",
-      monthly: "/mese",
+      subtitle: "Scegli il piano adatto al tuo percorso di programmazione. Piani mensili flessibili o annuali scontati.",
+      badge: "Piani di Prezzo",
+      monthlyToggle: "Mensile",
+      annualToggle: "Annuale",
+      annualDiscount: "Risparmia 20%",
+      monthlySuffix: "/mese",
+      billedMonthlyNote: "Fatturazione mensile",
+      billedAnnuallyNote: "/anno fatturati annualmente",
+      freeNote: "Sempre gratis, nessuna carta richiesta",
       getStarted: "Inizia Ora",
       popular: "Più Popolare",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
@@ -174,7 +218,11 @@ const Pricing = () => {
         {
           id: "free",
           name: "Gratis",
-          price: "0",
+          price: {
+            monthly: "0",
+            annual: "0",
+            annualBilled: "0",
+          },
           tagline: "Inizia a costruire gratis",
           features: [
             "100 token AI al mese",
@@ -189,7 +237,11 @@ const Pricing = () => {
         {
           id: "starter",
           name: "Starter",
-          price: "9.99",
+          price: {
+            monthly: "4.99",
+            annual: "3.99",
+            annualBilled: "47.88",
+          },
           tagline: "Per sviluppatori in crescita",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
@@ -205,7 +257,11 @@ const Pricing = () => {
         {
           id: "pro",
           name: "Pro",
-          price: "19.99",
+          price: {
+            monthly: "7.99",
+            annual: "6.39",
+            annualBilled: "76.68",
+          },
           tagline: "Per sviluppatori seri",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
@@ -223,7 +279,11 @@ const Pricing = () => {
         {
           id: "enterprise",
           name: "Enterprise",
-          price: "49.99",
+          price: {
+            monthly: "9.99",
+            annual: "7.99",
+            annualBilled: "95.88",
+          },
           tagline: "Scala l'intero team",
           priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
           features: [
@@ -242,8 +302,10 @@ const Pricing = () => {
     },
   };
 
+  const current = t[language] || t.it;
+
   const handleCheckout = async (plan: Plan) => {
-    if (plan.price === "0") {
+    if (plan.price.monthly === "0") {
       window.location.href = "/register";
       return;
     }
@@ -256,7 +318,11 @@ const Pricing = () => {
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId: plan.priceId, planId: plan.id }),
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          planId: plan.id,
+          interval: billingCycle === "annual" ? "year" : "month",
+        }),
       });
       const { sessionId, url, error } = await response.json();
       if (error) throw new Error(error);
@@ -276,8 +342,6 @@ const Pricing = () => {
     }
   };
 
-  const current = t[language];
-
   return (
     <section
       id="prezzi"
@@ -285,24 +349,33 @@ const Pricing = () => {
     >
       {/* Background decor */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage:
-            "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }} />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px]"
-          style={{ background: "radial-gradient(ellipse, rgba(16,185,129,0.07) 0%, transparent 70%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse, rgba(16,185,129,0.07) 0%, transparent 70%)",
+          }}
         />
         <div
           className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)" }}
+          style={{
+            background:
+              "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)",
+          }}
         />
       </div>
 
-      <div className="container mx-auto px-6 md:px-12 relative z-10">
+      <div className="container mx-auto relative z-10 max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px]">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -312,19 +385,17 @@ const Pricing = () => {
             <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
             <span className="absolute inset-px rounded-full bg-white" />
             <Sparkles size={11} className="relative text-emerald-500" />
-            <span className="relative text-emerald-600">Piani di Prezzo</span>
+            <span className="relative text-emerald-600">{current.badge}</span>
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-black tracking-tight text-[#0f172a] mb-5"
+            className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 3xl:text-7xl font-black tracking-tight text-[#0f172a] mb-4 sm:mb-5"
           >
             {current.titleA}{" "}
-            <span className="text-gradient">
-              {current.titleB}
-            </span>
+            <span className="text-gradient">{current.titleB}</span>
           </motion.h2>
 
           <motion.p
@@ -332,17 +403,72 @@ const Pricing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto"
+            className="text-sm xs:text-base sm:text-lg md:text-xl 3xl:text-2xl text-[#475569] max-w-2xl 3xl:max-w-3xl mx-auto px-2 sm:px-0"
           >
             {current.subtitle}
           </motion.p>
+
+          {/* Billing Cycle Toggle */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="flex items-center justify-center mt-8 px-2"
+          >
+            <div className="inline-flex items-center p-1 sm:p-1.5 bg-slate-200/75 border border-slate-300/80 rounded-full shadow-inner relative max-w-full">
+              <button
+                type="button"
+                onClick={() => setBillingCycle("monthly")}
+                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${
+                  billingCycle === "monthly"
+                    ? "text-[#0f172a]"
+                    : "text-[#64748b] hover:text-[#0f172a]"
+                }`}
+              >
+                {billingCycle === "monthly" && (
+                  <motion.span
+                    layoutId="billingPill"
+                    className="absolute inset-0 bg-white rounded-full shadow-md -z-10"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+                {current.monthlyToggle}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBillingCycle("annual")}
+                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${
+                  billingCycle === "annual"
+                    ? "text-[#0f172a]"
+                    : "text-[#64748b] hover:text-[#0f172a]"
+                }`}
+              >
+                {billingCycle === "annual" && (
+                  <motion.span
+                    layoutId="billingPill"
+                    className="absolute inset-0 bg-white rounded-full shadow-md -z-10"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span>{current.annualToggle}</span>
+                <span className="px-2 py-0.5 text-[10px] md:text-[11px] font-bold text-emerald-700 bg-emerald-100 rounded-full border border-emerald-200">
+                  {current.annualDiscount}
+                </span>
+              </button>
+            </div>
+          </motion.div>
         </div>
 
         {/* Plans */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 2xl:gap-8 3xl:gap-10 max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto items-stretch">
           {current.plans.map((plan, i) => {
             const style = PLAN_STYLES[plan.id];
             const isLoading = loading === plan.id;
+            const isFree = plan.price.monthly === "0";
+            const displayPrice =
+              billingCycle === "annual" ? plan.price.annual : plan.price.monthly;
 
             return (
               <motion.div
@@ -385,9 +511,9 @@ const Pricing = () => {
                     />
 
                     {/* Card body */}
-                    <div className="relative flex flex-col h-full p-6 pt-7">
+                    <div className="relative flex flex-col h-full p-4 xs:p-5 sm:p-6 3xl:p-8 pt-6 sm:pt-7">
                       {/* Plan name + icon */}
-                      <div className="flex items-center gap-3 mb-6">
+                      <div className="flex items-center gap-3 mb-5">
                         <div
                           className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
                           style={{
@@ -397,7 +523,10 @@ const Pricing = () => {
                             boxShadow: `0 8px 20px -8px ${style.glow}`,
                           }}
                         >
-                          {React.cloneElement(plan.icon as React.ReactElement<{ size?: number }>, { size: 20 })}
+                          {React.cloneElement(
+                            plan.icon as React.ReactElement<{ size?: number }>,
+                            { size: 20 },
+                          )}
                         </div>
                         <div>
                           <p className="text-lg font-extrabold text-[#0f172a] leading-tight">
@@ -409,17 +538,38 @@ const Pricing = () => {
                         </div>
                       </div>
 
-                      {/* Price */}
-                      <div className="flex items-end gap-1 mb-6 min-h-[56px]">
-                        <span className="text-xl font-medium text-[#64748b] leading-none mb-1.5">€</span>
-                        <span className="text-5xl font-black tracking-tight text-[#0f172a] leading-none">
-                          {plan.price}
-                        </span>
-                        {plan.price !== "0" && (
-                          <span className="mb-1 text-sm font-medium text-[#64748b]">
-                            {current.monthly}
+                      {/* Price Section */}
+                      <div className="flex flex-col mb-6 min-h-[68px]">
+                        <div className="flex items-end gap-1">
+                          <span className="text-xl font-medium text-[#64748b] leading-none mb-1.5">
+                            €
                           </span>
-                        )}
+                          <motion.span
+                            key={`${plan.id}-${billingCycle}`}
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-3xl xs:text-4xl sm:text-5xl 3xl:text-6xl font-black tracking-tight text-[#0f172a] leading-none"
+                          >
+                            {displayPrice}
+                          </motion.span>
+                          {!isFree && (
+                            <span className="mb-1 text-sm font-medium text-[#64748b]">
+                              {current.monthlySuffix}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1.5 text-xs text-[#64748b] min-h-[18px]">
+                          {isFree ? (
+                            <span>{current.freeNote}</span>
+                          ) : billingCycle === "annual" ? (
+                            <span className="text-emerald-600 font-medium">
+                              €{plan.price.annualBilled} {current.billedAnnuallyNote}
+                            </span>
+                          ) : (
+                            <span>{current.billedMonthlyNote}</span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Features */}
@@ -428,11 +578,14 @@ const Pricing = () => {
                           <li key={j} className="flex items-start gap-3">
                             <span
                               className="mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                              style={{ background: `${style.accent}1a`, color: style.accent }}
+                              style={{
+                                background: `${style.accent}1a`,
+                                color: style.accent,
+                              }}
                             >
                               <Check size={11} strokeWidth={3} />
                             </span>
-                            <span className="text-sm leading-snug text-[#475569]">
+                            <span className="text-xs xs:text-sm leading-snug text-[#475569]">
                               {feature}
                             </span>
                           </li>
@@ -443,14 +596,17 @@ const Pricing = () => {
                       <button
                         onClick={() => handleCheckout(plan)}
                         disabled={loading !== null}
-                        className={`w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${style.btnClass}`}
+                        className={`w-full min-h-[48px] flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm 3xl:text-base font-bold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${style.btnClass}`}
                       >
                         {isLoading ? (
                           <Loader2 size={16} className="animate-spin" />
                         ) : (
                           <>
                             {current.getStarted}
-                            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                            <ArrowRight
+                              size={14}
+                              className="group-hover:translate-x-0.5 transition-transform"
+                            />
                           </>
                         )}
                       </button>

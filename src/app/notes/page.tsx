@@ -403,7 +403,7 @@ export default function NotesPage() {
     <>
       <Navbar />
 
-      <section className="w-full max-w-7xl mx-auto px-6 md:px-12 py-8 md:py-12 bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 my-8 relative overflow-hidden">
+      <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto px-4 sm:px-6 md:px-12 py-6 sm:py-8 md:py-12 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 mt-20 sm:mt-24 mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-linear-to-br from-primary/10 via-emerald-500/5 to-transparent rounded-full blur-[150px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-linear-to-tr from-emerald-500/5 to-transparent rounded-full blur-[120px] pointer-events-none translate-y-1/2 -translate-x-1/3"></div>
 

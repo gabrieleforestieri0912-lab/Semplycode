@@ -146,23 +146,23 @@ return (
       animate={{ y: 0 }}
       className={`fixed left-1/2 -translate-x-1/2 z-100 transition-all duration-500 ${
         scrolled
-          ? 'top-6 w-[calc(100%-3rem)] max-w-5xl rounded-full bg-white/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-emerald-500/20'
-          : 'top-4 w-[calc(100%-2rem)] max-w-7xl rounded-full bg-white/60 backdrop-blur-sm border border-emerald-500/10 shadow-sm'
+          ? 'top-2 sm:top-6 w-[calc(100%-1rem)] sm:w-[calc(100%-3rem)] max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl rounded-full bg-white/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-emerald-500/20'
+          : 'top-2 sm:top-4 w-[calc(100%-0.75rem)] sm:w-[calc(100%-2rem)] max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] rounded-full bg-white/75 backdrop-blur-md border border-emerald-500/10 shadow-sm'
       }`}
     >
-      <div className={`w-full px-4 sm:px-5 md:px-6 h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-12' : ''}`}>
+      <div className={`w-full px-3 sm:px-5 md:px-6 h-14 sm:h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-11 sm:h-12' : ''}`}>
         {/* Logo */}
         <div className="flex items-center gap-2 shrink-0">
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/" className="flex items-center gap-2 group">
             <div className={`relative transition-all duration-300 ${scrolled ? 'scale-90' : ''}`}>
               <div className={`absolute inset-0 bg-emerald-500/20 rounded-lg blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${scrolled ? 'hidden' : ''}`} />
               <img
                 src="/semplycode.png"
                 alt="Semplycode"
-                className={`rounded-lg relative z-1 transition-all duration-300 ${scrolled ? 'w-7 h-7' : 'w-9 h-9'}`}
+                className={`rounded-lg relative z-1 transition-all duration-300 ${scrolled ? 'w-6 h-6 sm:w-7 sm:h-7' : 'w-8 h-8 sm:w-9 sm:h-9'}`}
               />
             </div>
-            <span className="font-bold tracking-tight text-[#0f172a] transition-all duration-300 text-lg sm:text-xl">
+            <span className="font-bold tracking-tight text-[#0f172a] transition-all duration-300 text-base sm:text-xl">
               semplycode
             </span>
           </Link>
@@ -185,7 +185,7 @@ return (
         </div>
 
         {/* Right side: Account / Auth + Hamburger */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
 
           <ThemeToggle />
 
@@ -202,14 +202,14 @@ return (
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/[0.04] transition-colors border border-[#e2e8f0] hover:border-emerald-500/40"
+                className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full hover:bg-black/[0.04] transition-colors border border-[#e2e8f0] hover:border-emerald-500/40"
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 ring-emerald-500 transition-all duration-200">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 ring-emerald-500 transition-all duration-200">
                   {sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture ? (
                     <img
                       src={sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture}
                       alt="Avatar"
-                      className="w-8 h-8 object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <User className="w-4 h-4 text-white" />
@@ -293,16 +293,16 @@ return (
             <>
               <Link
                 href="/login"
-                className="hidden sm:flex px-5 py-2.5 rounded-full text-sm font-semibold text-[#475569] hover:text-[#0f172a] border border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-black/[0.02] transition-all active:scale-95"
+                className="hidden sm:flex px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold text-[#475569] hover:text-[#0f172a] border border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-black/[0.02] transition-all active:scale-95"
               >
                 {t.login}
               </Link>
 
               <Link
                 href="/register"
-                className="flex items-center gap-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white px-5 sm:px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.03] active:scale-95 transition-all duration-200"
+                className="flex items-center gap-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.03] active:scale-95 transition-all duration-200"
               >
-                <Rocket size={16} />
+                <Rocket size={15} />
                 <span className="hidden sm:inline">{t.getStarted}</span>
                 <span className="sm:hidden">Inizia</span>
               </Link>
@@ -312,15 +312,15 @@ return (
           {/* Hamburger under 1200px */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="xl:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-black/[0.04] transition-colors text-[#475569] hover:text-[#0f172a]"
+            className="xl:hidden flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl hover:bg-black/[0.04] transition-colors text-[#475569] hover:text-[#0f172a]"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* Full-height mobile menu */}
+      {/* Floating full-width mobile menu drawer */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -330,17 +330,17 @@ return (
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="xl:hidden fixed inset-0 top-0 bg-black/20 backdrop-blur-sm z-80"
+              className="xl:hidden fixed inset-0 top-0 bg-black/30 backdrop-blur-sm z-80"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
-            {/* Drawer panel */}
+            {/* Drawer panel floating below pill navbar */}
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ type: "spring", damping: 30, stiffness: 350 }}
-              className="xl:hidden absolute top-full left-0 right-0 bg-white backdrop-blur-2xl border-b border-[#e2e8f0] z-85 overflow-hidden"
+              className="xl:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-2xl border border-[#e2e8f0] rounded-3xl shadow-2xl z-85 overflow-hidden max-h-[calc(100vh-6rem)] overflow-y-auto"
             >
               <div className="flex flex-col p-4 gap-1">
                 {navLinks.map((link, i) => (
@@ -353,10 +353,75 @@ return (
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={mobileNavLinkClass}
                   >
-                    <span className="w-1 h-4 rounded-full bg-emerald-500/0 group-hover:bg-emerald-500/80 transition-colors" />
+                    <span className="w-1.5 h-4 rounded-full bg-emerald-500/0 group-hover:bg-emerald-500/80 transition-colors" />
                     {link.label}
                   </MotionLink>
                 ))}
+
+                <div className="my-2 border-t border-[#e2e8f0]/80" />
+
+                {sessionUser ? (
+                  <div className="flex flex-col gap-1">
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={mobileNavLinkClass}
+                    >
+                      <BarChart3 className="w-4 h-4 text-emerald-500" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/chat"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={mobileNavLinkClass}
+                    >
+                      <Code2 className="w-4 h-4 text-emerald-500" />
+                      Chat AI
+                    </Link>
+                    <Link
+                      href="/notes"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={mobileNavLinkClass}
+                    >
+                      <Bookmark className="w-4 h-4 text-emerald-500" />
+                      Il mio Cassetto
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={mobileNavLinkClass}
+                    >
+                      <Settings className="w-4 h-4 text-emerald-500" />
+                      Impostazioni
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-5 py-3 rounded-xl text-base font-semibold text-red-600 hover:bg-red-500/10 transition-colors text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Esci
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 pt-1">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold border border-[#e2e8f0] text-[#0f172a] hover:bg-black/[0.03] transition-colors"
+                    >
+                      {t.login}
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20"
+                    >
+                      <Rocket size={16} />
+                      {t.getStarted}
+                    </Link>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>

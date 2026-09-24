@@ -8,8 +8,8 @@ export default function Terms() {
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       <Navbar />
 
-      <main className="container mx-auto px-6 md:px-12 py-24 max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8">Termini di Servizio</h1>
+      <main className="container mx-auto py-24 sm:py-28 max-w-4xl 3xl:max-w-5xl 4xl:max-w-6xl">
+        <h1 className="text-3xl sm:text-4xl 3xl:text-5xl font-bold mb-8">Termini di Servizio</h1>
 
         <div className="prose prose-lg max-w-none text-gray-600">
           <p className="text-sm text-gray-500 mb-8">Ultimo aggiornamento: 16 Aprile 2026</p>

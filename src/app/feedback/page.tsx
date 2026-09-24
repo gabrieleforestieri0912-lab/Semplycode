@@ -88,24 +88,24 @@ export default function FeedbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-16 px-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white py-12 sm:py-16 px-4 sm:px-6">
+      <div className="max-w-2xl 3xl:max-w-3xl mx-auto">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-[#64748b] hover:text-primary mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-[#64748b] hover:text-primary mb-8 transition-colors text-sm font-medium min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" />
           Torna indietro
         </Link>
 
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-[#0f172a] mb-3">Invia un Feedback</h1>
-          <p className="text-[#475569] text-lg">
+        <div className="mb-8 sm:mb-10">
+          <h1 className="text-3xl sm:text-4xl 3xl:text-5xl font-bold text-[#0f172a] mb-3">Invia un Feedback</h1>
+          <p className="text-[#475569] text-base sm:text-lg 3xl:text-xl">
             Il tuo parere è importante per noi. Compila il form e inviaci le tue impressioni, suggerimenti o segnalazioni.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white border border-[#e2e8f0] rounded-2xl p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="bg-white border border-[#e2e8f0] rounded-2xl p-5 sm:p-8 space-y-6 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-[#475569] mb-2">Nome</label>

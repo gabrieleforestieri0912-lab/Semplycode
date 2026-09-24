@@ -1536,7 +1536,7 @@ export default function Chat() {
   const activeFile = uploadedFiles[activeFileIndex] ?? null;
 
   return (
-    <div className="flex h-screen bg-[#0a0c10] text-gray-300 overflow-hidden font-sans -mt-16">
+    <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans -mt-16">
       <AnimatePresence>
         {isDesktop && isSidebarExpanded && (
           <motion.div
@@ -1905,7 +1905,7 @@ export default function Chat() {
         <section
           className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0a0c10] md:flex ${activeMobilePanel === "editor" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}
         >
-          <div className="h-16 border-b border-emerald-900/20 flex items-center justify-between px-6 bg-[#0d1117]/50 gap-4">
+          <div className="h-14 sm:h-16 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 gap-2 sm:gap-4">
             {code.trim() || activeFile ? (
               <div className="flex items-center gap-2 min-w-0">
                 <Cpu size={14} className="text-primary shrink-0" />
@@ -2019,7 +2019,7 @@ export default function Chat() {
           aria-hidden={activeMobilePanel !== "insights"}
           className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}
         >
-          <div className="h-16 border-b border-emerald-900/20 flex items-center justify-between px-6 bg-[#0d1117]/50 md:flex shrink-0">
+          <div className="h-14 sm:h-16 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 md:flex shrink-0">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setInsightsTab("full")}
@@ -2079,7 +2079,7 @@ export default function Chat() {
             )}
           </div>
 
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar">
             {insightsTab === "full" ? (
               <AnimatePresence mode="wait">
                 {messages.length === 0 && isLoading ? (
@@ -2335,7 +2335,7 @@ export default function Chat() {
             )}
           </div>
 
-          <div className="p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+          <div className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
             <div className="flex gap-2 items-end">
               <textarea
                 value={chatInput}

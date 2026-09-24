@@ -35,14 +35,14 @@ const perks = [
 
 export default function ExtensionSection() {
   return (
-    <section id="estensione" className="w-full py-16 md:py-20">
-      <div className="container mx-auto px-6 md:px-12 max-w-6xl">
+    <section id="estensione" className="w-full py-16 md:py-24 3xl:py-32">
+      <div className="container mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl px-6 py-14 md:px-16 md:py-20 text-center"
+          className="relative overflow-hidden rounded-2xl sm:rounded-3xl px-4 sm:px-10 md:px-16 3xl:px-24 py-10 sm:py-14 md:py-20 3xl:py-28 text-center"
           style={{
             background: "linear-gradient(150deg, #0a0c10 0%, #10151d 55%, #0d1a16 100%)",
             border: "1px solid rgba(16,185,129,0.25)",
@@ -59,7 +59,7 @@ export default function ExtensionSection() {
             style={{ background: "radial-gradient(circle, rgba(66,133,244,0.15) 0%, transparent 70%)" }}
           />
 
-          <div className="relative z-10 max-w-3xl mx-auto">
+          <div className="relative z-10 max-w-3xl 3xl:max-w-5xl mx-auto">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border"
               style={{
@@ -72,7 +72,7 @@ export default function ExtensionSection() {
               Estensione Chrome
             </div>
 
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-white mb-5">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-black tracking-tight text-white mb-4 sm:mb-5">
               Il tuo co-pilot AI,{" "}
               <span
                 style={{
@@ -85,42 +85,44 @@ export default function ExtensionSection() {
               </span>
             </h2>
 
-            <p className="text-base md:text-lg text-[#94a3b8] max-w-2xl mx-auto leading-relaxed mb-10">
+            <p className="text-sm xs:text-base md:text-lg 3xl:text-xl text-[#94a3b8] max-w-2xl 3xl:max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10">
               Seleziona il codice su qualsiasi sito — GitHub, documentazione, Stack Overflow —
               e lascia che Semplycode lo analizzi, lo spieghi e lo corregga in un pannello laterale.
             </p>
 
             {/* Perks */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left mb-10">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 3xl:gap-6 text-left mb-8 sm:mb-10">
               {perks.map((p) => (
                 <div
                   key={p.title}
-                  className="rounded-2xl p-4"
+                  className="rounded-2xl p-4 3xl:p-6"
                   style={{
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
                   <p.icon size={20} style={{ color: "#34d399" }} className="mb-2.5" />
-                  <p className="text-sm font-semibold text-white mb-1">{p.title}</p>
-                  <p className="text-xs text-[#94a3b8] leading-relaxed">{p.desc}</p>
+                  <p className="text-sm 3xl:text-base font-semibold text-white mb-1">{p.title}</p>
+                  <p className="text-xs 3xl:text-sm text-[#94a3b8] leading-relaxed">{p.desc}</p>
                 </div>
               ))}
             </div>
 
             {/* CTA */}
-            <a
-              href={CHROME_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={CHROME_BUTTON_CLASS}
-              style={CHROME_BUTTON_STYLE}
-            >
-              <ChromeLogo className="w-5 h-5" />
-              Aggiungi a Chrome
-            </a>
+            <div className="flex justify-center">
+              <a
+                href={CHROME_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${CHROME_BUTTON_CLASS} min-h-[48px] w-full xs:w-auto inline-flex items-center justify-center`}
+                style={CHROME_BUTTON_STYLE}
+              >
+                <ChromeLogo className="w-5 h-5" />
+                Aggiungi a Chrome
+              </a>
+            </div>
 
-            <p className="mt-5 text-xs text-[#64748b]">
+            <p className="mt-5 text-xs 3xl:text-sm text-[#64748b]">
               Gratis · Disponibile sul Chrome Web Store · Attiva solo quando lo decidi tu
             </p>
           </div>

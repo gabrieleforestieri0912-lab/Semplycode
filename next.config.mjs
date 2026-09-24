@@ -5,6 +5,15 @@ const nextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/pricing",
+        destination: "/#prezzi",
+        permanent: true,
+      },
+    ];
+  },
   experimental: {
     optimizePackageImports: [
       "framer-motion",

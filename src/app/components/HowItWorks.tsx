@@ -101,7 +101,7 @@ const HowItWorks = () => {
   return (
     <section
       id="come-funziona"
-      className="relative pt-12 md:pt-16 pb-24 md:pb-32 overflow-hidden"
+      className="relative pt-10 md:pt-14 lg:pt-16 pb-20 md:pb-28 lg:pb-32 overflow-hidden"
     >
       {/* Background decor */}
       <div className="absolute inset-0 pointer-events-none">
@@ -124,7 +124,7 @@ const HowItWorks = () => {
         />
       </div>
 
-      <div className="container mx-auto px-6 md:px-12 relative z-10">
+      <div className="container mx-auto relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -144,20 +144,20 @@ const HowItWorks = () => {
             <span className="relative text-emerald-600">{current.badge}</span>
           </motion.div>
 
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-5 text-[#0f172a]">
+          <h2 className="text-[clamp(1.75rem,4vw,4rem)] 3xl:text-[4.5rem] font-black tracking-tight mb-4 sm:mb-5 text-[#0f172a]">
             {current.headlineA}{" "}
             <span className="text-gradient">
               {current.headlineB}
             </span>
           </h2>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-[#475569]">
+          <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto px-2 sm:px-0 text-[#475569]">
             {current.subtitle}
           </p>
         </motion.div>
 
         {/* Steps */}
-        <div className="relative max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-6 md:gap-5">
+        <div className="relative max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl 4xl:max-w-[1600px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-5 2xl:gap-8 3xl:gap-10">
             {current.steps.map((item, i) => (
               <motion.div
                 key={i}
@@ -169,7 +169,7 @@ const HowItWorks = () => {
               >
                 {/* Gradient border wrapper */}
                 <div className="relative h-full rounded-3xl p-px bg-[#e2e8f0] transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-emerald-400 group-hover:via-teal-400 group-hover:to-emerald-500 group-hover:shadow-xl group-hover:shadow-emerald-500/10">
-                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden p-7">
+                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden p-5 sm:p-7 xl:p-8">
                     {/* Hover radial glow */}
                     <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"

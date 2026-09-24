@@ -355,16 +355,16 @@ const DemoSection = () => {
   };
 
   return (
-    <section className="w-full max-w-7xl mx-auto p-4 md:p-6 bg-white rounded-3xl border border-[#e2e8f0] shadow-2xl my-12 relative overflow-hidden group">
+    <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden group">
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 px-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4 px-1 sm:px-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-primary to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-10 h-10 bg-linear-to-br from-primary to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
             <Brain className="text-white w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-[#0f172a]">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-[#0f172a]">
               Analizzatore Codice Live
             </h2>
             <p className="text-xs text-[#64748b] font-mono flex items-center gap-1.5">
@@ -374,10 +374,10 @@ const DemoSection = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {isLoading && (
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-2">
-              <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-3.5 py-1.5">
+              <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
               <span className="text-xs font-medium text-emerald-600">
                 Analizzando...
               </span>
@@ -409,9 +409,9 @@ const DemoSection = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-162.5">
-        <div className="flex flex-col min-h-0 bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:border-emerald-300">
-          <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[380px] xs:min-h-[440px] lg:min-h-[580px] 2xl:min-h-[660px] 3xl:min-h-[720px]">
+        <div className="flex flex-col min-h-[300px] lg:min-h-0 bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:border-emerald-300">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
             <div className="flex items-center gap-2.5">
               <Code2 className="text-primary w-4 h-4" />
               {detectedLang ? (
@@ -482,15 +482,15 @@ const DemoSection = () => {
           </div>
         </div>
 
-        <div className="flex flex-col bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-3xl overflow-hidden shadow-sm relative">
-          <div className="flex items-center gap-2.5 px-6 py-4 bg-white border-b border-[#e2e8f0]">
+        <div className="flex flex-col bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm relative min-h-[300px] lg:min-h-0">
+          <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
             <MessageSquare className="text-emerald-600 w-4 h-4" />
             <span className="text-[11px] font-bold text-[#64748b] font-mono tracking-widest uppercase">
               Report
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-8 max-h-145 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-h-[380px] lg:max-h-[560px] 2xl:max-h-[640px] custom-scrollbar">
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-200 shadow-inner">

@@ -161,16 +161,16 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 
 ## Piani e Token
 
-| Piano | Prezzo | Budget token mensile | Display |
-|-------|--------|----------------------|---------|
-| Free | 0 €/mese | 100K | 100 |
-| Starter | 9.99 €/mese | 1.5M | 1500 |
-| Pro | 19.99 €/mese | 3M | 3000 |
-| Enterprise | 49.99 €/mese | illimitato | ∞ |
+| Piano | Prezzo (Mensile / Annuale) | Budget token mensile | Display |
+|-------|----------------------------|----------------------|---------|
+| Free | 0 € | 100K | 100 |
+| Starter | 4.99 €/m (3.99 €/m ann.) | 1.5M | 1500 |
+| Pro | 7.99 €/m (6.39 €/m ann.) | 3M | 3000 |
+| Enterprise | 9.99 €/m (7.99 €/m ann.) | illimitato | ∞ |
 
 - Ospiti (senza account): budget giornaliero di 30K token gestito lato server via Redis (`GUEST_DAILY_TOKEN_BUDGET`).
 - Il display mostra i token in migliaia (100 / 1500 / 3000 / illimitati); i budget reali in `src/lib/tokenBudget.ts`.
-- **Flusso checkout**: `POST /api/checkout` con `{ priceId, planId }` → sessione Stripe → webhook `checkout.session.completed` aggiorna `subscription_status` e `plan`.
+- **Flusso checkout**: `POST /api/checkout` con `{ priceId, planId, interval }` → sessione Stripe → webhook `checkout.session.completed` aggiorna `subscription_status` e `plan`.
 
 ---
 

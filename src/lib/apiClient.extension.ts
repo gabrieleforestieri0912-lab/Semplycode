@@ -1,6 +1,6 @@
 /**
  * Entry point per il bundle dell'estensione Chrome.
- * Genera `chrome-extension/api-client.js` (IIFE) con:
+ * Genera `extension/api-client.js` (IIFE) con:
  *   npm run build:extension-api
  *
  * Il sidepanel lo usa così:

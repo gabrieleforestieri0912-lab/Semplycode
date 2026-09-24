@@ -130,7 +130,7 @@ export default function SettingsPage() {
     <>
       <Navbar />
 
-      <section className="w-full max-w-3xl mx-auto p-6 md:p-10 bg-white rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 my-12 relative overflow-hidden">
+      <section className="w-full max-w-3xl 3xl:max-w-4xl mx-auto p-4 sm:p-6 md:p-10 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-xl shadow-black/5 mt-20 sm:mt-24 mb-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
 
         <div className="relative z-10">

@@ -17,11 +17,14 @@ function getStripe(): Stripe {
 }
 
 // I prezzi sono in centesimi e allineati a quelli mostrati nella UI (/pricing).
-// La chiave è il priceId inviato dal frontend (o il planId come fallback).
-const PLANS: Record<string, { productName: string; amount: number; currency: string; interval: 'month' }> = {
-  starter: { productName: 'Semplycode Starter', amount: 999, currency: 'eur', interval: 'month' },
-  pro: { productName: 'Semplycode Pro', amount: 1999, currency: 'eur', interval: 'month' },
-  enterprise: { productName: 'Semplycode Enterprise', amount: 4999, currency: 'eur', interval: 'month' },
+// Supporta sia l'intervallo mensile che annuale (con sconto annuale).
+const PLANS: Record<string, { productName: string; amount: number; currency: string; interval: 'month' | 'year' }> = {
+  starter: { productName: 'Semplycode Starter', amount: 499, currency: 'eur', interval: 'month' },
+  starter_annual: { productName: 'Semplycode Starter (Annuale)', amount: 4788, currency: 'eur', interval: 'year' },
+  pro: { productName: 'Semplycode Pro', amount: 799, currency: 'eur', interval: 'month' },
+  pro_annual: { productName: 'Semplycode Pro (Annuale)', amount: 7668, currency: 'eur', interval: 'year' },
+  enterprise: { productName: 'Semplycode Enterprise', amount: 999, currency: 'eur', interval: 'month' },
+  enterprise_annual: { productName: 'Semplycode Enterprise (Annuale)', amount: 9588, currency: 'eur', interval: 'year' },
 };
 
 // Alias: i priceId del frontend puntano al piano corrispondente.
@@ -31,8 +34,13 @@ const PRICE_ALIASES: Record<string, string> = {
   'price_1Rx1kF9ddZe187yvEnterprisePlan123': 'enterprise',
 };
 
-function resolvePlan(priceId: string, planId?: string): string {
-  return PRICE_ALIASES[priceId] || planId || priceId;
+function resolvePlan(priceId?: string, planId?: string, interval?: string): string {
+  let base = (priceId && PRICE_ALIASES[priceId]) || planId || priceId || 'starter';
+  base = base.replace(/_annual$/, '');
+  if (interval === 'year') {
+    return `${base}_annual`;
+  }
+  return base;
 }
 
 async function getOrCreatePrice(planKey: string): Promise<Stripe.Price> {
@@ -81,7 +89,7 @@ function getSiteUrl(req: NextRequest): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ||
     req.headers.get('origin') ||
-    'http://localhost:3000'
+    'https://semplycode.vercel.app'
   );
 }
 
@@ -93,14 +101,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { priceId, planId } = await req.json();
+    const { priceId, planId, interval } = await req.json();
 
-    if (!priceId) {
-      return NextResponse.json({ error: 'Missing priceId' }, { status: 400 });
+    if (!priceId && !planId) {
+      return NextResponse.json({ error: 'Missing priceId or planId' }, { status: 400 });
     }
 
-    const planKey = resolvePlan(priceId, planId);
+    const planKey = resolvePlan(priceId, planId, interval);
     const price = await getOrCreatePrice(planKey);
+    const basePlan = planKey.replace(/_annual$/, '');
 
     let customerId: string | null = null;
     let customerEmail = email;
@@ -134,13 +143,17 @@ export async function POST(req: NextRequest) {
       success_url: `${siteUrl}/dashboard?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/#prezzi?canceled=true`,
       metadata: {
-        planId: planKey,
+        planId: basePlan,
+        billingInterval: interval === 'year' ? 'year' : 'month',
         userId: userId || 'guest',
       },
       // Il planId serve al webhook customer.subscription.updated per ripristinare
       // il piano quando Stripe invia eventi di subscription (rinnovi, cambi).
       subscription_data: {
-        metadata: { planId: planKey },
+        metadata: {
+          planId: basePlan,
+          billingInterval: interval === 'year' ? 'year' : 'month',
+        },
       },
     };
 

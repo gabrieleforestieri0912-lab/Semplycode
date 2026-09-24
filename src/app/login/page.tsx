@@ -65,7 +65,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-dvh bg-white flex items-start sm:items-center justify-center px-4 font-sans relative overflow-x-hidden -mt-16">
+    <div className="min-h-dvh bg-white flex items-center justify-center px-4 py-12 font-sans relative overflow-x-hidden">
       <CodeFloatBackground variant="sides" />
       <Link
         href="/"
