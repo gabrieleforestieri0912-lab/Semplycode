@@ -26,7 +26,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     allowGithub: false,
     maxChatHistory: 0,
     maxNotes: 0,
-    allowedAnalysisTypes: ['full'],
+    allowedAnalysisTypes: ['correction'],
     canUseAdvancedModel: false,
   },
   free: {
@@ -37,7 +37,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     allowGithub: false,
     maxChatHistory: 10,
     maxNotes: 20,
-    allowedAnalysisTypes: ['full', 'explain'],
+    allowedAnalysisTypes: ['correction', 'revision'],
     canUseAdvancedModel: false,
   },
   starter: {
@@ -48,7 +48,7 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     allowGithub: true,
     maxChatHistory: 50,
     maxNotes: 100,
-    allowedAnalysisTypes: ['full', 'explain', 'debug', 'optimize'],
+    allowedAnalysisTypes: ['correction', 'revision'],
     canUseAdvancedModel: false,
   },
   pro: {
@@ -86,8 +86,19 @@ export function getPlanLimits(plan?: string | null): PlanLimits {
   return PLAN_LIMITS[normalizePlan(plan)];
 }
 
+function normalizeAnalysisTypeForPlan(t: string): string {
+  const v = (t || '').toLowerCase().trim();
+  if (['correzione', 'correction', 'correct', 'fix', 'debug'].includes(v)) return 'correction';
+  if (['revisione', 'revision', 'optimize', 'review', 'full', 'security', 'performance', 'style'].includes(v))
+    return 'revision';
+  if (['creazione', 'creation', 'create', 'project', 'guida', 'build'].includes(v)) return 'creation';
+  return v;
+}
+
 export function isAnalysisAllowed(plan: string | null | undefined, analysisType: string): boolean {
   const limits = getPlanLimits(plan);
   if (limits.allowedAnalysisTypes === 'all') return true;
-  return (limits.allowedAnalysisTypes as string[]).includes(analysisType);
+  const normalized = normalizeAnalysisTypeForPlan(analysisType);
+  const allowed = (limits.allowedAnalysisTypes as string[]).map(normalizeAnalysisTypeForPlan);
+  return allowed.includes(normalized);
 }

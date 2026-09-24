@@ -979,11 +979,12 @@ async function sendToAI(messages) {
   return data?.message?.content || data?.choices?.[0]?.message?.content || "";
 }
 
-async function sendToAIStream(messages, onChunk, onDone, onError) {
+async function sendToAIStream(messages, onChunk, onDone, onError, extraMode) {
   try {
+    const modeToSend = extraMode || (typeof currentMode !== 'undefined' ? currentMode : 'correction');
     const res = await apiFetch("/chat", {
       method: "POST",
-      body: JSON.stringify({ messages, stream: true }),
+      body: JSON.stringify({ messages, stream: true, analysisType: modeToSend }),
     });
 
     if (!res.ok) {
@@ -1023,10 +1024,41 @@ async function sendToAIStream(messages, onChunk, onDone, onError) {
   }
 }
 
+let currentMode = "correction";
+const MODE_HINTS = {
+  correction: "🔧 Correzione — corregge solo gli errori nel codice.",
+  revision: "✨ Revisione — ripulisce e ottimizza il codice.",
+  creation: "🚀 Creazione — ti guida passo-passo a costruire progetti in ogni linguaggio.",
+};
+function updateModeHint() {
+  const hint = $("mode-hint");
+  if (!hint) return;
+  hint.textContent = MODE_HINTS[currentMode] || "";
+  hint.style.display = hint.textContent ? "block" : "none";
+  const btn = $("analyze-btn");
+  if (btn) {
+    if (currentMode === "creation") btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Crea';
+    else if (currentMode === "revision") btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Revisiona';
+    else btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Analizza';
+  }
+}
+
 function initPlayground() {
   const analyzeBtn = $("analyze-btn");
   const chatInput = $("chat-input");
   const chatSend = $("chat-send");
+  const modeSelect = $("mode-select");
+
+  if (modeSelect) {
+    try { const saved = localStorage.getItem("semplycode:mode"); if (saved) currentMode = saved; } catch(_) {}
+    modeSelect.value = currentMode;
+    updateModeHint();
+    modeSelect.onchange = () => {
+      currentMode = modeSelect.value;
+      try { localStorage.setItem("semplycode:mode", currentMode); } catch(_) {}
+      updateModeHint();
+    };
+  }
 
   if (!analyzeBtn) return;
 
@@ -1071,16 +1103,18 @@ function initPlayground() {
     lastAnalyzedCode = code;
     storage.set({ draftCode: code });
     clearChat();
-    addMessage("user", "Analizza questo codice");
+    const modeLabel = currentMode === 'creation' ? 'Crea progetto' : currentMode === 'revision' ? 'Revisiona questo codice' : 'Correggi questo codice';
+    addMessage("user", modeLabel);
     setAnalyzing(true);
 
+    const systemPrompts = {
+      correction: "Sei un esperto Code Reviewer italiano in modalità CORREZIONE: correggi SOLO gli errori sintattici/logici, senza ottimizzazioni extra. Mostra errori e codice corretto minimo.",
+      revision: "Sei un esperto Code Reviewer italiano in modalità REVISIONE: correggi, ripulisci e ottimizza il codice (naming, DRY, performance, leggibilità). Fornisci codice revisionato e best practice.",
+      creation: "Sei un tutor italiano in modalità CREAZIONE: guida passo-passo la costruzione del progetto dal nulla. Prerequisiti, struttura cartelle, ogni passo con comandi e snippet in ogni linguaggio, fino a progetto funzionante.",
+    };
     const messages = [
-      {
-        role: "system",
-        content:
-          "Sei un esperto Code Reviewer italiano. La tua priorità assoluta è individuare, spiegare e correggere gli errori nel codice. Poi dai suggerimenti e mostra il codice corretto.",
-      },
-      { role: "user", content: `Codice da analizzare:\n\`\`\`\n${code}\n\`\`\`` },
+      { role: "system", content: systemPrompts[currentMode] || systemPrompts.correction },
+      { role: "user", content: `Modalità: ${currentMode}\nCodice/contesto:\n\`\`\`\n${code}\n\`\`\`` },
     ];
 
     const streaming = addStreamingMessage();

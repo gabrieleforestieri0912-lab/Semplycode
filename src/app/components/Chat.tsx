@@ -14,7 +14,7 @@ import EditorWrapper from "./EditorWrapper";
 import Onboarding from "./Onboarding";
 import QuotaBadge from "./QuotaBadge";
 import CodeApplyModal from "./playground/CodeApplyModal";
-import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS } from "@/lib/analysisPrompts";
+import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS } from "@/lib/analysisPrompts";
 import { postChat, postChatStream, formatApiError } from "@/lib/playgroundApi";
 import {
   MessageSquare,
@@ -600,7 +600,7 @@ export default function Chat() {
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
-  const [analysisType, setAnalysisType] = useState("full");
+  const [analysisType, setAnalysisType] = useState("correction");
   const [errorContext, setErrorContext] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [isGithubLoading, setIsGithubLoading] = useState(false);
@@ -2346,16 +2346,35 @@ export default function Chat() {
               <span className="shrink-0" aria-hidden />
             )}
             <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+              <div className="flex items-center rounded-full bg-[#0d1117] border border-emerald-900/30 p-1 gap-1" role="tablist" aria-label="Modalità AI">
+                {(['correction','revision','creation'] as const).map((mode) => {
+                  const active = analysisType === mode;
+                  const label = ANALYSIS_TYPE_LABELS[mode];
+                  const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      title={desc}
+                      onClick={() => setAnalysisType(mode)}
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-400 hover:text-emerald-300 hover:bg-emerald-900/30'}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
               <select
-                value={analysisType}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setAnalysisType(e.target.value)}
-                className="bg-[#0d1117]/80 border border-emerald-900/30 rounded-xl px-2 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider focus:outline-none focus:border-primary"
-                title="Tipo di analisi"
+                value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
+                className="bg-[#0d1117]/80 border border-emerald-900/30 rounded-xl px-2 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider focus:outline-none focus:border-primary hidden lg:block"
+                title="Altre analisi (legacy)"
               >
-                {Object.entries(ANALYSIS_TYPE_LABELS).map(([k, label]) => (
-                  <option key={k} value={k}>
-                    {label as string}
-                  </option>
+                <option value="">Altro…</option>
+                {(['full','security','performance','style','debug'] as const).map((k) => (
+                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
                 ))}
               </select>
               <QuotaBadge className="hidden sm:flex" />
