@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-location-assign-relative-destination */
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
@@ -407,11 +408,10 @@ const FormattedAIResponse = ({
             key={`btn-${i}`}
             type="button"
             data-line={lineNum}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 mx-0.5 text-[10px] font-semibold rounded-md border transition-all cursor-pointer ${
-              highlightedLine === lineNum
+            className={`inline-flex items-center gap-1 px-2 py-0.5 mx-0.5 text-[10px] font-semibold rounded-md border transition-all cursor-pointer ${highlightedLine === lineNum
                 ? "bg-emerald-500/30 text-emerald-200 border-emerald-400/60 shadow-sm shadow-emerald-500/20"
                 : "bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/40 hover:text-emerald-300"
-            }`}
+              }`}
             onClick={() => onLineClick?.(lineNum)}
           >
             <span className="text-[8px]">📍</span>
@@ -462,11 +462,10 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
       className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`max-w-[min(100%,42rem)] rounded-2xl ${
-          isUser
+        className={`max-w-[min(100%,42rem)] rounded-2xl ${isUser
             ? "bg-primary/20 border border-primary/30 text-gray-100 px-4 py-3"
             : "bg-[#061014]/90 border border-emerald-900/25 text-gray-300 px-5 py-4"
-        }`}
+          }`}
       >
         {!isUser && (
           <div className="flex items-center justify-between mb-3">
@@ -501,9 +500,8 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                 <button
                   type="button"
                   onClick={() => setFeedback(feedback === "liked" ? null : "liked")}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${
-                    feedback === "liked" ? "text-emerald-400 bg-emerald-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
-                  }`}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${feedback === "liked" ? "text-emerald-400 bg-emerald-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
+                    }`}
                   title="Utile"
                 >
                   <ThumbsUp size={12} />
@@ -511,9 +509,8 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                 <button
                   type="button"
                   onClick={() => setFeedback(feedback === "disliked" ? null : "disliked")}
-                  className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${
-                    feedback === "disliked" ? "text-red-400 bg-red-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
-                  }`}
+                  className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${feedback === "disliked" ? "text-red-400 bg-red-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
+                    }`}
                   title="Non utile"
                 >
                   <ThumbsDown size={12} />
@@ -736,7 +733,7 @@ export default function Chat() {
     try {
       const shown = localStorage.getItem("semplycode:onboard:v1");
       if (!shown) setShowOnboarding(true);
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -962,7 +959,7 @@ export default function Chat() {
       try {
         JSON.parse(trimmed);
         return "json";
-      } catch {}
+      } catch { }
     }
 
     if (
@@ -1192,7 +1189,7 @@ export default function Chat() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Errore salvataggio");
       // Categorizzazione asincrona (non blocca la UX)
-      fetch(`/api/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
+      fetch(`/api/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => { });
     } catch (error) {
       console.error("Impossibile salvare la nota.", error);
     }
@@ -1556,7 +1553,7 @@ export default function Chat() {
             savedAt: Date.now(),
           }),
         );
-      } catch {}
+      } catch { }
     }, 1500),
   );
 
@@ -1703,606 +1700,602 @@ export default function Chat() {
               setIsProfileOpen(false);
             }
           }}
-          className={`h-full bg-[#0d1117] border-r border-emerald-900/30 ${
-            isDesktop
+          className={`h-full bg-[#0d1117] border-r border-emerald-900/30 ${isDesktop
               ? "absolute left-0 top-0 shadow-2xl overflow-hidden"
               : "relative overflow-hidden"
-          }`}
+            }`}
         >
-        <div
-          className="h-full flex flex-col"
-          style={{ width: SIDEBAR_WIDTH }}
-        >
-          <div className="flex items-center border-b border-emerald-900/20 h-16 shrink-0 w-full min-w-0">
-            <div className="w-[70px] shrink-0 flex justify-center items-center py-4">
-              <Link href="/" className="shrink-0 block">
-                <img
-                  src="/semplycode.png"
-                  alt="Semplycode"
-                  className="w-10 h-10 rounded-xl"
-                />
-              </Link>
-            </div>
-            {showSidebarLabels && (
-              <span
-                className={`font-bold text-white whitespace-nowrap overflow-hidden transition-all duration-150 ease-out pr-3 ${labelReveal}`}
-              >
-                Semplycode
-              </span>
-            )}
-          </div>
-
-          <nav className="flex-1 py-4 px-3 min-h-0 overflow-y-auto overflow-x-hidden">
-            {showSidebarLabels && (
-              <div className="space-y-3">
-                {user ? (
-                  <>
-                <button
-                  type="button"
-                  onClick={startNewChat}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white transition-all"
+          <div
+            className="h-full flex flex-col"
+            style={{ width: SIDEBAR_WIDTH }}
+          >
+            <div className="flex items-center border-b border-emerald-900/20 h-16 shrink-0 w-full min-w-0">
+              <div className="w-[70px] shrink-0 flex justify-center items-center py-4">
+                <Link href="/" className="shrink-0 block">
+                  <img
+                    src="/semplycode.png"
+                    alt="Semplycode"
+                    className="w-10 h-10 rounded-xl"
+                  />
+                </Link>
+              </div>
+              {showSidebarLabels && (
+                <span
+                  className={`font-bold text-white whitespace-nowrap overflow-hidden transition-all duration-150 ease-out pr-3 ${labelReveal}`}
                 >
-                  <Plus size={18} className="shrink-0" />
-                  <span className="text-sm font-semibold whitespace-nowrap">
-                    Nuova Chat
-                  </span>
-                </button>
+                  Semplycode
+                </span>
+              )}
+            </div>
 
-                {/* Search filter */}
-                {chatHistory.length > 0 && (
-                  <div className="relative mb-2">
-                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600" />
-                    <input
-                      type="text"
-                      value={historySearch}
-                      onChange={(e) => setHistorySearch(e.target.value)}
-                      placeholder="Cerca chat..."
-                      className="w-full bg-[#061014] border border-emerald-900/20 rounded-lg pl-8 pr-2 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/40"
-                    />
-                  </div>
-                )}
-
-                {/* --- SEZIONE PROGETTI --- */}
-                <div className="pt-1 pb-2 border-b border-emerald-900/20 space-y-2">
-                  <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      <FolderKanban size={13} className="text-emerald-400" />
-                      <span>Progetti</span>
-                      {projects.length > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/20">
-                          {projects.length}
+            <nav className="flex-1 py-4 px-3 min-h-0 overflow-y-auto overflow-x-hidden">
+              {showSidebarLabels && (
+                <div className="space-y-3">
+                  {user ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={startNewChat}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white transition-all"
+                      >
+                        <Plus size={18} className="shrink-0" />
+                        <span className="text-sm font-semibold whitespace-nowrap">
+                          Nuova Chat
                         </span>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsCreatingProject(!isCreatingProject)}
-                      className="p-1 text-gray-400 hover:text-emerald-400 rounded-md hover:bg-emerald-950/40 transition-colors"
-                      title="Nuovo progetto"
-                      aria-label="Crea nuovo progetto"
-                    >
-                      <FolderPlus size={14} />
-                    </button>
-                  </div>
+                      </button>
 
-                  {/* Form creazione progetto inline */}
-                  {isCreatingProject && (
-                    <form
-                      onSubmit={handleCreateProject}
-                      className="p-2.5 rounded-xl bg-[#061014] border border-emerald-500/30 space-y-2 animate-in fade-in"
-                    >
-                      <input
-                        autoFocus
-                        type="text"
-                        value={newProjectName}
-                        onChange={(e) => setNewProjectName(e.target.value)}
-                        placeholder="Nome progetto..."
-                        className="w-full bg-[#010409] border border-emerald-900/40 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/60"
-                      />
-
-                      {/* Color dots */}
-                      <div className="flex items-center gap-1.5 pt-0.5">
-                        <span className="text-[10px] text-gray-500 mr-1">Colore:</span>
-                        {PROJECT_COLORS.map((col) => (
-                          <button
-                            key={col.id}
-                            type="button"
-                            onClick={() => setNewProjectColor(col.id)}
-                            className={`w-4 h-4 rounded-full ${col.bg} transition-transform ${
-                              newProjectColor === col.id ? "ring-2 ring-white scale-110" : "opacity-70 hover:opacity-100"
-                            }`}
-                            title={col.label}
+                      {/* Search filter */}
+                      {chatHistory.length > 0 && (
+                        <div className="relative mb-2">
+                          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600" />
+                          <input
+                            type="text"
+                            value={historySearch}
+                            onChange={(e) => setHistorySearch(e.target.value)}
+                            placeholder="Cerca chat..."
+                            className="w-full bg-[#061014] border border-emerald-900/20 rounded-lg pl-8 pr-2 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/40"
                           />
-                        ))}
-                      </div>
+                        </div>
+                      )}
 
-                      <div className="flex gap-1.5 pt-1">
-                        <button
-                          type="submit"
-                          className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold rounded-md transition-colors"
-                        >
-                          Crea
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCreatingProject(false);
-                            setNewProjectName("");
-                          }}
-                          className="px-2.5 py-1 text-[11px] text-gray-400 hover:text-white rounded-md border border-emerald-900/30"
-                        >
-                          Annulla
-                        </button>
-                      </div>
-                    </form>
-                  )}
+                      {/* --- SEZIONE PROGETTI --- */}
+                      <div className="pt-1 pb-2 border-b border-emerald-900/20 space-y-2">
+                        <div className="flex items-center justify-between px-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <FolderKanban size={13} className="text-emerald-400" />
+                            <span>Progetti</span>
+                            {projects.length > 0 && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/20">
+                                {projects.length}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setIsCreatingProject(!isCreatingProject)}
+                            className="p-1 text-gray-400 hover:text-emerald-400 rounded-md hover:bg-emerald-950/40 transition-colors"
+                            title="Nuovo progetto"
+                            aria-label="Crea nuovo progetto"
+                          >
+                            <FolderPlus size={14} />
+                          </button>
+                        </div>
 
-                  {/* Lista Progetti */}
-                  {projects.length > 0 && (
-                    <div className="space-y-1">
-                      {projects.map((proj) => {
-                        const colorConfig = getProjectColor(proj.color);
-                        const isExpanded = !!expandedFolders[proj.id];
-                        const projChats = chatHistory.filter((c) => chatProjectMap[c._id] === proj.id);
-                        const filteredProjChats = projChats.filter((c) =>
-                          !historySearch || c.title?.toLowerCase().includes(historySearch.toLowerCase())
-                        );
+                        {/* Form creazione progetto inline */}
+                        {isCreatingProject && (
+                          <form
+                            onSubmit={handleCreateProject}
+                            className="p-2.5 rounded-xl bg-[#061014] border border-emerald-500/30 space-y-2 animate-in fade-in"
+                          >
+                            <input
+                              autoFocus
+                              type="text"
+                              value={newProjectName}
+                              onChange={(e) => setNewProjectName(e.target.value)}
+                              placeholder="Nome progetto..."
+                              className="w-full bg-[#010409] border border-emerald-900/40 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/60"
+                            />
 
-                        return (
-                          <div key={proj.id} className="rounded-lg bg-[#061014]/40 border border-emerald-900/15 overflow-hidden">
-                            {/* Progetto Header */}
-                            <div className="group/proj flex items-center justify-between p-1.5 hover:bg-emerald-950/20 transition-colors">
-                              <button
-                                type="button"
-                                onClick={() => setExpandedFolders((prev) => ({ ...prev, [proj.id]: !isExpanded }))}
-                                className="flex items-center gap-1.5 flex-1 min-w-0 text-left cursor-pointer"
-                              >
-                                <ChevronRight
-                                  size={12}
-                                  className={`text-gray-500 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                            {/* Color dots */}
+                            <div className="flex items-center gap-1.5 pt-0.5">
+                              <span className="text-[10px] text-gray-500 mr-1">Colore:</span>
+                              {PROJECT_COLORS.map((col) => (
+                                <button
+                                  key={col.id}
+                                  type="button"
+                                  onClick={() => setNewProjectColor(col.id)}
+                                  className={`w-4 h-4 rounded-full ${col.bg} transition-transform ${newProjectColor === col.id ? "ring-2 ring-white scale-110" : "opacity-70 hover:opacity-100"
+                                    }`}
+                                  title={col.label}
                                 />
-                                <Folder size={13} className={colorConfig.text} />
-                                {renameProjectId === proj.id ? (
-                                  <form
-                                    onSubmit={(e) => handleRenameProject(e, proj.id)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-1 flex-1 min-w-0"
-                                  >
-                                    <input
-                                      autoFocus
-                                      type="text"
-                                      value={renameProjectTitle}
-                                      onChange={(e) => setRenameProjectTitle(e.target.value)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Escape") setRenameProjectId(null);
-                                      }}
-                                      className="bg-[#010409] border border-emerald-500/50 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none w-full"
-                                    />
-                                    <button type="submit" className="p-0.5 text-emerald-400">
-                                      <Check size={11} />
-                                    </button>
-                                  </form>
-                                ) : (
-                                  <span className="text-xs font-semibold text-gray-300 truncate">
-                                    {proj.name}
-                                  </span>
-                                )}
-                              </button>
-
-                              <div className="flex items-center gap-1 shrink-0">
-                                <span className="text-[10px] text-gray-500 px-1.5 py-0.2 rounded-full bg-emerald-950/40">
-                                  {projChats.length}
-                                </span>
-                                <div className="opacity-0 group-hover/proj:opacity-100 flex items-center gap-0.5 transition-opacity">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setRenameProjectId(proj.id);
-                                      setRenameProjectTitle(proj.name);
-                                    }}
-                                    className="p-1 text-gray-500 hover:text-emerald-400 rounded"
-                                    title="Rinomina progetto"
-                                  >
-                                    <PenLine size={11} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => handleDeleteProject(e, proj.id)}
-                                    className="p-1 text-gray-500 hover:text-red-400 rounded"
-                                    title="Elimina progetto"
-                                  >
-                                    <Trash2 size={11} />
-                                  </button>
-                                </div>
-                              </div>
+                              ))}
                             </div>
 
-                            {/* Chat del progetto */}
-                            {isExpanded && (
-                              <div className="pl-3 pr-1 pb-1 pt-0.5 space-y-0.5 border-l-2 border-emerald-500/20 ml-2.5 my-1">
-                                {filteredProjChats.length === 0 ? (
-                                  <p className="py-1 px-2 text-[11px] text-gray-600 italic">
-                                    Nessuna chat in questo progetto
-                                  </p>
-                                ) : (
-                                  filteredProjChats.map((chat) => (
-                                    <div
-                                      key={chat._id}
-                                      role={renameChat?.chatId === chat._id ? undefined : "button"}
-                                      tabIndex={renameChat?.chatId === chat._id ? undefined : 0}
-                                      aria-current={currentChatId === chat._id ? "true" : undefined}
-                                      onClick={() => {
-                                        if (renameChat?.chatId !== chat._id) loadChat(chat);
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (renameChat?.chatId === chat._id) return;
-                                        if (e.key === "Enter" || e.key === " ") {
-                                          e.preventDefault();
-                                          loadChat(chat);
-                                        }
-                                      }}
-                                      className={`group flex items-center justify-between gap-1 p-1.5 rounded-md cursor-pointer text-xs outline-none transition-colors ${
-                                        currentChatId === chat._id
-                                          ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
-                                          : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
-                                      }`}
+                            <div className="flex gap-1.5 pt-1">
+                              <button
+                                type="submit"
+                                className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold rounded-md transition-colors"
+                              >
+                                Crea
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsCreatingProject(false);
+                                  setNewProjectName("");
+                                }}
+                                className="px-2.5 py-1 text-[11px] text-gray-400 hover:text-white rounded-md border border-emerald-900/30"
+                              >
+                                Annulla
+                              </button>
+                            </div>
+                          </form>
+                        )}
+
+                        {/* Lista Progetti */}
+                        {projects.length > 0 && (
+                          <div className="space-y-1">
+                            {projects.map((proj) => {
+                              const colorConfig = getProjectColor(proj.color);
+                              const isExpanded = !!expandedFolders[proj.id];
+                              const projChats = chatHistory.filter((c) => chatProjectMap[c._id] === proj.id);
+                              const filteredProjChats = projChats.filter((c) =>
+                                !historySearch || c.title?.toLowerCase().includes(historySearch.toLowerCase())
+                              );
+
+                              return (
+                                <div key={proj.id} className="rounded-lg bg-[#061014]/40 border border-emerald-900/15 overflow-hidden">
+                                  {/* Progetto Header */}
+                                  <div className="group/proj flex items-center justify-between p-1.5 hover:bg-emerald-950/20 transition-colors">
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedFolders((prev) => ({ ...prev, [proj.id]: !isExpanded }))}
+                                      className="flex items-center gap-1.5 flex-1 min-w-0 text-left cursor-pointer"
                                     >
-                                      {renameChat?.chatId === chat._id ? (
+                                      <ChevronRight
+                                        size={12}
+                                        className={`text-gray-500 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                                      />
+                                      <Folder size={13} className={colorConfig.text} />
+                                      {renameProjectId === proj.id ? (
                                         <form
-                                          className="flex items-center gap-1 flex-1 min-w-0"
-                                          onSubmit={(e) => {
-                                            e.preventDefault();
-                                            submitRenameChat();
-                                          }}
+                                          onSubmit={(e) => handleRenameProject(e, proj.id)}
                                           onClick={(e) => e.stopPropagation()}
+                                          className="flex items-center gap-1 flex-1 min-w-0"
                                         >
                                           <input
                                             autoFocus
                                             type="text"
-                                            value={renameChat.title}
-                                            onChange={(e) => setRenameChat({ chatId: chat._id, title: e.target.value })}
+                                            value={renameProjectTitle}
+                                            onChange={(e) => setRenameProjectTitle(e.target.value)}
                                             onKeyDown={(e) => {
-                                              if (e.key === "Escape") setRenameChat(null);
+                                              if (e.key === "Escape") setRenameProjectId(null);
                                             }}
-                                            className="flex-1 min-w-0 bg-[#010409] border border-emerald-500/40 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                                            className="bg-[#010409] border border-emerald-500/50 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none w-full"
                                           />
-                                          <button
-                                            type="submit"
-                                            className="p-0.5 text-emerald-400 hover:text-emerald-300 shrink-0"
-                                            aria-label="Salva nome"
-                                          >
+                                          <button type="submit" className="p-0.5 text-emerald-400">
                                             <Check size={11} />
                                           </button>
                                         </form>
                                       ) : (
-                                        <>
-                                          <span className="truncate flex-1 pr-1 font-medium">
-                                            {chat.title}
-                                          </span>
-                                          <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
-                                            <button
-                                              type="button"
-                                              onClick={(e: ReactMouseEvent) => {
-                                                e.stopPropagation();
-                                                setMoveChatTarget({ chatId: chat._id, currentProjId: proj.id });
-                                              }}
-                                              className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                              title="Sposta chat in un altro progetto"
-                                              aria-label="Sposta in progetto"
-                                            >
-                                              <FolderInput size={11} />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={(e: ReactMouseEvent) => {
-                                                e.stopPropagation();
-                                                setExportMenuChatId(chat._id);
-                                              }}
-                                              className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                              title="Esporta chat o codice"
-                                              aria-label="Esporta chat"
-                                            >
-                                              <Download size={11} />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={(e: ReactMouseEvent) => {
-                                                e.stopPropagation();
-                                                setRenameChat({ chatId: chat._id, title: chat.title || "" });
-                                              }}
-                                              className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                              title="Rinomina chat"
-                                              aria-label="Rinomina chat"
-                                            >
-                                              <PenLine size={11} />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
-                                              className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
-                                              title="Elimina chat"
-                                              aria-label="Elimina chat"
-                                            >
-                                              <Trash2 size={11} />
-                                            </button>
+                                        <span className="text-xs font-semibold text-gray-300 truncate">
+                                          {proj.name}
+                                        </span>
+                                      )}
+                                    </button>
+
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <span className="text-[10px] text-gray-500 px-1.5 py-0.2 rounded-full bg-emerald-950/40">
+                                        {projChats.length}
+                                      </span>
+                                      <div className="opacity-0 group-hover/proj:opacity-100 flex items-center gap-0.5 transition-opacity">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setRenameProjectId(proj.id);
+                                            setRenameProjectTitle(proj.name);
+                                          }}
+                                          className="p-1 text-gray-500 hover:text-emerald-400 rounded"
+                                          title="Rinomina progetto"
+                                        >
+                                          <PenLine size={11} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleDeleteProject(e, proj.id)}
+                                          className="p-1 text-gray-500 hover:text-red-400 rounded"
+                                          title="Elimina progetto"
+                                        >
+                                          <Trash2 size={11} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Chat del progetto */}
+                                  {isExpanded && (
+                                    <div className="pl-3 pr-1 pb-1 pt-0.5 space-y-0.5 border-l-2 border-emerald-500/20 ml-2.5 my-1">
+                                      {filteredProjChats.length === 0 ? (
+                                        <p className="py-1 px-2 text-[11px] text-gray-600 italic">
+                                          Nessuna chat in questo progetto
+                                        </p>
+                                      ) : (
+                                        filteredProjChats.map((chat) => (
+                                          <div
+                                            key={chat._id}
+                                            role={renameChat?.chatId === chat._id ? undefined : "button"}
+                                            tabIndex={renameChat?.chatId === chat._id ? undefined : 0}
+                                            aria-current={currentChatId === chat._id ? "true" : undefined}
+                                            onClick={() => {
+                                              if (renameChat?.chatId !== chat._id) loadChat(chat);
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (renameChat?.chatId === chat._id) return;
+                                              if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                loadChat(chat);
+                                              }
+                                            }}
+                                            className={`group flex items-center justify-between gap-1 p-1.5 rounded-md cursor-pointer text-xs outline-none transition-colors ${currentChatId === chat._id
+                                                ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
+                                                : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
+                                              }`}
+                                          >
+                                            {renameChat?.chatId === chat._id ? (
+                                              <form
+                                                className="flex items-center gap-1 flex-1 min-w-0"
+                                                onSubmit={(e) => {
+                                                  e.preventDefault();
+                                                  submitRenameChat();
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <input
+                                                  autoFocus
+                                                  type="text"
+                                                  value={renameChat.title}
+                                                  onChange={(e) => setRenameChat({ chatId: chat._id, title: e.target.value })}
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === "Escape") setRenameChat(null);
+                                                  }}
+                                                  className="flex-1 min-w-0 bg-[#010409] border border-emerald-500/40 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                                                />
+                                                <button
+                                                  type="submit"
+                                                  className="p-0.5 text-emerald-400 hover:text-emerald-300 shrink-0"
+                                                  aria-label="Salva nome"
+                                                >
+                                                  <Check size={11} />
+                                                </button>
+                                              </form>
+                                            ) : (
+                                              <>
+                                                <span className="truncate flex-1 pr-1 font-medium">
+                                                  {chat.title}
+                                                </span>
+                                                <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e: ReactMouseEvent) => {
+                                                      e.stopPropagation();
+                                                      setMoveChatTarget({ chatId: chat._id, currentProjId: proj.id });
+                                                    }}
+                                                    className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                                    title="Sposta chat in un altro progetto"
+                                                    aria-label="Sposta in progetto"
+                                                  >
+                                                    <FolderInput size={11} />
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e: ReactMouseEvent) => {
+                                                      e.stopPropagation();
+                                                      setExportMenuChatId(chat._id);
+                                                    }}
+                                                    className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                                    title="Esporta chat o codice"
+                                                    aria-label="Esporta chat"
+                                                  >
+                                                    <Download size={11} />
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e: ReactMouseEvent) => {
+                                                      e.stopPropagation();
+                                                      setRenameChat({ chatId: chat._id, title: chat.title || "" });
+                                                    }}
+                                                    className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                                    title="Rinomina chat"
+                                                    aria-label="Rinomina chat"
+                                                  >
+                                                    <PenLine size={11} />
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
+                                                    className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
+                                                    title="Elimina chat"
+                                                    aria-label="Elimina chat"
+                                                  >
+                                                    <Trash2 size={11} />
+                                                  </button>
+                                                </div>
+                                              </>
+                                            )}
                                           </div>
-                                        </>
+                                        ))
                                       )}
                                     </div>
-                                  ))
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* --- SEZIONE CHAT RECENTI / SENZA PROGETTO --- */}
+                      <div className="space-y-1 pt-1">
+                        <div className="flex items-center justify-between px-1 mb-1">
+                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            {projects.length > 0 ? "Senza Progetto" : "Chat Recenti"}
+                          </span>
+                          <span className="text-[10px] text-gray-600">
+                            {chatHistory.filter((c) => !chatProjectMap[c._id]).length}
+                          </span>
+                        </div>
+
+                        {isHistoryLoading ? (
+                          Array.from({ length: 3 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="p-2 rounded-lg bg-[#061014] border border-emerald-900/10 animate-pulse"
+                            >
+                              <div className="skeleton h-3 w-4/6 mb-2"></div>
+                              <div className="skeleton h-2 w-5/6"></div>
+                            </div>
+                          ))
+                        ) : chatHistory.filter((c) => !chatProjectMap[c._id]).length === 0 ? (
+                          <p className="px-2 py-2 text-xs text-gray-600">
+                            {projects.length > 0 ? "Tutte le chat sono organizzate nei progetti" : "Nessuna chat salvata"}
+                          </p>
+                        ) : (
+                          chatHistory
+                            .filter((chat) => chat && !chatProjectMap[chat._id] && (
+                              !historySearch ||
+                              chat.title?.toLowerCase().includes(historySearch.toLowerCase())
+                            ))
+                            .map((chat) => (
+                              <div
+                                key={chat._id}
+                                role={renameChat?.chatId === chat._id ? undefined : "button"}
+                                tabIndex={renameChat?.chatId === chat._id ? undefined : 0}
+                                aria-current={currentChatId === chat._id ? "true" : undefined}
+                                onClick={() => {
+                                  if (renameChat?.chatId !== chat._id) loadChat(chat);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (renameChat?.chatId === chat._id) return;
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    loadChat(chat);
+                                  }
+                                }}
+                                className={`group flex items-center justify-between gap-1 p-2 rounded-lg cursor-pointer text-xs outline-none transition-colors ${currentChatId === chat._id
+                                    ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
+                                    : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
+                                  }`}
+                              >
+                                {renameChat?.chatId === chat._id ? (
+                                  <form
+                                    className="flex items-center gap-1 flex-1 min-w-0"
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      submitRenameChat();
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <input
+                                      autoFocus
+                                      type="text"
+                                      value={renameChat.title}
+                                      onChange={(e) => setRenameChat({ chatId: chat._id, title: e.target.value })}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Escape") setRenameChat(null);
+                                      }}
+                                      className="flex-1 min-w-0 bg-[#010409] border border-emerald-500/40 rounded px-2 py-1 text-xs text-white focus:outline-none"
+                                    />
+                                    <button
+                                      type="submit"
+                                      className="p-1 text-emerald-400 hover:text-emerald-300 shrink-0"
+                                      aria-label="Salva nome"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                  </form>
+                                ) : (
+                                  <>
+                                    <span className="truncate flex-1 pr-1 font-medium">
+                                      {chat.title}
+                                    </span>
+                                    <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+                                      <button
+                                        type="button"
+                                        onClick={(e: ReactMouseEvent) => {
+                                          e.stopPropagation();
+                                          setMoveChatTarget({ chatId: chat._id });
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                        title="Sposta in un progetto"
+                                        aria-label="Sposta in progetto"
+                                      >
+                                        <FolderInput size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e: ReactMouseEvent) => {
+                                          e.stopPropagation();
+                                          setExportMenuChatId(chat._id);
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                        title="Esporta chat o codice"
+                                        aria-label="Esporta chat"
+                                      >
+                                        <Download size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e: ReactMouseEvent) => {
+                                          e.stopPropagation();
+                                          setRenameChat({ chatId: chat._id, title: chat.title || "" });
+                                        }}
+                                        className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
+                                        title="Rinomina chat"
+                                        aria-label="Rinomina chat"
+                                      >
+                                        <PenLine size={12} />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
+                                        className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
+                                        title="Elimina chat"
+                                        aria-label="Elimina chat"
+                                      >
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                  </>
                                 )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            ))
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-3 rounded-xl border border-emerald-900/25 bg-[#061014]/60 space-y-2">
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Accedi per salvare la cronologia e ottenere 10 analisi al giorno.
+                      </p>
+                      <Link
+                        href="/login"
+                        className="block text-center text-xs font-semibold py-2 rounded-lg border border-emerald-900/40 text-gray-300 hover:text-primary"
+                      >
+                        Accedi
+                      </Link>
+                      <Link
+                        href="/register"
+                        className="block text-center text-xs font-semibold py-2 rounded-lg bg-primary text-white"
+                      >
+                        Registrati gratis
+                      </Link>
                     </div>
                   )}
                 </div>
+              )}
+            </nav>
 
-                {/* --- SEZIONE CHAT RECENTI / SENZA PROGETTO --- */}
-                <div className="space-y-1 pt-1">
-                  <div className="flex items-center justify-between px-1 mb-1">
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      {projects.length > 0 ? "Senza Progetto" : "Chat Recenti"}
-                    </span>
-                    <span className="text-[10px] text-gray-600">
-                      {chatHistory.filter((c) => !chatProjectMap[c._id]).length}
-                    </span>
-                  </div>
-
-                  {isHistoryLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="p-2 rounded-lg bg-[#061014] border border-emerald-900/10 animate-pulse"
-                      >
-                        <div className="skeleton h-3 w-4/6 mb-2"></div>
-                        <div className="skeleton h-2 w-5/6"></div>
-                      </div>
-                    ))
-                  ) : chatHistory.filter((c) => !chatProjectMap[c._id]).length === 0 ? (
-                    <p className="px-2 py-2 text-xs text-gray-600">
-                      {projects.length > 0 ? "Tutte le chat sono organizzate nei progetti" : "Nessuna chat salvata"}
-                    </p>
-                  ) : (
-                    chatHistory
-                      .filter((chat) => chat && !chatProjectMap[chat._id] && (
-                        !historySearch ||
-                        chat.title?.toLowerCase().includes(historySearch.toLowerCase())
-                      ))
-                      .map((chat) => (
-                        <div
-                          key={chat._id}
-                          role={renameChat?.chatId === chat._id ? undefined : "button"}
-                          tabIndex={renameChat?.chatId === chat._id ? undefined : 0}
-                          aria-current={currentChatId === chat._id ? "true" : undefined}
-                          onClick={() => {
-                            if (renameChat?.chatId !== chat._id) loadChat(chat);
-                          }}
-                          onKeyDown={(e) => {
-                            if (renameChat?.chatId === chat._id) return;
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              loadChat(chat);
-                            }
-                          }}
-                          className={`group flex items-center justify-between gap-1 p-2 rounded-lg cursor-pointer text-xs outline-none transition-colors ${
-                            currentChatId === chat._id
-                              ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
-                              : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
-                          }`}
-                        >
-                          {renameChat?.chatId === chat._id ? (
-                            <form
-                              className="flex items-center gap-1 flex-1 min-w-0"
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                submitRenameChat();
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <input
-                                autoFocus
-                                type="text"
-                                value={renameChat.title}
-                                onChange={(e) => setRenameChat({ chatId: chat._id, title: e.target.value })}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Escape") setRenameChat(null);
-                                }}
-                                className="flex-1 min-w-0 bg-[#010409] border border-emerald-500/40 rounded px-2 py-1 text-xs text-white focus:outline-none"
-                              />
-                              <button
-                                type="submit"
-                                className="p-1 text-emerald-400 hover:text-emerald-300 shrink-0"
-                                aria-label="Salva nome"
-                              >
-                                <Check size={12} />
-                              </button>
-                            </form>
-                          ) : (
-                            <>
-                              <span className="truncate flex-1 pr-1 font-medium">
-                                {chat.title}
-                              </span>
-                              <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
-                                <button
-                                  type="button"
-                                  onClick={(e: ReactMouseEvent) => {
-                                    e.stopPropagation();
-                                    setMoveChatTarget({ chatId: chat._id });
-                                  }}
-                                  className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                  title="Sposta in un progetto"
-                                  aria-label="Sposta in progetto"
-                                >
-                                  <FolderInput size={12} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e: ReactMouseEvent) => {
-                                    e.stopPropagation();
-                                    setExportMenuChatId(chat._id);
-                                  }}
-                                  className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                  title="Esporta chat o codice"
-                                  aria-label="Esporta chat"
-                                >
-                                  <Download size={12} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e: ReactMouseEvent) => {
-                                    e.stopPropagation();
-                                    setRenameChat({ chatId: chat._id, title: chat.title || "" });
-                                  }}
-                                  className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                  title="Rinomina chat"
-                                  aria-label="Rinomina chat"
-                                >
-                                  <PenLine size={12} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
-                                  className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
-                                  title="Elimina chat"
-                                  aria-label="Elimina chat"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      ))
-                  )}
-                </div>
-                  </>
-                ) : (
-                  <div className="p-3 rounded-xl border border-emerald-900/25 bg-[#061014]/60 space-y-2">
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Accedi per salvare la cronologia e ottenere 10 analisi al giorno.
-                    </p>
-                    <Link
-                      href="/login"
-                      className="block text-center text-xs font-semibold py-2 rounded-lg border border-emerald-900/40 text-gray-300 hover:text-primary"
-                    >
-                      Accedi
-                    </Link>
-                    <Link
-                      href="/register"
-                      className="block text-center text-xs font-semibold py-2 rounded-lg bg-primary text-white"
-                    >
-                      Registrati gratis
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-          </nav>
-
-          <div className="p-3 border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60">
-            {user ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = !isProfileOpen;
-                    setIsProfileOpen(next);
-                    if (next && isDesktop) setIsSidebarExpanded(true);
-                  }}
-                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0"
-                >
-                  <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
-                    {user.image ? (
-                      <img
-                        src={user.image}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <User size={16} className="text-white" />
-                    )}
-                  </div>
-                  <div
-                    className={`flex-1 text-left min-w-0 overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
+            <div className="p-3 border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60">
+              {user ? (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !isProfileOpen;
+                      setIsProfileOpen(next);
+                      if (next && isDesktop) setIsSidebarExpanded(true);
+                    }}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0"
                   >
-                    <p className="text-sm font-medium text-white truncate whitespace-nowrap">
-                      {user.firstName || user.email?.split("@")[0]}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate whitespace-nowrap">
-                      {user.email}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={`shrink-0 text-gray-500 overflow-hidden transition-all duration-150 ease-out ${showSidebarLabels ? "opacity-100 w-4 delay-100" : "opacity-0 w-0"} ${isProfileOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+                    <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User size={16} className="text-white" />
+                      )}
+                    </div>
+                    <div
+                      className={`flex-1 text-left min-w-0 overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
+                    >
+                      <p className="text-sm font-medium text-white truncate whitespace-nowrap">
+                        {user.firstName || user.email?.split("@")[0]}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate whitespace-nowrap">
+                        {user.email}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      size={16}
+                      className={`shrink-0 text-gray-500 overflow-hidden transition-all duration-150 ease-out ${showSidebarLabels ? "opacity-100 w-4 delay-100" : "opacity-0 w-0"} ${isProfileOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
 
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <>
-                      <motion.div
-                        key="profile-backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-55"
-                        onClick={() => setIsProfileOpen(false)}
-                        aria-hidden
-                      />
-                      <motion.div
-                        key="profile-menu"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute bottom-full left-0 mb-2 w-56 z-100 bg-[#0d1117] border border-emerald-900/30 rounded-xl shadow-2xl overflow-hidden"
-                      >
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        router.push("/dashboard");
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
-                    >
-                      <BarChart3 size={16} />
-                      Dashboard
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        router.push("/settings");
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
-                    >
-                      <Settings size={16} />
-                      Impostazioni
-                    </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors"
-              >
-                <User size={20} className="shrink-0" />
-                <span
-                  className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <>
+                        <motion.div
+                          key="profile-backdrop"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-55"
+                          onClick={() => setIsProfileOpen(false)}
+                          aria-hidden
+                        />
+                        <motion.div
+                          key="profile-menu"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 8 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full left-0 mb-2 w-56 z-100 bg-[#0d1117] border border-emerald-900/30 rounded-xl shadow-2xl overflow-hidden"
+                        >
+                          <button
+                            onClick={() => {
+                              setIsProfileOpen(false);
+                              router.push("/dashboard");
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
+                          >
+                            <BarChart3 size={16} />
+                            Dashboard
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsProfileOpen(false);
+                              router.push("/settings");
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
+                          >
+                            <Settings size={16} />
+                            Impostazioni
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors"
                 >
-                  Accedi
-                </span>
-              </Link>
-            )}
+                  <User size={20} className="shrink-0" />
+                  <span
+                    className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
+                  >
+                    Accedi
+                  </span>
+                </Link>
+              )}
+            </div>
           </div>
-        </div>
         </motion.div>
       </motion.aside>
 
@@ -2318,21 +2311,19 @@ export default function Chat() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setActiveMobilePanel("editor")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                  activeMobilePanel === "editor"
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${activeMobilePanel === "editor"
                     ? "bg-primary text-white"
                     : "text-gray-400 hover:bg-emerald-900/20"
-                }`}
+                  }`}
               >
                 Editor
               </button>
               <button
                 onClick={() => setActiveMobilePanel("insights")}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                  activeMobilePanel === "insights"
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${activeMobilePanel === "insights"
                     ? "bg-primary text-white"
                     : "text-gray-400 hover:bg-emerald-900/20"
-                }`}
+                  }`}
               >
                 Chat AI
               </button>
@@ -2395,11 +2386,10 @@ export default function Chat() {
                   role="tab"
                   aria-selected={activeFileIndex === i}
                   onClick={() => selectFileTab(i)}
-                  className={`group flex items-center gap-2 px-3 py-2 text-[11px] font-mono whitespace-nowrap border-r border-emerald-900/20 transition-colors cursor-pointer ${
-                    activeFileIndex === i
+                  className={`group flex items-center gap-2 px-3 py-2 text-[11px] font-mono whitespace-nowrap border-r border-emerald-900/20 transition-colors cursor-pointer ${activeFileIndex === i
                       ? "bg-[#010409] text-primary border-t-2 border-t-emerald-400"
                       : "text-gray-500 hover:text-gray-300 hover:bg-[#0a0c10]"
-                  }`}
+                    }`}
                 >
                   <FileText size={12} className="shrink-0 text-primary/70" />
                   <span className="max-w-[140px] truncate">{file.name}</span>
@@ -2461,22 +2451,20 @@ export default function Chat() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setInsightsTab("full")}
-                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                  insightsTab === "full"
+                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "full"
                     ? "border-primary text-primary"
                     : "border-transparent text-gray-500 hover:text-gray-400"
-                }`}
+                  }`}
               >
                 <Brain size={14} />
                 Analisi Completa
               </button>
               <button
                 onClick={() => setInsightsTab("files")}
-                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                  insightsTab === "files"
+                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "files"
                     ? "border-primary text-primary"
                     : "border-transparent text-gray-500 hover:text-gray-400"
-                }`}
+                  }`}
               >
                 <Upload size={14} />
                 Carica File
@@ -2586,8 +2574,8 @@ export default function Chat() {
                         }
                         onRegenerate={
                           m.role === "assistant" &&
-                          i === messages.length - 1 &&
-                          !isLoading
+                            i === messages.length - 1 &&
+                            !isLoading
                             ? () => regenerateMessage(i)
                             : undefined
                         }
@@ -2627,11 +2615,10 @@ export default function Chat() {
                     setIsDraggingFiles(true);
                   }}
                   onDragLeave={() => setIsDraggingFiles(false)}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-                    isDraggingFiles
+                  className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${isDraggingFiles
                       ? "border-primary bg-primary/5"
                       : "border-emerald-900/30 hover:border-emerald-800/50"
-                  }`}
+                    }`}
                 >
                   <Upload
                     size={28}
@@ -2907,11 +2894,10 @@ export default function Chat() {
               <button
                 type="button"
                 onClick={() => handleAssignChatToProject(moveChatTarget.chatId, null)}
-                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${
-                  !moveChatTarget.currentProjId
+                className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${!moveChatTarget.currentProjId
                     ? "bg-emerald-900/30 border-emerald-500/40 text-white font-semibold"
                     : "bg-[#061014] border-emerald-900/20 text-gray-300 hover:border-emerald-500/30"
-                }`}
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <FolderX size={16} className="text-gray-500" /> Nessun progetto (Senza progetto)
@@ -2927,11 +2913,10 @@ export default function Chat() {
                     key={proj.id}
                     type="button"
                     onClick={() => handleAssignChatToProject(moveChatTarget.chatId, proj.id)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${
-                      isCurrent
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${isCurrent
                         ? "bg-emerald-900/30 border-emerald-500/40 text-white font-semibold"
                         : "bg-[#061014] border-emerald-900/20 text-gray-300 hover:border-emerald-500/30"
-                    }`}
+                      }`}
                   >
                     <span className="flex items-center gap-2.5">
                       <span className={`w-3 h-3 rounded-full ${colorConfig.bg}`} />
@@ -2971,17 +2956,17 @@ export default function Chat() {
         const targetChat =
           exportMenuChatId === "current"
             ? {
-                _id: currentChatId || "current",
-                title: "Conversazione Corrente",
-                messages: messages,
-                language: detectedLang,
-              }
+              _id: currentChatId || "current",
+              title: "Conversazione Corrente",
+              messages: messages,
+              language: detectedLang,
+            }
             : chatHistory.find((c) => c._id === exportMenuChatId) || {
-                _id: exportMenuChatId,
-                title: "Conversazione",
-                messages: messages,
-                language: detectedLang,
-              };
+              _id: exportMenuChatId,
+              title: "Conversazione",
+              messages: messages,
+              language: detectedLang,
+            };
 
         return (
           <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">

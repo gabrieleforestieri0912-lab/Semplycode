@@ -33,12 +33,12 @@ interface Palette {
 }
 
 const LIGHT_PALETTE: Palette = {
-  kw: "#059669",
-  fn: "#7c3aed",
-  str: "#b45309",
-  com: "#94a3b8",
-  num: "#d97706",
-  plain: "#475569",
+  kw: "#047857",
+  fn: "#6d28d9",
+  str: "#9a3412",
+  com: "#64748b",
+  num: "#c2410c",
+  plain: "#334155",
 };
 
 const DARK_PALETTE: Palette = {
@@ -47,19 +47,20 @@ const DARK_PALETTE: Palette = {
   str: "#fbbf24",
   com: "#64748b",
   num: "#f59e0b",
-  plain: "#94a3b8",
+  plain: "#cbd5e1",
 };
 
+// Overlay più leggero così il codice dietro resta visibile
 const LIGHT_OVERLAY =
-  "linear-gradient(180deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.28) 45%, rgba(255,255,255,0.72) 100%)";
+  "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 38%, rgba(255,255,255,0.55) 100%)";
 const DARK_OVERLAY =
-  "linear-gradient(180deg, rgba(8,13,20,0.72) 0%, rgba(8,13,20,0.28) 45%, rgba(8,13,20,0.72) 100%)";
+  "linear-gradient(180deg, rgba(8,13,20,0.55) 0%, rgba(8,13,20,0.08) 38%, rgba(8,13,20,0.55) 100%)";
 
 /* Variante "sides": overlay orizzontale, trasparente ai bordi (codice visibile) e chiaro al centro (form leggibile) */
 const LIGHT_SIDES_OVERLAY =
-  "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.88) 32%, rgba(255,255,255,0.96) 50%, rgba(255,255,255,0.88) 68%, rgba(255,255,255,0) 100%)";
+  "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.82) 32%, rgba(255,255,255,0.94) 50%, rgba(255,255,255,0.82) 68%, rgba(255,255,255,0) 100%)";
 const DARK_SIDES_OVERLAY =
-  "linear-gradient(90deg, rgba(8,13,20,0) 0%, rgba(8,13,20,0.88) 32%, rgba(8,13,20,0.96) 50%, rgba(8,13,20,0.88) 68%, rgba(8,13,20,0) 100%)";
+  "linear-gradient(90deg, rgba(8,13,20,0) 0%, rgba(8,13,20,0.82) 32%, rgba(8,13,20,0.94) 50%, rgba(8,13,20,0.82) 68%, rgba(8,13,20,0) 100%)";
 
 /* Keyword per linguaggio: usate dal tokenizer per l'evidenziazione. */
 const KEYWORDS: Record<Lang, ReadonlySet<string>> = {
@@ -167,7 +168,14 @@ for (const snippet of codeSnippets) {
   for (let size = 2; size <= 4; size++) {
     for (let i = 0; i + size <= lines.length; i++) {
       let m = 0;
-      for (let j = 0; j < size; j++) m = Math.max(m, lineChars(lines[i + j]));
+      let meaningful = 0;
+      for (let j = 0; j < size; j++) {
+        m = Math.max(m, lineChars(lines[i + j]));
+        const t = lines[i + j].map(([tx]) => tx).join('').trim();
+        // conta righe con contenuto reale (non solo parentesi)
+        if (t.length > 4 && /[A-Za-z0-9]/.test(t)) meaningful++;
+      }
+      if (meaningful === 0) continue; // evita blocchi di sole parentesi
       WINDOWS.push({ lang, start: start + i, size, maxChars: m });
     }
   }
@@ -299,7 +307,7 @@ export default function CodeFloatBackground({
   variant = "hero",
   speed = 7,
   languages = LANGS.slice(),
-  opacity = 0.32,
+  opacity = 0.58,
   className = "",
 }: CodeFloatBackgroundProps) {
   const { theme } = useTheme();
@@ -343,7 +351,7 @@ export default function CodeFloatBackground({
           }}
         >
           <div
-            className="code-float-line font-mono text-[13px] leading-[1.9] whitespace-nowrap"
+            className="code-float-line font-mono text-[13.5px] leading-[1.9] whitespace-nowrap"
             style={
               {
                 "--dur": `${b.dur}s`,
@@ -354,9 +362,9 @@ export default function CodeFloatBackground({
             }
           >
             {SNIPPETS[b.lang].slice(b.start, b.start + b.size).map((line, li) => (
-              <div key={li} className="whitespace-pre">
+              <div key={li} className="whitespace-pre" style={{ textShadow: theme === 'dark' ? '0 0 8px rgba(16,185,129,0.15)' : '0 0 0 transparent' }}>
                 {line.map(([text, kind], ti) => (
-                  <span key={ti} style={{ color: palette[kind] }}>
+                  <span key={ti} style={{ color: palette[kind], fontWeight: kind === 'kw' || kind === 'fn' ? 600 : 400 }}>
                     {text}
                   </span>
                 ))}

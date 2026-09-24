@@ -64,6 +64,21 @@ const COMMON_WORDS_BG = [
 
 const COMMON_WORD_SET_BG = new Set(COMMON_WORDS_BG);
 
+function isProseText(text) {
+  const t = text.trim();
+  if (t.length < 20 || t.length > 8000) return false;
+  if (isCodeText(text)) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 3) return false;
+  if (/^https?:\/\//.test(t)) return false;
+  const hasLetters = /[A-Za-zÀ-ÿ]{3,}/.test(t);
+  const hasSpaces = /\s/.test(t);
+  if (!hasLetters || !hasSpaces) return false;
+  const letterRatio = (t.match(/[A-Za-zÀ-ÿ]/g) || []).length / t.length;
+  if (letterRatio < 0.5) return false;
+  return true;
+}
+
 function isCodeText(text) {
   const t = text.trim();
   if (t.length < 8) return false;
@@ -244,7 +259,12 @@ chrome.runtime.onInstalled.addListener(() => {
       title: "Spiega con Semplycode AI",
       contexts: ["selection"]
     });
-    console.log("Semplycode Context Menu Registered.");
+    chrome.contextMenus.create({
+      id: "revise-text",
+      title: "Rivedi scrittura con Semplycode",
+      contexts: ["selection"]
+    });
+    console.log("Semplycode Context Menus Registered.");
   });
 });
 
@@ -268,6 +288,22 @@ async function openPanelWithCode(tabId, selectedCode) {
   chrome.runtime.sendMessage({ action: "start-analysis", code: selectedCode.trim() });
 }
 
+async function openPanelWithRevision(tabId, selectedText) {
+  if (!selectedText?.trim()) return;
+  if (chrome.sidePanel && tabId) {
+    try {
+      await chrome.sidePanel.open({ tabId });
+    } catch (err) {
+      console.error("Failed to open sidePanel:", err);
+    }
+  }
+  await chrome.storage.local.set({
+    reviseText: selectedText.trim(),
+    timestamp: Date.now(),
+  });
+  chrome.runtime.sendMessage({ action: "start-revision", text: selectedText.trim() });
+}
+
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "explain-code" && info.selectionText) {
     if (!isCodeText(info.selectionText)) {
@@ -275,6 +311,16 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       return;
     }
     openPanelWithCode(tab.id, info.selectionText);
+  }
+  if (info.menuItemId === "revise-text" && info.selectionText) {
+    if (!isProseText(info.selectionText)) {
+      // consenti comunque la revisione se l'utente la richiede esplicitamente da menu
+      if (info.selectionText.trim().length < 20) {
+        console.warn("[Semplycode] Testo troppo breve per la revisione.");
+        return;
+      }
+    }
+    openPanelWithRevision(tab.id, info.selectionText);
   }
 });
 
@@ -303,6 +349,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .catch(() => {}); // Il pannello potrebbe non essere ancora carico — si riprenderà dallo storage all'avvio
     });
 
+    sendResponse({ ok: true });
+    return true;
+  }
+  if (message.action === "revise-selection" && message.text) {
+    const tabId = sender.tab?.id;
+    if (tabId) {
+      chrome.sidePanel.open({ tabId }).catch(err => {
+        console.warn("[Semplycode] Impossibile aprire il pannello laterale:", err);
+      });
+    }
+    chrome.storage.local.set({
+      reviseText: message.text.trim(),
+      timestamp: Date.now(),
+    }).then(() => {
+      chrome.runtime.sendMessage({ action: "start-revision", text: message.text.trim() }).catch(() => {});
+    });
     sendResponse({ ok: true });
     return true;
   }

@@ -34,6 +34,7 @@ export async function postChatStream(
   onChunk: (content: string) => void,
   onDone: (fullContent: string) => void,
   onError: (error: string) => void,
+  extra?: { analysisType?: string },
 ): Promise<AbortController> {
   const controller = new AbortController();
 
@@ -41,7 +42,7 @@ export async function postChatStream(
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages, stream: true }),
+      body: JSON.stringify({ messages, stream: true, analysisType: extra?.analysisType }),
       signal: controller.signal,
     });
 

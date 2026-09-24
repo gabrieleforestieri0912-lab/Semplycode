@@ -9,6 +9,7 @@ import {
   getPlanTokenBudget,
   isNewMonth,
 } from '@/lib/tokenBudget';
+import { getPlanLimits } from '@/lib/planLimits';
 
 const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -38,6 +39,7 @@ export async function GET(req: NextRequest) {
 
       const chats = await countChatsByUserId(user.email);
       const remainingTokens = budget === null ? null : Math.max(0, budget - tokensUsed);
+      const limits = getPlanLimits(plan);
 
       return NextResponse.json({
         authenticated: true,
@@ -47,6 +49,7 @@ export async function GET(req: NextRequest) {
         tokenLimit: budget,
         remainingTokens,
         periodStart: user.tokens_period_start || new Date().toISOString(),
+        limits,
       });
     }
 
@@ -59,6 +62,7 @@ export async function GET(req: NextRequest) {
       tokensUsed: 0,
       tokenLimit: GUEST_DAILY_TOKEN_BUDGET,
       remainingTokens: GUEST_DAILY_TOKEN_BUDGET,
+      limits: getPlanLimits('guest'),
     };
 
     if (!guestId) {
@@ -80,6 +84,7 @@ export async function GET(req: NextRequest) {
       ...responseBody,
       tokensUsed: used,
       remainingTokens: rl.remaining,
+      limits: getPlanLimits('guest'),
     });
 
     if (!cookieStore.get(GUEST_COOKIE)?.value) {

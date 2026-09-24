@@ -11,6 +11,8 @@ import {
   fallbackChatTitle,
   generateChatTitleWithAI,
 } from '@/lib/chatTitle';
+import { findUserByEmail, countChatsByUserId } from '@/lib/supabase/db';
+import { getPlanLimits } from '@/lib/planLimits';
 
 interface ChatMessage {
   role: string;
@@ -56,6 +58,15 @@ export async function POST(req: NextRequest) {
       if (title) update.title = title;
       chat = await updateChat(chatId, userId, update as any);
     } else {
+      // Enforce piano: limite numero chat
+      const user = await findUserByEmail(userId).catch(() => null);
+      const limits = getPlanLimits(user?.plan || 'free');
+      if (limits.maxChatHistory !== null) {
+        const currentCount = await countChatsByUserId(userId).catch(() => 0);
+        if (currentCount >= limits.maxChatHistory) {
+          return NextResponse.json({ error: `Hai raggiunto il limite di ${limits.maxChatHistory} chat per il piano ${user?.plan || 'free'}. Passa a un piano superiore.` }, { status: 403 });
+        }
+      }
       const firstUserMessage: string =
         generateTitleFrom ||
         (messages.find((m: ChatMessage) => m.role === 'user')?.content) ||

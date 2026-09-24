@@ -199,16 +199,17 @@ html.dark [class*="from-emerald-500"] { background: #10b981 !important; }
 }
 
 @keyframes code-line-pulse {
-  0%,100% { opacity: var(--op, 0.3); }
-  50%      { opacity: calc(var(--op, 0.3) * 0.6); }
+  0%,100% { opacity: var(--op, 0.55); }
+  50%      { opacity: calc(var(--op, 0.55) * 0.75); }
 }
 
 .code-float-line {
-  opacity: var(--op, 0.3);
+  opacity: var(--op, 0.55);
   animation:
     code-float-line var(--dur, 7s) ease-in-out infinite,
     code-line-pulse var(--dur, 7s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
+  filter: drop-shadow(0 1px 6px rgba(16,185,129,0.08));
 }
 
 @keyframes code-bg-fade-in {

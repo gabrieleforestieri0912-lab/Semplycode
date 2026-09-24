@@ -17,7 +17,7 @@ const Hero = () => {
 
   return (
     <section className="relative pt-14 sm:pt-20 md:pt-28 lg:pt-32 pb-14 sm:pb-20 md:pb-24 lg:pb-32 overflow-hidden">
-      {/* Background orbs */}
+      {/* Background orbs - più visibili */}
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -25,13 +25,19 @@ const Hero = () => {
           transition={{ duration: 2 }}
           className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 65%)",
+            background: "radial-gradient(circle, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 40%, transparent 68%)",
           }}
         />
         <div
           className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full"
           style={{
-            background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 65%)",
+            background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 right-[-80px] w-[360px] h-[360px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)",
           }}
         />
       </div>

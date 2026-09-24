@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser, unauthorizedResponse } from '@/lib/api-auth';
 import { createNote, listNotes, type CreateNoteInput } from '@/lib/notesDb';
+import { findUserByEmail } from '@/lib/supabase/db';
+import { getPlanLimits } from '@/lib/planLimits';
+import { getServiceClient } from '@/lib/supabase/service';
 
 export async function GET(req: NextRequest) {
   try {
@@ -46,6 +49,16 @@ export async function POST(req: NextRequest) {
     }
     if (body.snippet_code.length > 60000 || body.explanation.length > 60000) {
       return NextResponse.json({ error: 'Contenuto troppo lungo' }, { status: 400 });
+    }
+
+    const dbUser = await findUserByEmail(user.email).catch(() => null);
+    const limits = getPlanLimits(dbUser?.plan || 'free');
+    if (limits.maxNotes !== null) {
+      const supabase = getServiceClient();
+      const { count } = await supabase.from('notes').select('*', { count: 'exact', head: true }).eq('user_id', dbUser?.id || user.email);
+      if ((count || 0) >= limits.maxNotes) {
+        return NextResponse.json({ error: `Hai raggiunto il limite di ${limits.maxNotes} note per il piano ${dbUser?.plan || 'free'}. Passa a un piano superiore.` }, { status: 403 });
+      }
     }
 
     const input: CreateNoteInput = {

@@ -12,6 +12,7 @@ import {
   getPlanTokenBudget,
   isNewMonth,
 } from '@/lib/tokenBudget';
+import { getPlanLimits, isAnalysisAllowed } from '@/lib/planLimits';
 
 const GUEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
@@ -25,10 +26,11 @@ export async function POST(req: NextRequest) {
     // Autenticazione: sessione cookie (webapp) oppure Bearer token (estensione)
     const authUser = await getAuthUser(req);
     const email = authUser?.email || null;
-    const body: { messages?: unknown[]; model?: string; stream?: boolean } = await req.json();
+    const body: { messages?: unknown[]; model?: string; stream?: boolean; analysisType?: string; totalChars?: number } = await req.json();
     const messages = body.messages;
     const requestedModel = body.model;
     const wantsStream = body.stream !== false;
+    const analysisType = body.analysisType || 'full';
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages array is required' }), {
@@ -44,6 +46,42 @@ export async function POST(req: NextRequest) {
     // Stima dei token di input (conosciuti prima della risposta)
     const inputTokens = estimateMessagesTokens(messages as ChatMessage[]);
 
+    // Limite caratteri in base al piano (anche per guest)
+    const provisionalPlan = email ? undefined : 'guest';
+    // Per gli autenticati il plan verrà risolto dopo, ma applichiamo subito un controllo generico
+    // per evitare payload enormi.
+    const guestLimits = getPlanLimits('guest');
+    const totalInputChars = (messages as ChatMessage[]).reduce((acc, m) => acc + (m.content?.length || 0), 0);
+    const checkCharsLimit = (planId: string | null) => {
+      const limits = getPlanLimits(planId);
+      if (totalInputChars > limits.maxTotalChars) {
+        return limits;
+      }
+      return null;
+    };
+    // Pre-check guest (per utenti non autenticati)
+    if (!email) {
+      const exceeded = checkCharsLimit('guest');
+      if (exceeded) {
+        return new Response(
+          JSON.stringify({
+            error: `Input troppo lungo per il piano Ospite (max ${exceeded.maxTotalChars.toLocaleString('it-IT')} caratteri). Registrati gratuitamente per limiti più alti.`,
+            code: 'PLAN_LIMIT',
+          }),
+          { status: 429, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      if (!isAnalysisAllowed('guest', analysisType)) {
+        return new Response(
+          JSON.stringify({
+            error: `Il tipo di analisi "${analysisType}" non è disponibile per il piano Ospite. Registrati per sbloccare più tipi.`,
+            code: 'PLAN_LIMIT',
+          }),
+          { status: 403, headers: { 'content-type': 'application/json' } },
+        );
+      }
+    }
+
     if (!email) {
       const cookieStore = await cookies();
       let guestId = cookieStore.get(GUEST_COOKIE)?.value;
@@ -56,7 +94,7 @@ export async function POST(req: NextRequest) {
       if (!rl.allowed || inputTokens >= rl.remaining) {
         return new Response(
           JSON.stringify({
-            error: 'Hai esaurito i 30 token gratuiti di oggi. Crea un account gratuito per 100 token al mese.',
+            error: 'Hai esaurito i token giornalieri ospite. Crea un account gratuito per più capacità mensile.',
             code: 'GUEST_LIMIT',
             remainingTokens: Math.max(0, rl.remaining - inputTokens),
           }),
@@ -73,6 +111,28 @@ export async function POST(req: NextRequest) {
       }
 
       plan = user.plan || 'free';
+      const limits = getPlanLimits(plan);
+      // Verifica tipo di analisi consentito per il piano
+      if (!isAnalysisAllowed(plan, analysisType)) {
+        return new Response(
+          JSON.stringify({
+            error: `Il tipo di analisi "${analysisType}" richiede il piano Pro o superiore. Il tuo piano attuale (${plan}) consente solo: ${(limits.allowedAnalysisTypes as string[]).join(', ')}.`,
+            code: 'PLAN_LIMIT',
+          }),
+          { status: 403, headers: { 'content-type': 'application/json' } },
+        );
+      }
+      // Verifica lunghezza input vs piano
+      const exceeded = checkCharsLimit(plan);
+      if (exceeded) {
+        return new Response(
+          JSON.stringify({
+            error: `Input troppo lungo per il piano ${plan} (max ${exceeded.maxTotalChars.toLocaleString('it-IT')} caratteri). Passa a un piano superiore.`,
+            code: 'PLAN_LIMIT',
+          }),
+          { status: 429, headers: { 'content-type': 'application/json' } },
+        );
+      }
       const budget = getPlanTokenBudget(plan);
 
       if (budget !== null) {
@@ -92,8 +152,8 @@ export async function POST(req: NextRequest) {
             JSON.stringify({
               error:
                 plan === 'free'
-                  ? `Hai esaurito i 100 token mensili del piano Free. Passa a un piano superiore per più token.`
-                  : `Hai esaurito i token mensili del tuo piano.`,
+                  ? `Hai esaurito i token mensili del piano Free. Passa a Starter o Pro per continuare.`
+                  : `Hai esaurito i token mensili del tuo piano (${plan}). Effettua l'upgrade per più capacità.`,
               code: 'PLAN_LIMIT',
               remainingTokens: 0,
             }),

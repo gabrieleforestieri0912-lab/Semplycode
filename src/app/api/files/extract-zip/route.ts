@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser } from '@/lib/api-auth';
+import { findUserByEmail } from '@/lib/supabase/db';
+import { getPlanLimits } from '@/lib/planLimits';
 
-const MAX_FILES = 5;
-const MAX_FILE_SIZE = 100 * 1024;
 const MAX_ZIP_SIZE = 512 * 1024;
 
 const ALLOWED_EXT = new Set([
@@ -20,6 +21,16 @@ function detectLanguageFromFilename(filename: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verifica piano prima di permettere ZIP
+    const authUser = await getAuthUser(req);
+    const plan = authUser?.email ? (await findUserByEmail(authUser.email).catch(() => null))?.plan || 'free' : 'guest';
+    const limits = getPlanLimits(plan);
+    if (!limits.allowZip) {
+      return NextResponse.json({ error: `L'estrazione ZIP richiede il piano Pro o Enterprise. Il tuo piano attuale è "${plan}".` }, { status: 403 });
+    }
+    const MAX_FILES = limits.maxFiles;
+    const MAX_FILE_SIZE = limits.maxCharsPerFile;
+
     const formData = await req.formData();
     const zipFile = formData.get('file');
     if (!zipFile || typeof zipFile === 'string') {

@@ -1141,6 +1141,56 @@ function initPlayground() {
   };
 }
 
+// ===== Revision (prosa) =====
+
+async function handleRevision(text) {
+  if (!text || !text.trim()) return;
+  const nav = document.querySelector('.nav-item[data-section="playground"]');
+  if (nav) nav.click();
+  if (!codeEditor && !$("code-editor-fallback")) await initCodeEditor();
+  clearChat();
+  // Mostra il testo originale come messaggio utente
+  addMessage("user", `Rivedi questa scrittura:\n\n"${text.slice(0, 4000)}"`);
+  const systemPrompt = `Sei un correttore di bozze esperto in italiano (e inglese se il testo è in inglese). Correggi ortografia, grammatica, punteggiatura e stile.
+Rispondi in italiano con questa struttura Markdown:
+## Testo rivisto
+[versione corretta e fluida, pronta da copiare]
+
+## Correzioni principali
+- [elenco puntato delle modifiche più importanti]
+
+## Suggerimenti di stile
+- [eventuali consigli per migliorare chiarezza/concisioni]
+
+Mantieni il significato originale, non aggiungere contenuti nuovi. Se il testo è codice, segnalalo.`;
+  const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: text },
+  ];
+  const streaming = addStreamingMessage();
+  sendToAIStream(
+    messages,
+    (chunk) => streaming.append(chunk),
+    (full) => {
+      lastAssistantReply = streaming.finalize();
+      chatMessages.push({ role: "assistant", content: lastAssistantReply });
+    },
+    (err) => {
+      streaming.el.remove();
+      addMessage("assistant", "⚠️ Errore revisione: " + err);
+    }
+  );
+}
+
+async function loadReviseTextFromStorage() {
+  const data = await storage.get("reviseText");
+  if (data.reviseText) {
+    const txt = data.reviseText;
+    await storage.remove("reviseText");
+    handleRevision(txt);
+  }
+}
+
 // ===== Context menu code =====
 
 async function loadSelectedCodeFromContextMenu(autoAnalyze = false) {
@@ -1414,6 +1464,7 @@ function enterApp() {
   initHubUi();
   initPlayground();
   loadSelectedCodeFromContextMenu(true);
+  loadReviseTextFromStorage();
   initCodeEditor();
   initSettings();
   initTour();
@@ -1452,6 +1503,9 @@ chrome.runtime.onMessage.addListener((msg) => {
       setTimeout(() => $("analyze-btn")?.click(), 500);
     };
     apply();
+  }
+  if (msg.action === "start-revision" && msg.text) {
+    handleRevision(msg.text);
   }
 });
 

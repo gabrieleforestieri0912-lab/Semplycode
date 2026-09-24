@@ -267,6 +267,26 @@ function looksLikeCode(text) {
   return codeScore - proseScore >= 2 && codeScore >= 4;
 }
 
+function looksLikeProse(text) {
+  const t = text.trim();
+  if (t.length < 20 || t.length > 8000) return false;
+  // Se è codice, non è prosa
+  if (looksLikeCode(text)) return false;
+  // Deve contenere almeno 3 parole
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 3) return false;
+  // Evita selezioni solo URL o numeri
+  if (/^https?:\/\//.test(t)) return false;
+  // Deve avere almeno una frase con spazi e punteggiatura o parole comuni
+  const hasLetters = /[A-Za-zÀ-ÿ]{3,}/.test(t);
+  const hasSpaces = /\s/.test(t);
+  if (!hasLetters || !hasSpaces) return false;
+  // Evita selezioni troppo brevi di soli simboli
+  const letterRatio = (t.match(/[A-Za-zÀ-ÿ]/g) || []).length / t.length;
+  if (letterRatio < 0.5) return false;
+  return true;
+}
+
 function wrapSelectionHighlight() {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
@@ -345,6 +365,56 @@ function showFloatButton(rect, text) {
   document.body.appendChild(floatBtn);
 }
 
+function showReviseButton(rect, text) {
+  removeUi();
+
+  floatBtn = document.createElement('button');
+  floatBtn.type = 'button';
+  floatBtn.className = 'semplycode-float-revise';
+  floatBtn.innerHTML = `
+    <span class="semplycode-float-icon" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </span>
+    Rivedi scrittura con Semplycode
+  `;
+  floatBtn.title = 'Invia il testo selezionato per la revisione';
+
+  const top = Math.min(rect.bottom + window.scrollY + 8, window.scrollY + window.innerHeight - 48);
+  const left = Math.min(
+    rect.left + window.scrollX + rect.width / 2 - 130,
+    window.scrollX + window.innerWidth - 250,
+  );
+
+  floatBtn.style.top = `${Math.max(8, top)}px`;
+  floatBtn.style.left = `${Math.max(8, left)}px`;
+
+  floatBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+  floatBtn.addEventListener('click', () => {
+    const payload = text.trim().slice(0, 8000);
+    if (!chrome.runtime?.id) {
+      floatBtn.remove();
+      return;
+    }
+    try {
+      chrome.runtime.sendMessage({ action: 'revise-selection', text: payload }, (response) => {
+        if (chrome.runtime.lastError) {
+          floatBtn.remove();
+          return;
+        }
+        floatBtn.remove();
+      });
+    } catch (e) {
+      floatBtn.remove();
+    }
+    floatBtn.disabled = true;
+    floatBtn.textContent = 'Apertura pannello…';
+    setTimeout(removeUi, 1200);
+  });
+
+  document.body.appendChild(floatBtn);
+}
+
 function onSelectionEnd() {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) {
@@ -353,7 +423,9 @@ function onSelectionEnd() {
   }
 
   const text = sel.toString();
-  if (!looksLikeCode(text)) {
+  const isCode = looksLikeCode(text);
+  const isProse = !isCode && looksLikeProse(text);
+  if (!isCode && !isProse) {
     removeUi();
     return;
   }
@@ -365,7 +437,8 @@ function onSelectionEnd() {
     return;
   }
 
-  showFloatButton(rect, text);
+  if (isCode) showFloatButton(rect, text);
+  else if (isProse) showReviseButton(rect, text);
 }
 
 document.addEventListener('mouseup', () => {
