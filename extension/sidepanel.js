@@ -932,6 +932,29 @@ function addLoadingMessage() {
   return div;
 }
 
+function addStreamingMessage() {
+  const container = $("chat-messages");
+  const div = document.createElement("div");
+  div.className = "msg msg-ai msg-streaming";
+  div.dataset.raw = "";
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return {
+    el: div,
+    append(chunk) {
+      div.dataset.raw += chunk;
+      div.innerHTML = renderMarkdown(div.dataset.raw);
+      container.scrollTop = container.scrollHeight;
+    },
+    finalize() {
+      div.classList.remove("msg-streaming");
+      const final = div.dataset.raw;
+      div.innerHTML = renderMarkdown(final);
+      return final;
+    },
+  };
+}
+
 function clearChat() {
   const container = $("chat-messages");
   if (container) container.innerHTML = "";
@@ -942,12 +965,62 @@ function clearChat() {
 async function sendToAI(messages) {
   const res = await apiFetch("/chat", {
     method: "POST",
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, stream: false }),
   });
 
+  if (!res.ok) {
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    throw new Error(data.error || `Errore ${res.status} dal server AI`);
+  }
+
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Errore dal server AI");
-  return data.message.content;
+  // support both {message:{content}} and {choices:[{message:{content}}]}
+  return data?.message?.content || data?.choices?.[0]?.message?.content || "";
+}
+
+async function sendToAIStream(messages, onChunk, onDone, onError) {
+  try {
+    const res = await apiFetch("/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages, stream: true }),
+    });
+
+    if (!res.ok) {
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
+      onError(data.error || `Errore ${res.status} dal server AI`);
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullContent = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data:")) continue;
+        const dataStr = trimmed.slice(5).trim();
+        if (!dataStr || dataStr === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(dataStr);
+          if (parsed.done) { onDone(fullContent); return; }
+          const chunk = parsed.content || parsed?.choices?.[0]?.delta?.content || "";
+          if (chunk) { fullContent += chunk; onChunk(chunk); }
+        } catch (_) {}
+      }
+    }
+    onDone(fullContent);
+  } catch (err) {
+    if (err.name !== "AbortError") onError(err.message || "Errore di streaming");
+  }
 }
 
 function initPlayground() {
@@ -986,37 +1059,45 @@ function initPlayground() {
     };
   }
 
+  function setAnalyzing(on) {
+    analyzeBtn.disabled = on;
+    analyzeBtn.textContent = on ? "Analisi..." : "Analizza";
+  }
+
   analyzeBtn.onclick = async () => {
     const code = getEditorValue().trim();
-    if (!code) {
-      showToast("Inserisci del codice nell'editor");
-      return;
-    }
+    if (!code) { showToast("Inserisci del codice nell'editor"); return; }
 
     lastAnalyzedCode = code;
     storage.set({ draftCode: code });
-
     clearChat();
     addMessage("user", "Analizza questo codice");
-    const loadingDiv = addLoadingMessage();
+    setAnalyzing(true);
 
-    try {
-      const reply = await sendToAI([
-        {
-          role: "system",
-          content:
-            "Sei un esperto Code Reviewer italiano. La tua priorità assoluta è individuare, spiegare e correggere gli errori nel codice. Poi dai suggerimenti e il codice corretto.",
-        },
-        { role: "user", content: `Codice da analizzare:\n${code}` },
-      ]);
+    const messages = [
+      {
+        role: "system",
+        content:
+          "Sei un esperto Code Reviewer italiano. La tua priorità assoluta è individuare, spiegare e correggere gli errori nel codice. Poi dai suggerimenti e mostra il codice corretto.",
+      },
+      { role: "user", content: `Codice da analizzare:\n\`\`\`\n${code}\n\`\`\`` },
+    ];
 
-      lastAssistantReply = reply;
-      loadingDiv.remove();
-      addMessage("assistant", reply);
-    } catch (e) {
-      loadingDiv.remove();
-      addMessage("assistant", "Errore: " + e.message);
-    }
+    const streaming = addStreamingMessage();
+    sendToAIStream(
+      messages,
+      (chunk) => streaming.append(chunk),
+      (full) => {
+        lastAssistantReply = streaming.finalize();
+        chatMessages.push({ role: "assistant", content: lastAssistantReply });
+        setAnalyzing(false);
+      },
+      (err) => {
+        streaming.el.remove();
+        addMessage("assistant", "⚠️ Errore: " + err);
+        setAnalyzing(false);
+      }
+    );
   };
 
   const sendChat = async () => {
@@ -1026,30 +1107,37 @@ function initPlayground() {
     const code = getEditorValue().trim();
     addMessage("user", question);
     chatInput.value = "";
-    const loading = addLoadingMessage();
+    chatSend.disabled = true;
 
-    try {
-      const reply = await sendToAI([
-        {
-          role: "system",
-          content: `L'utente sta lavorando su questo codice:\n${code}\nRispondi in italiano in modo chiaro e utile.`,
-        },
-        ...chatMessages.slice(-6),
-      ]);
+    const systemCtx = code
+      ? `L'utente sta lavorando su questo codice:\n\`\`\`\n${code}\n\`\`\`\nRispondi in italiano in modo chiaro e utile.`
+      : "Sei un esperto di programmazione. Rispondi in italiano in modo chiaro e utile.";
 
-      lastAnalyzedCode = code;
-      lastAssistantReply = reply;
-      loading.remove();
-      addMessage("assistant", reply);
-    } catch (e) {
-      loading.remove();
-      addMessage("assistant", "Errore: " + e.message);
-    }
+    const messages = [
+      { role: "system", content: systemCtx },
+      ...chatMessages.slice(-8),
+    ];
+
+    const streaming = addStreamingMessage();
+    sendToAIStream(
+      messages,
+      (chunk) => streaming.append(chunk),
+      (full) => {
+        lastAssistantReply = streaming.finalize();
+        chatMessages.push({ role: "assistant", content: lastAssistantReply });
+        chatSend.disabled = false;
+      },
+      (err) => {
+        streaming.el.remove();
+        addMessage("assistant", "⚠️ Errore: " + err);
+        chatSend.disabled = false;
+      }
+    );
   };
 
   chatSend.onclick = sendChat;
   chatInput.onkeydown = (e) => {
-    if (e.key === "Enter") sendChat();
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
   };
 }
 

@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Crown,
   Shield,
+  FolderDown,
 } from "lucide-react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -101,10 +102,32 @@ export default function SettingsPage() {
     router.push("/");
   };
 
+  const [exportPath, setExportPath] = useState("");
+  const [exportAutoPrefix, setExportAutoPrefix] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedPath = localStorage.getItem("semplycode:export_path") || "";
+      const savedPrefix = localStorage.getItem("semplycode:export_autoprefix") === "true";
+      setExportPath(savedPath);
+      setExportAutoPrefix(savedPrefix);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const handleSave = async () => {
     setLoading(true);
     setFeedback(null);
     try {
+      // Salva preferenze locali di esportazione
+      try {
+        localStorage.setItem("semplycode:export_path", exportPath.trim());
+        localStorage.setItem("semplycode:export_autoprefix", exportAutoPrefix ? "true" : "false");
+      } catch (err) {
+        console.error("Failed to save export settings to localStorage:", err);
+      }
+
       const response = await fetch("/api/user/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +136,7 @@ export default function SettingsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Salvataggio non riuscito");
       setUser((cur) => ({ ...cur!, ...data.user }));
-      setFeedback({ type: "success", message: "Modifiche salvate con successo." });
+      setFeedback({ type: "success", message: "Modifiche e impostazioni di esportazione salvate con successo." });
     } catch (error) {
       setFeedback({ type: "error", message: (error as Error).message });
     } finally {
@@ -317,6 +340,58 @@ export default function SettingsPage() {
                 }`}
               />
             </button>
+          </div>
+        </motion.div>
+
+        {/* ── Configurazione Percorso Esportazione ──────── */}
+        <motion.div
+          custom={6} variants={cardVariants} initial="hidden" animate="visible"
+          className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-[#0f172a] flex items-center gap-2">
+              <FolderDown className="w-4 h-4 text-emerald-500" /> Esportazione & Download
+            </h2>
+            <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              Personalizzabile
+            </span>
+          </div>
+          <p className="text-xs text-[#64748b] mb-4 leading-relaxed">
+            Configura il percorso o prefisso di salvataggio per i file di codice (.py, .ts, .js, .html, ecc.) e le chat AI esportate.
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="export-path-input" className="block text-xs font-semibold text-[#334155] mb-1.5">
+                Cartella o Percorso di destinazione preferito
+              </label>
+              <input
+                id="export-path-input"
+                type="text"
+                value={exportPath}
+                onChange={(e) => setExportPath(e.target.value)}
+                placeholder="es. C:/Progetti/Semplycode oppure Semplycode/Exports"
+                className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-xs text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-mono transition-all"
+              />
+              <p className="text-[11px] text-[#94a3b8] mt-1.5 leading-relaxed">
+                Suggerimento: puoi anche impostare la cartella dei download predefinita nelle impostazioni del tuo browser per salvare i file scaricati direttamente in questo percorso.
+              </p>
+            </div>
+
+            <label className="flex items-center gap-3 p-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={exportAutoPrefix}
+                onChange={(e) => setExportAutoPrefix(e.target.checked)}
+                className="rounded border-[#cbd5e1] text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+              />
+              <div className="text-xs">
+                <span className="font-semibold text-[#0f172a] block">Includi nome cartella come prefisso file</span>
+                <span className="text-[#64748b] text-[11px]">
+                  Es. <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">Exports_solution.py</code> per identificare subito la provenienza del file.
+                </span>
+              </div>
+            </label>
           </div>
         </motion.div>
 
