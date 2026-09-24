@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const model = requestedModel || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = requestedModel || process.env.AI_MODEL || 'qwen/qwen3-coder-plus:free';
     let setGuestCookie: string | null = null;
     let plan: string | null = null;
 

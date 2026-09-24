@@ -58,17 +58,13 @@ export async function GET(req: NextRequest) {
 
   const forwardedHost = req.headers.get('x-forwarded-host');
   const isLocalEnv = process.env.NODE_ENV === 'development';
-  const url = new URL(
-    `${origin}${next.startsWith('/') ? next : `/${next}`}`,
-  );
+  const nextPath = next.startsWith('/') ? next : `/${next}`;
 
-  if (isLocalEnv) {
-    return NextResponse.redirect(url);
+  // In production always prefer the public host (Vercel sets x-forwarded-host)
+  if (!isLocalEnv && forwardedHost) {
+    return NextResponse.redirect(`https://${forwardedHost}${nextPath}`);
   }
 
-  if (forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${next}`);
-  }
-
-  return NextResponse.redirect(url);
+  // Local dev or fallback: use the origin from the request URL
+  return NextResponse.redirect(new URL(nextPath, origin));
 }

@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
-import ThemeToggle from "./ThemeToggle";
+
 
 const MotionLink = motion.create(Link);
 
@@ -129,7 +129,7 @@ const Navbar = () => {
     { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
     { icon: Code2, label: t.editor, href: "/chat" },
     { icon: Bookmark, label: "Il mio Cassetto", href: "/notes" },
-    { icon: Settings, label: t.settings, href: "/settings" },
+    { icon: Settings, label: "Profilo & Impostazioni", href: "/settings" },
   ];
 
   const navLinkClass = `relative font-medium transition-all duration-200 text-[#475569] hover:text-[#0f172a] text-sm`;
@@ -186,8 +186,6 @@ const Navbar = () => {
 
         {/* Right side: Account / Auth + Hamburger */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-
-          <ThemeToggle />
 
           {sessionUser && (
             <Link

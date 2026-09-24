@@ -17,7 +17,7 @@ import {
 import type { Note, Category, NoteWithRelations } from '@/lib/supabase/types';
 
 const CATEGORY_MODEL =
-  process.env.NOTES_AI_MODEL || process.env.GEMINI_MODEL;
+  process.env.NOTES_AI_MODEL || process.env.AI_MODEL || 'qwen/qwen3-coder-plus:free';
 
 /**
  * Categorizza una nota in background: riusa le categorie esistenti

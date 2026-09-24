@@ -12,71 +12,79 @@ export interface ChatResult {
   content: string;
 }
 
-function getGeminiModel(): string {
-  return process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+function getAIBaseUrl(): string {
+  const url = process.env.AI_BASE_URL || 'https://api.xkiro.com/v1';
+  return url.replace(/\/+$/, '');
 }
 
-function getGeminiApiKey(): string {
-  return process.env.GEMINI_API_KEY || '';
+function getAIApiKey(): string {
+  return (
+    process.env.AI_API_KEY ||
+    process.env.XKIRO_API_KEY ||
+    'sk-xt-45159bc825d4cc36555287427086591547f01e278b5984a4'
+  );
 }
 
-function toGeminiContent(messages: ChatMessage[]): { role: string; parts: { text: string }[] }[] {
-  const systemText = messages
-    .filter((m) => m.role === 'system')
-    .map((m) => m.content)
-    .join('\n');
-
-  const userMessages = messages.filter((m) => m.role !== 'system');
-
-  if (systemText) {
-    return [{ role: 'user', parts: [{ text: systemText }] }, ...userMessages.map(toPart)];
-  }
-  return userMessages.map(toPart);
+function getDefaultAIModel(): string {
+  return process.env.AI_MODEL || 'qwen/qwen3-coder-plus:free';
 }
 
-function toPart(message: ChatMessage): { role: string; parts: { text: string }[] } {
-  return { role: message.role === 'assistant' ? 'model' : 'user', parts: [{ text: message.content }] };
+function toOpenAIMessages(messages: ChatMessage[]): { role: string; content: string }[] {
+  return messages.map((m) => ({
+    role: m.role === 'model' ? 'assistant' : m.role,
+    content: m.content || '',
+  }));
 }
 
 export async function chatWithAI(options: ChatOptions): Promise<ChatResult> {
-  const model = options.model || getGeminiModel();
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${getGeminiApiKey()}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: toGeminiContent(options.messages),
-      }),
+  const model = options.model || getDefaultAIModel();
+  const baseUrl = getAIBaseUrl();
+  const apiKey = getAIApiKey();
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
     },
-  );
+    body: JSON.stringify({
+      model,
+      messages: toOpenAIMessages(options.messages),
+      stream: false,
+    }),
+  });
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
-    throw new Error(`Gemini error: ${response.statusText} ${errText}`);
+    throw new Error(`AI Provider error (${response.status}): ${errText}`);
   }
 
   const data = await response.json();
-  const content = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const content = data?.choices?.[0]?.message?.content || '';
   return { content };
 }
 
 export async function chatWithAIStream(options: ChatOptions): Promise<Response> {
-  const model = options.model || getGeminiModel();
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${getGeminiApiKey()}${'&alt=sse'}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: toGeminiContent(options.messages),
-      }),
+  const model = options.model || getDefaultAIModel();
+  const baseUrl = getAIBaseUrl();
+  const apiKey = getAIApiKey();
+
+  const response = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
     },
-  );
+    body: JSON.stringify({
+      model,
+      messages: toOpenAIMessages(options.messages),
+      stream: true,
+    }),
+  });
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
-    throw new Error(`Gemini error: ${response.statusText} ${errText}`);
+    throw new Error(`AI Provider stream error (${response.status}): ${errText}`);
   }
 
   const encoder = new TextEncoder();
@@ -101,26 +109,33 @@ export async function chatWithAIStream(options: ChatOptions): Promise<Response> 
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const trimmed = line.slice(6).trim();
-            if (!trimmed) continue;
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const dataStr = trimmed.slice(5).trim();
+
+            if (dataStr === '[DONE]') {
+              continue;
+            }
 
             try {
-              const parsed = JSON.parse(trimmed);
-              const delta = parsed?.candidates?.[0]?.content?.parts?.[0]?.text
-                || parsed?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data
-                || '';
+              const parsed = JSON.parse(dataStr);
+              const delta =
+                parsed?.choices?.[0]?.delta?.content ||
+                parsed?.choices?.[0]?.text ||
+                '';
               if (delta) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta })}\n\n`));
+                controller.enqueue(
+                  encoder.encode(`data: ${JSON.stringify({ content: delta })}\n\n`),
+                );
               }
             } catch {
-              // skip malformed JSON
+              // skip incomplete chunk JSON
             }
           }
         }
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
-          console.error('Gemini stream error:', err);
+          console.error('AI stream error:', err);
         }
       } finally {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));

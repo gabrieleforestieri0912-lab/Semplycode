@@ -289,9 +289,10 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# AI Provider (Google Gemini)
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash
+# AI Provider (OpenAI-compatible / xKiro)
+AI_API_KEY=your_ai_api_key
+AI_BASE_URL=https://api.xkiro.com/v1
+AI_MODEL=qwen/qwen3-coder-plus:free
 
 # Opzionale Redis (rate limiting multi-instanza)
 REDIS_URL=redis://localhost:6379
