@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-location-assign-relative-destination */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -140,15 +141,14 @@ const Navbar = () => {
   const mobileNavLinkClass =
     "flex items-center gap-3 px-5 py-4 rounded-xl text-base font-semibold text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] active:scale-[0.99] transition-all duration-150";
 
-return (
+  return (
     <motion.nav
       initial={{ y: 0 }}
       animate={{ y: 0 }}
-      className={`fixed left-1/2 -translate-x-1/2 z-100 transition-all duration-500 ${
-        scrolled
+      className={`fixed left-1/2 -translate-x-1/2 z-100 transition-all duration-500 ${scrolled
           ? 'top-2 sm:top-6 w-[calc(100%-1rem)] sm:w-[calc(100%-3rem)] max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl rounded-full bg-white/95 backdrop-blur-xl shadow-xl shadow-black/10 border border-emerald-500/20'
           : 'top-2 sm:top-4 w-[calc(100%-0.75rem)] sm:w-[calc(100%-2rem)] max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] rounded-full bg-white/75 backdrop-blur-md border border-emerald-500/10 shadow-sm'
-      }`}
+        }`}
     >
       <div className={`w-full px-3 sm:px-5 md:px-6 h-14 sm:h-16 flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-11 sm:h-12' : ''}`}>
         {/* Logo */}

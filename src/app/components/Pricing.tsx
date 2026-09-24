@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-location-assign-relative-destination */
 "use client";
 
 import React, { useState } from "react";
@@ -330,7 +331,7 @@ const Pricing = () => {
         window.location.href = url;
       } else if (sessionId) {
         const stripe = await stripePromise;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error: stripeError } = await (stripe as any).redirectToCheckout({ sessionId });
         if (stripeError) throw new Error(stripeError.message);
       }
@@ -420,11 +421,10 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setBillingCycle("monthly")}
-                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${
-                  billingCycle === "monthly"
+                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${billingCycle === "monthly"
                     ? "text-[#0f172a]"
                     : "text-[#64748b] hover:text-[#0f172a]"
-                }`}
+                  }`}
               >
                 {billingCycle === "monthly" && (
                   <motion.span
@@ -439,11 +439,10 @@ const Pricing = () => {
               <button
                 type="button"
                 onClick={() => setBillingCycle("annual")}
-                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${
-                  billingCycle === "annual"
+                className={`relative z-10 min-h-[40px] sm:min-h-[44px] flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs md:text-sm font-semibold rounded-full transition-colors duration-200 ${billingCycle === "annual"
                     ? "text-[#0f172a]"
                     : "text-[#64748b] hover:text-[#0f172a]"
-                }`}
+                  }`}
               >
                 {billingCycle === "annual" && (
                   <motion.span
@@ -495,11 +494,10 @@ const Pricing = () => {
 
                 {/* Gradient border wrapper */}
                 <div
-                  className={`relative h-full rounded-3xl p-px transition-all duration-500 ${
-                    plan.popular
+                  className={`relative h-full rounded-3xl p-px transition-all duration-500 ${plan.popular
                       ? "bg-gradient-to-b from-emerald-400 via-teal-300 to-emerald-500 shadow-xl shadow-emerald-500/20"
                       : "bg-[#e2e8f0] group-hover:bg-gradient-to-br group-hover:from-emerald-300 group-hover:via-teal-300 group-hover:to-emerald-400"
-                  }`}
+                    }`}
                 >
                   <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden flex flex-col">
                     {/* Hover glow */}
