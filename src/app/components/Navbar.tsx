@@ -133,8 +133,8 @@ const Navbar = () => {
     { icon: Settings, label: "Profilo & Impostazioni", href: "/settings" },
   ];
 
-  // Hover aggiunto ai link navbar (pill + underline) — richiesto
-  const navLinkClass = `group relative inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium text-[#475569] hover:text-[#0f172a] hover:bg-black/[0.04] hover:shadow-sm transition-all`;
+  // Hover navbar — solo underline emerald, niente pill
+  const navLinkClass = `group relative inline-flex items-center px-2 py-1.5 text-sm font-medium text-[#475569] hover:text-emerald-600 transition-colors`;
 
   const primaryBtnClass =
     "inline-flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.97] transition-all border border-emerald-500/10";

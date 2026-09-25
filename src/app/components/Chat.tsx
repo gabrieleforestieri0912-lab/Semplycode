@@ -1649,7 +1649,7 @@ export default function Chat() {
   const activeFile = uploadedFiles[activeFileIndex] ?? null;
 
   return (
-    <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans -mt-16">
+    <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans">
       <AnimatePresence>
         {isDesktop && isSidebarExpanded && (
           <motion.div
@@ -1729,7 +1729,22 @@ export default function Chat() {
             </div>
 
             <nav className="flex-1 py-4 px-3 min-h-0 overflow-y-auto overflow-x-hidden">
-              {showSidebarLabels && (
+              {!showSidebarLabels ? (
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
+                    <Plus size={18} />
+                  </button>
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Cerca chat" aria-label="Cerca chat" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <Search size={16} />
+                  </button>
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Progetti" aria-label="Progetti" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FolderKanban size={16} />
+                  </button>
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Chat recenti" aria-label="Chat recenti" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FileCode size={16} />
+                  </button>
+                </div>
+              ) : (
                 <div className="space-y-3">
                   {user ? (
                     <>
