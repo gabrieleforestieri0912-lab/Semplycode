@@ -276,7 +276,10 @@ function buildScatter(
   const usedTexts = new Set<string>();
 
   for (let r = 0; r < rows; r++) {
-    const y = yFor(r);
+    const baseY = yFor(r);
+    // Sparpagliamento verticale: ±4% per rompere l'allineamento a griglia
+    const yRaw = baseY + (rand() * 8 - 4);
+    const y = Math.max(6, Math.min(94, yRaw));
     const slots = variant === "sides" ? SIDES_ROWS[r % SIDES_ROWS.length] : HERO_ROWS[r % HERO_ROWS.length];
     let langIdx = r;
     for (const slot of slots) {
@@ -299,7 +302,9 @@ function buildScatter(
         }
       }
       if (!picked) continue;
-      const x = slot.x + (rand() * 3 - 1.5); // jitter orizzontale ±1.5% (mai in collisione)
+      // Sparpagliamento orizzontale: ±7% per non essere allineati, poi clamp per restare visibili per intero
+      const rawX = slot.x + (rand() * 14 - 7);
+      const x = Math.max(14, Math.min(86, rawX));
       const dur = speed * (0.7 + rand() * 0.5);
       const delay = -rand() * dur * 2; // negativo: già "in corsa"
       const range = 6 + rand() * 6; // 6–12px
