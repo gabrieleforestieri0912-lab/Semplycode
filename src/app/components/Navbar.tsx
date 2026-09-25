@@ -95,11 +95,11 @@ const Navbar = () => {
     editor: "Editor",
   };
 
+  // Essenziale: solo sezioni che sopravvivono al restyling (3 voci max per gerarchia)
   const navLinks = [
-    { href: "/#demo", label: "Demo" },
     { href: "/#funzionalita", label: "Funzionalità" },
-    { href: "/#estensione", label: "Estensione" },
     { href: "/#prezzi", label: "Prezzi" },
+    { href: "/#faq", label: "FAQ" },
   ];
 
   const profileMenuVariants: Variants = {
@@ -132,12 +132,13 @@ const Navbar = () => {
     { icon: Settings, label: "Profilo & Impostazioni", href: "/settings" },
   ];
 
-  const navLinkClass = `relative font-medium transition-all duration-200 text-[#475569] hover:text-[#0f172a] text-sm`;
+  // Gerarchia visiva: link mutati, una sola CTA primaria ben distinguibile
+  const navLinkClass = `relative font-medium text-sm text-muted hover:text-foreground transition-colors`;
 
   const primaryBtnClass =
-    "flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white border border-emerald-400/30 shadow-lg shadow-emerald-500/15 hover:shadow-emerald-500/30 hover:scale-[1.03] active:scale-[0.97] transition-all duration-200";
+    "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-[0.97] transition-all";
   const secondaryBtnClass =
-    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-[#e2e8f0] text-[#475569] hover:text-[#0f172a] hover:border-[#cbd5e1] hover:bg-black/[0.02] active:scale-[0.97] transition-all duration-200";
+    "hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-muted hover:text-foreground hover:underline underline-offset-4 transition-colors";
   const mobileNavLinkClass =
     "flex items-center gap-3 px-5 py-4 rounded-xl text-base font-semibold text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] active:scale-[0.99] transition-all duration-150";
 
@@ -286,19 +287,19 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Account / Auth */}
+          {/* Account / Auth — gerarchia: Accedi = link secondario, Inizia Ora = unica CTA primaria */}
           {!sessionUser && (
             <>
               <Link
                 href="/login"
-                className="hidden sm:flex px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold text-[#475569] hover:text-[#0f172a] border border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-black/[0.02] transition-all active:scale-95"
+                className={secondaryBtnClass}
               >
                 {t.login}
               </Link>
 
               <Link
                 href="/register"
-                className="flex items-center gap-1.5 bg-linear-to-r from-emerald-500 to-teal-500 text-white px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/35 hover:scale-[1.03] active:scale-95 transition-all duration-200"
+                className={primaryBtnClass}
               >
                 <Rocket size={15} />
                 <span className="hidden sm:inline">{t.getStarted}</span>
