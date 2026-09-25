@@ -262,25 +262,33 @@ const Navbar = () => {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      className="absolute right-0 mt-3 w-60 bg-white backdrop-blur-xl border border-[#e2e8f0] rounded-2xl shadow-2xl shadow-black/10 z-95 overflow-hidden"
+                      className="absolute right-0 mt-3 w-72 bg-white backdrop-blur-xl border border-[#e2e8f0] rounded-2xl shadow-2xl shadow-black/15 z-95 overflow-hidden"
                     >
-                      <div className="relative px-4 py-3.5 border-b border-[#e2e8f0] bg-linear-to-br from-primary/[0.06] to-emerald-500/[0.06]">
-                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+                      <div className="relative px-5 py-4 border-b border-[#e2e8f0] bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+                        <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
                         <div className="relative flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-                            <User className="w-4 h-4 text-white" />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0 ring-2 ring-white">
+                            {sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture ? (
+                              <img src={sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture} alt="Avatar" className="w-full h-full object-cover rounded-xl" />
+                            ) : (
+                              <User className="w-5 h-5 text-white" />
+                            )}
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-[#0f172a] truncate">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-[#0f172a] truncate flex items-center gap-1.5">
                               {sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || "Utente"}
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/30" />
                             </p>
-                            <p className="text-xs text-[#64748b] truncate mt-0.5">
+                            <p className="text-xs text-[#64748b] truncate">
                               {sessionUser.email}
                             </p>
                           </div>
+                          <span className="shrink-0 text-[10px] font-bold tracking-widest uppercase px-2 py-1 rounded-full bg-emerald-500 text-white shadow-sm">
+                            Pro
+                          </span>
                         </div>
                       </div>
-                      <div className="py-1.5">
+                      <div className="p-2">
                         {profileItems.map((item) => (
                           <motion.button
                             key={item.href}
@@ -289,25 +297,32 @@ const Navbar = () => {
                               setIsProfileOpen(false);
                               router.push(item.href);
                             }}
-                            className="group w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#475569] hover:text-[#0f172a] hover:bg-black/[0.03] transition-colors"
+                            className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#334155] hover:text-[#0f172a] hover:bg-[#f8fafc] hover:shadow-sm border border-transparent hover:border-[#e2e8f0] transition-all"
                           >
-                            <span className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all">
-                              <item.icon className="w-4 h-4 text-primary group-hover:text-white transition-colors" />
+                            <span className="w-9 h-9 rounded-xl bg-[#f1f5f9] group-hover:bg-emerald-500 flex items-center justify-center border border-[#e2e8f0] group-hover:border-emerald-500 shadow-sm transition-all">
+                              <item.icon className="w-4 h-4 text-[#64748b] group-hover:text-white transition-colors" />
                             </span>
-                            {item.label}
+                            <span className="flex-1 text-left">{item.label}</span>
+                            <span className="w-6 h-6 rounded-full bg-white border border-[#e2e8f0] group-hover:border-emerald-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                            </span>
                           </motion.button>
                         ))}
-                        <div className="my-1.5 border-t border-[#e2e8f0]/60" />
+                        <div className="my-2 h-px bg-gradient-to-r from-transparent via-[#e2e8f0] to-transparent" />
                         <motion.button
                           variants={profileItemVariants}
                           onClick={handleLogout}
-                          className="group w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600/80 hover:text-red-600 hover:bg-red-500/[0.07] transition-colors"
+                          className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-[#475569] hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all"
                         >
-                          <span className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center group-hover:bg-red-500 transition-all">
+                          <span className="w-9 h-9 rounded-xl bg-red-50 group-hover:bg-red-500 flex items-center justify-center border border-red-100 group-hover:border-red-500 shadow-sm transition-all">
                             <LogOut className="w-4 h-4 text-red-500 group-hover:text-white transition-colors" />
                           </span>
-                          {t.logout}
+                          <span className="flex-1 text-left">{t.logout}</span>
                         </motion.button>
+                      </div>
+                      <div className="px-4 py-2.5 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-between">
+                        <span className="text-[11px] text-[#94a3b8]">Semplycode AI</span>
+                        <span className="text-[11px] font-medium text-emerald-600">10 analisi/giorno</span>
                       </div>
                     </motion.div>
                   </>

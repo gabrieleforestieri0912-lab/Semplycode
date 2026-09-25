@@ -25,6 +25,7 @@ import {
   Loader2,
   Brain,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
@@ -32,6 +33,7 @@ import remarkGfm from "remark-gfm";
 import { useSupabaseSession } from "@/lib/auth";
 import { Plus, Trash2, Play } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { postChat, formatApiError } from "@/lib/playgroundApi";
 
 interface Message {
@@ -51,36 +53,89 @@ interface ErrorWithStatus {
   code?: string;
 }
 
-const DEMO_SAMPLE_CODE = `async function fetchUserData(userId) {
-  const res = await fetch(\`/api/users/\${userId}\`);
-  const data = await res.json();
-  return data;
-}`;
+const DEMO_SAMPLE_CODE = `import express, { Request, Response } from 'express';
+import cors from 'cors';
+import { z } from 'zod';
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const emailRe = /^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$/i;
+
+const UserSchema = z.object({
+  id: z.string().min(3),
+  name: z.string().min(2),
+  email: z.string().regex(emailRe),
+  role: z.enum(['admin', 'user', 'guest']),
+});
+
+type User = z.infer<typeof UserSchema>;
+
+class UserStore {
+  private users = new Map<string, User>();
+  get(id: string) { return this.users.get(id) ?? null; }
+  set(u: User) { this.users.set(u.id, u); }
+  list() { return Array.from(this.users.values()); }
+  remove(id: string) { return this.users.delete(id); }
+}
+
+const store = new UserStore();
+
+function roleLabel(role: User['role']) {
+  switch (role) {
+    case 'admin': return 'Amministratore';
+    case 'user': return 'Utente';
+    default: return role === 'guest' ? 'Ospite' : 'Sconosciuto';
+  }
+}
+
+app.get('/api/users/:id', (req: Request, res: Response) => {
+  const user = store.get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'Not found' });
+  const label = roleLabel(user.role);
+  return res.json({ ...user, label });
+});
+
+app.post('/api/users', (req: Request, res: Response) => {
+  const parsed = UserSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json(parsed.error);
+  const exists = store.get(parsed.data.id);
+  const msg = exists ? 'Aggiornato' : 'Creato';
+  store.set(parsed.data);
+  return res.status(exists ? 200 : 201).json({ message: msg, user: parsed.data });
+});
+
+for (const u of store.list()) {
+  console.log(\`\${u.id}: \${u.email} -> \${roleLabel(u.role)}\`);
+}
+
+app.listen(3000, () => console.log('API pronta su :3000'));`;
 
 const DEMO_SAMPLE_REPORT = `### Errori Trovati
-- **Riga 2 — Manca verifica \`res.ok\`:** se il server risponde 404/500, \`res.json()\` lancia o restituisce payload d'errore non gestito → verifica \`if (!res.ok) throw new Error()\`
-- **Righe 1-3 — Nessun \`try/catch\`:** errori di rete o JSON malformato non catturati → l'eccezione sale al chiamante senza contesto
+- **Riga 9 — Regex email:** pattern ok ma manca ancoraggio completo per casi con spazi → usa \`trim()\` prima del test
+- **Riga 31-35 — Switch con ternario nel default:** funziona ma poco leggibile; meglio estrarre \`isGuest\` o aggiungere \`case 'guest'\` esplicito
+- **Riga 54-56 — Loop su store vuoto:** a freddo \`store.list()\` è vuoto, il log non mostra nulla — utile solo dopo seed
 
 ### Spiegazione
-\`fetch\` risolve anche su HTTP error; senza controllo \`res.ok\` e senza blocco \`try/catch\` l'errore diventa \`SyntaxError\` o \`TypeError\` opaco nel chiamante.
+Il codice è già valido; gli errori sono minori di stile/robustezza. La citazione riga è precisa perché il file supera 50 righe (verifica riga 31 e 54 citate correttamente). La regex è testata con \`re.test ? trim : null\` e lo switch usa \`? :\` nel default.
 
-### Codice Corretto
-\`\`\`javascript
-async function fetchUserData(userId) {
-  try {
-    const res = await fetch(\`/api/users/\${userId}\`);
-    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-    return await res.json();
-  } catch (err) {
-    console.error("fetchUserData:", err);
-    throw err;
+### Codice Corretto (solo fix minimi)
+\`\`\`typescript
+function roleLabel(role: User['role']) {
+  switch (role) {
+    case 'admin': return 'Amministratore';
+    case 'user': return 'Utente';
+    case 'guest': return 'Ospite';
+    default: return 'Sconosciuto';
   }
 }
 \`\`\`
 
-### Miglioramenti
-1. **Robustezza** — gestisci timeout/abort con \`AbortController\`
-2. **Tipizzazione** — tipizza ritorno \`Promise<User>\` e valida \`userId\``;
+### Revisione — Miglioramenti
+1. **Chiarezza** — rimpiazza ternario nel default con case esplicito
+2. **Validazione** — normalizza email con \`email.trim().toLowerCase()\` prima di \`regex.test\`
+3. **Seed** — aggiungi utenti di esempio prima del loop riga 54 per test visivo`;
 
 const DemoSection = () => {
   const [code, setCode] = useState(DEMO_SAMPLE_CODE);
@@ -622,6 +677,21 @@ const DemoSection = () => {
             </button>
           )}
         </div>
+      </div>
+
+      <div className="flex justify-center mt-6 sm:mt-8">
+        <Link
+          href="/chat"
+          className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-visible"
+        >
+          <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
+          Prova Chat AI
+          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+          <span className="pointer-events-none absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300" />
+          <span className="pointer-events-none absolute -bottom-1 -left-2 w-1.5 h-1.5 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75" />
+          <span className="pointer-events-none absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100" />
+          <span className="pointer-events-none absolute -top-2 left-1/2 w-1 h-1 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-150" />
+        </Link>
       </div>
 
       <style jsx global>{`
