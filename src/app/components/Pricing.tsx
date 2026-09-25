@@ -500,11 +500,11 @@ const Pricing = () => {
                   </motion.span>
                 )}
 
-                {/* Gradient border wrapper */}
+                {/* Gradient border wrapper — hover su tutte le card */}
                 <div
                   className={`relative h-full rounded-3xl p-px transition-all duration-500 ${plan.popular
-                      ? "bg-gradient-to-b from-emerald-400 via-teal-300 to-emerald-500 shadow-xl shadow-emerald-500/20"
-                      : "bg-[#e2e8f0] group-hover:bg-gradient-to-br group-hover:from-emerald-300 group-hover:via-teal-300 group-hover:to-emerald-400"
+                      ? "bg-gradient-to-b from-emerald-400 via-teal-300 to-emerald-500 shadow-xl shadow-emerald-500/20 group-hover:shadow-2xl group-hover:shadow-emerald-500/25"
+                      : "bg-[#e2e8f0] group-hover:bg-gradient-to-br group-hover:from-emerald-300 group-hover:via-teal-300 group-hover:to-emerald-400 group-hover:shadow-xl group-hover:shadow-black/10"
                     }`}
                 >
                   <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden flex flex-col">
@@ -545,7 +545,7 @@ const Pricing = () => {
                       </div>
 
                       {/* Price Section */}
-                      <div className="flex flex-col mb-6 min-h-[68px]">
+                      <div className="flex flex-col mb-5 min-h-[68px]">
                         {isWaitlist ? (
                           <>
                             <div className="flex items-end gap-2">
@@ -592,6 +592,9 @@ const Pricing = () => {
                           </>
                         )}
                       </div>
+
+                      {/* Separatore prezzo / offerte — richiesto */}
+                      <div className="h-px bg-gradient-to-r from-transparent via-[#e2e8f0] to-transparent mb-6" />
 
                       {/* Features */}
                       <ul className="space-y-2.5 grow mb-6">

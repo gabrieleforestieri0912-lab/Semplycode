@@ -15,6 +15,7 @@ import {
   BarChart3,
   Code2,
   Bookmark,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
@@ -132,13 +133,15 @@ const Navbar = () => {
     { icon: Settings, label: "Profilo & Impostazioni", href: "/settings" },
   ];
 
-  // Gerarchia visiva: link mutati, una sola CTA primaria ben distinguibile
-  const navLinkClass = `relative font-medium text-sm text-muted hover:text-foreground transition-colors`;
+  // Gerarchia visiva: link mutati, una sola CTA primaria ben distinguibile — stile bottoni d'accesso rivisto
+  const navLinkClass = `relative font-medium text-sm text-[#475569] hover:text-[#0f172a] transition-colors`;
 
   const primaryBtnClass =
-    "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-[0.97] transition-all";
+    "inline-flex items-center justify-center gap-1.5 px-5 sm:px-6 py-2.5 rounded-full text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.97] transition-all border border-emerald-500/10";
   const secondaryBtnClass =
-    "hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-muted hover:text-foreground hover:underline underline-offset-4 transition-colors";
+    "hidden sm:inline-flex items-center justify-center px-4 sm:px-5 py-2.5 rounded-full text-sm font-semibold border border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:text-emerald-600 shadow-sm hover:shadow-md active:scale-[0.97] transition-all";
+  const chatBtnClass =
+    "inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-sm font-bold border border-emerald-500/30 bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 hover:shadow-md hover:shadow-emerald-500/20 active:scale-[0.97] transition-all";
   const mobileNavLinkClass =
     "flex items-center gap-3 px-5 py-4 rounded-xl text-base font-semibold text-[#475569] hover:bg-black/[0.03] hover:text-[#0f172a] active:scale-[0.99] transition-all duration-150";
 
@@ -191,8 +194,9 @@ const Navbar = () => {
           {sessionUser && (
             <Link
               href="/chat"
-              className="hidden sm:flex items-center px-4 py-2 rounded-xl text-sm font-semibold border border-emerald-500/40 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-500/60 hover:text-emerald-700 transition-all active:scale-[0.985]"
+              className={chatBtnClass}
             >
+              <Sparkles size={14} className="opacity-80" />
               Chat AI
             </Link>
           )}
@@ -201,9 +205,11 @@ const Navbar = () => {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full hover:bg-black/[0.04] transition-colors border border-[#e2e8f0] hover:border-emerald-500/40"
+                aria-expanded={isProfileOpen}
+                aria-haspopup="menu"
+                className={`relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full transition-all border ${isProfileOpen ? 'bg-white border-emerald-500/50 shadow-md shadow-emerald-500/10' : 'bg-white border-[#e2e8f0] hover:border-emerald-500/40 hover:shadow-md'}`}
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 ring-emerald-500 transition-all duration-200">
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center ring-2 transition-all duration-200 ${isProfileOpen ? 'ring-emerald-500' : 'ring-emerald-500/70 group-hover:ring-emerald-500'}`}>
                   {sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture ? (
                     <img
                       src={sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture}
