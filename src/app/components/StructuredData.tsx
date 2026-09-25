@@ -13,8 +13,7 @@ const organizationSchema = {
     url: `${SITE_URL}/semplycode.png`,
   },
   description:
-    "Semplycode è il tuo compagno AI per analizzare, debuggare e ottimizzare il codice in linguaggio semplice.",
-  sameAs: ["https://github.com/gabrieleforestieri0912-lab"],
+    "Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
 };
 
 const websiteSchema = {
@@ -24,7 +23,7 @@ const websiteSchema = {
   url: SITE_URL,
   name: "Semplycode",
   description:
-    "Analisi intelligente del codice con AI: trova bug, ottimizza e impara a programmare con spiegazioni in italiano.",
+    "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
   inLanguage: "it",
   publisher: {
     "@id": `${SITE_URL}/#organization`,
@@ -39,23 +38,22 @@ const softwareSchema = {
   operatingSystem: "Web",
   url: SITE_URL,
   description:
-    "Assistente AI che analizza codice sorgente in oltre 20 linguaggi, trova bug, spiega la logica e propone correzioni, con spiegazioni in italiano.",
+    "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale. In italiano, 20+ linguaggi.",
   inLanguage: ["it", "en"],
   featureList: [
-    "Analisi intelligente del codice con report su errori e correzioni",
-    "Debug con stack trace",
+    "Report strutturato in italiano con errore, riga e fix in diff",
+    "Debug correlato a stack trace quando fornito",
     "Supporto a 20+ linguaggi di programmazione",
-    "Caricamento file e archivi ZIP",
-    "Import file da GitHub",
-    "Review di sicurezza, performance e stile",
-    "Chat AI sul codice",
-    "Export e condivisione dei report",
+    "Caricamento fino a 5 file (20 su Enterprise) + ZIP e GitHub secondo piano",
+    "Tipi di analisi Correzione/Revisione/Creazione con focus Sicurezza/Performance/Stile",
+    "Chat AI sul codice con copia/diff",
+    "Export Markdown/codice e link condivisibile, salvataggio nel Cassetto",
   ],
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "EUR",
     lowPrice: "0",
-    highPrice: "9.99",
+    highPrice: "7.99",
     offerCount: "4",
     offers: [
       {
@@ -63,28 +61,29 @@ const softwareSchema = {
         name: "Gratis",
         price: "0",
         priceCurrency: "EUR",
-        description: "100 token AI al mese",
+        description: "100.000 crediti / mese ≈ ~20 analisi — 1 credito ≈ 4 caratteri",
       },
       {
         "@type": "Offer",
         name: "Starter",
         price: "4.99",
         priceCurrency: "EUR",
-        description: "1500 token AI al mese",
+        description: "1.500.000 crediti / mese ≈ ~300 analisi",
       },
       {
         "@type": "Offer",
         name: "Pro",
         price: "7.99",
         priceCurrency: "EUR",
-        description: "3000 token AI al mese",
+        description: "3.000.000 crediti / mese ≈ ~600 analisi",
       },
       {
         "@type": "Offer",
-        name: "Enterprise",
-        price: "9.99",
+        name: "Team",
+        price: "0",
         priceCurrency: "EUR",
-        description: "Token AI illimitati per team",
+        description: "Lista d’attesa — fatturazione centralizzata su richiesta",
+        availability: "https://schema.org/PreOrder",
       },
     ],
   },

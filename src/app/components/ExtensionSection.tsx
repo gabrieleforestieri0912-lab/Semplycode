@@ -2,13 +2,8 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { MousePointerClick, PanelRight, Languages, ShieldCheck } from "lucide-react";
+import { MousePointerClick, PanelRight, Languages, ShieldCheck, Clock } from "lucide-react";
 import ChromeLogo from "./ChromeLogo";
-import {
-  CHROME_STORE_URL,
-  CHROME_BUTTON_CLASS,
-  CHROME_BUTTON_STYLE,
-} from "@/lib/extension";
 
 const perks = [
   {
@@ -28,8 +23,8 @@ const perks = [
   },
   {
     icon: ShieldCheck,
-    title: "Privacy by design",
-    desc: "L'estensione agisce solo quando la attivi: il tuo codice non viene mai salvato.",
+    title: "Privacy chiara",
+    desc: "Il codice analizzato dall’estensione non viene salvato di default; solo il report che decidi di condividere dalla Chat AI genera un link temporaneo (7 giorni).",
   },
 ];
 
@@ -60,16 +55,16 @@ export default function ExtensionSection() {
           />
 
           <div className="relative z-10 max-w-3xl 3xl:max-w-5xl mx-auto">
-            {/* Badge */}
+            {/* Badge — In arrivo, non cliccabile */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border"
               style={{
-                background: "rgba(16,185,129,0.1)",
-                borderColor: "rgba(16,185,129,0.35)",
-                color: "#34d399",
+                background: "rgba(251,191,36,0.12)",
+                borderColor: "rgba(251,191,36,0.35)",
+                color: "#fbbf24",
               }}
             >
-              <ChromeLogo className="w-3.5 h-3.5" />
-              Estensione Chrome
+              <Clock size={12} />
+              In arrivo — Estensione Chrome
             </div>
 
             <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-black tracking-tight text-white mb-4 sm:mb-5">
@@ -87,7 +82,7 @@ export default function ExtensionSection() {
 
             <p className="text-sm xs:text-base md:text-lg 3xl:text-xl text-[#94a3b8] max-w-2xl 3xl:max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10">
               Seleziona il codice su qualsiasi sito — GitHub, documentazione, Stack Overflow —
-              e lascia che Semplycode lo analizzi, lo spieghi e lo corregga in un pannello laterale.
+              e lascialo analizzare in un pannello laterale. La pubblicazione sul Chrome Web Store è in preparazione.
             </p>
 
             {/* Perks */}
@@ -108,22 +103,29 @@ export default function ExtensionSection() {
               ))}
             </div>
 
-            {/* CTA */}
+            {/* CTA — In arrivo, senza link cliccabile (Sezione 0: listing non pubblicata, URL in src/lib/extension.ts senza ID valido) */}
             <div className="flex justify-center">
-              <a
-                href={CHROME_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${CHROME_BUTTON_CLASS} min-h-[48px] w-full xs:w-auto inline-flex items-center justify-center`}
-                style={CHROME_BUTTON_STYLE}
+              <span
+                aria-disabled="true"
+                className="min-h-[48px] w-full xs:w-auto inline-flex items-center justify-center gap-3 px-8 md:px-10 py-4 rounded-full text-base font-bold text-white/60 cursor-not-allowed"
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "none",
+                }}
+                title="Estensione non ancora pubblicata — nessun ID valido nello Store (src/lib/extension.ts)"
               >
-                <ChromeLogo className="w-5 h-5" />
-                Aggiungi a Chrome
-              </a>
+                <ChromeLogo className="w-5 h-5 opacity-60" />
+                In arrivo sul Chrome Web Store
+              </span>
             </div>
 
-            <p className="mt-5 text-xs 3xl:text-sm text-[#64748b]">
-              Gratis · Disponibile sul Chrome Web Store · Attiva solo quando lo decidi tu
+            <p className="mt-5 text-xs 3xl:text-sm text-[#64748b] leading-relaxed max-w-2xl mx-auto">
+              <span className="text-[#94a3b8]">Nessun link attivo finché la listing non sarà pubblicata</span>
+              {" · "}
+              Gratuita quando disponibile · Si attiva solo quando la apri tu
+              <br />
+              <span className="text-[#475569] text-[11px]">Condividere un link al report è diverso: lo crei esplicitamente dalla Chat AI e scade in 7 giorni (<span className="font-mono">src/app/api/share/route.ts:7</span>) — non è salvataggio automatico.</span>
             </p>
           </div>
         </motion.div>

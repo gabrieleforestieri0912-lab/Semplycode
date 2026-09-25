@@ -13,6 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   Lock,
+  Info,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { loadStripe } from "@stripe/stripe-js";
@@ -44,6 +45,8 @@ interface Plan {
   features: string[];
   icon: React.ReactElement;
   popular?: boolean;
+  isWaitlist?: boolean;
+  waitlistNote?: string;
 }
 
 interface SectionTranslation {
@@ -61,6 +64,8 @@ interface SectionTranslation {
   getStarted: string;
   popular: string;
   secure: string;
+  waitlistCta: string;
+  creditsFootnote: string;
   plans: Plan[];
 }
 
@@ -87,7 +92,7 @@ const PLAN_STYLES: Record<string, PlanStyle> = {
     accent: "#8b5cf6",
     glow: "rgba(139,92,246,0.28)",
     btnClass:
-      "bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-600/25 active:scale-[0.97]",
+      "bg-white border border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] active:scale-[0.97]",
   },
 };
 
@@ -102,7 +107,7 @@ const Pricing = () => {
     en: {
       titleA: "Simple,",
       titleB: "transparent pricing",
-      subtitle: "Pick the plan that fits your coding journey. Flexible monthly or discounted annual billing.",
+      subtitle: "Pick the plan that fits your coding journey. Credits are the clear unit — see what 1 credit means below.",
       badge: "Pricing Plans",
       monthlyToggle: "Monthly",
       annualToggle: "Annual",
@@ -110,10 +115,12 @@ const Pricing = () => {
       monthlySuffix: "/mo",
       billedMonthlyNote: "Billed monthly",
       billedAnnuallyNote: "/year billed annually",
-      freeNote: "Free forever, no card needed",
+      freeNote: "Free forever, no card needed · ~20 analyses / mo",
       getStarted: "Get Started",
+      waitlistCta: "Join waitlist",
       popular: "Most Popular",
       secure: "Secure payments via Stripe · Cancel anytime",
+      creditsFootnote: "1 credit = 1 token ≈ 4 characters (src/lib/tokenBudget.ts). ~20 analyses estimated on ~5k credits per analysis (code + response); actual count varies with length.",
       plans: [
         {
           id: "free",
@@ -125,11 +132,11 @@ const Pricing = () => {
           },
           tagline: "Start building for free",
           features: [
-            "100 AI tokens per month",
-            "Standard Neural Engine",
-            "Web Editor access",
-            "Basic error detection",
-            "Syntax highlighting",
+            "100,000 credits / mo ≈ ~20 analyses*",
+            "Standard model",
+            "Web Editor + auto language detection",
+            "Basic error detection with line + Italian explanation",
+            "1 file per request (100 KB, max 12k chars)",
             "Community Support",
           ],
           icon: <Zap />,
@@ -145,11 +152,11 @@ const Pricing = () => {
           tagline: "For growing developers",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
-            "1500 AI tokens per month",
-            "Deep Code Reviews",
-            "File upload (.py, .js, .ts…)",
-            "Export reports (PDF)",
-            "Priority queue",
+            "1,500,000 credits / mo ≈ ~300 analyses*",
+            "In-depth reviews (Correction + Revision)",
+            "Up to 3 files (100 KB each) + GitHub import",
+            "Export Markdown/code + shareable link",
+            "History: 50 chats + 100 Drawer notes",
             "Email Support",
           ],
           icon: <Rocket />,
@@ -165,12 +172,11 @@ const Pricing = () => {
           tagline: "For serious developers",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
-            "3000 AI tokens per month",
-            "All analysis types (security, performance…)",
-            "ZIP / multi-file upload",
-            "Real-time collaboration",
-            "Advanced AI models",
-            "Export & share reports",
+            "3,000,000 credits / mo ≈ ~600 analyses*",
+            "All analysis types + Security/Performance/Style focus",
+            "Up to 5 files + ZIP (100 KB each) + GitHub",
+            "Advanced models enabled",
+            "History: 200 chats + 500 notes, priority queue",
             "Priority Support",
           ],
           icon: <Crown />,
@@ -178,32 +184,30 @@ const Pricing = () => {
         },
         {
           id: "enterprise",
-          name: "Enterprise",
+          name: "Team",
           price: {
-            monthly: "9.99",
-            annual: "7.99",
-            annualBilled: "95.88",
+            monthly: "—",
+            annual: "—",
+            annualBilled: "—",
           },
-          tagline: "Scale your entire team",
-          priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
+          tagline: "Centralized billing — waitlist",
           features: [
-            "Unlimited AI tokens",
-            "Custom AI Training",
-            "Team Collaboration",
-            "Full API Access",
-            "SSO / SAML",
-            "Custom integrations",
-            "Dedicated Account Manager",
-            "White-label support",
+            "Multi-seat with centralized billing (on request)",
+            "Up to 20 files per request (100 KB each)",
+            "Shared credit pool by agreed volume",
+            "All analysis types + advanced models",
+            "Shared priority support",
           ],
           icon: <Building2 />,
+          isWaitlist: true,
+          waitlistNote: "No price, no SSO/SAML, no white-label — waitlist only.",
         },
       ],
     },
     it: {
       titleA: "Prezzi semplici,",
       titleB: "senza sorprese",
-      subtitle: "Scegli il piano adatto al tuo percorso di programmazione. Piani mensili flessibili o annuali scontati.",
+      subtitle: "Scegli il piano adatto a te. I crediti sono l’unità chiara — sotto trovi cosa vale 1 credito.",
       badge: "Piani di Prezzo",
       monthlyToggle: "Mensile",
       annualToggle: "Annuale",
@@ -211,10 +215,12 @@ const Pricing = () => {
       monthlySuffix: "/mese",
       billedMonthlyNote: "Fatturazione mensile",
       billedAnnuallyNote: "/anno fatturati annualmente",
-      freeNote: "Sempre gratis, nessuna carta richiesta",
+      freeNote: "Sempre gratis, nessuna carta richiesta · ~20 analisi / mese",
       getStarted: "Inizia Ora",
+      waitlistCta: "Iscriviti alla lista d’attesa",
       popular: "Più Popolare",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
+      creditsFootnote: "1 credito = 1 token ≈ 4 caratteri (src/lib/tokenBudget.ts:16). ~20 analisi stimate su ~5.000 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
       plans: [
         {
           id: "free",
@@ -226,11 +232,11 @@ const Pricing = () => {
           },
           tagline: "Inizia a costruire gratis",
           features: [
-            "100 token AI al mese",
-            "Motore Neurale Standard",
-            "Accesso Web Editor",
-            "Rilevamento errori base",
-            "Evidenziazione sintassi",
+            "100.000 crediti / mese ≈ ~20 analisi*",
+            "Modello standard",
+            "Editor web + rilevamento linguaggio automatico",
+            "Rilevamento errori base con riga + spiegazione italiana",
+            "1 file per richiesta (100 KB, max 12.000 caratteri)",
             "Supporto Community",
           ],
           icon: <Zap />,
@@ -246,11 +252,11 @@ const Pricing = () => {
           tagline: "Per sviluppatori in crescita",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
-            "1500 token AI al mese",
-            "Review codice approfondite",
-            "Upload file (.py, .js, .ts…)",
-            "Export report (PDF)",
-            "Coda prioritaria",
+            "1.500.000 crediti / mese ≈ ~300 analisi*",
+            "Review approfondite (Correzione + Revisione)",
+            "Fino a 3 file (100 KB cad.) + import GitHub",
+            "Export Markdown/codice e link condivisibile",
+            "Cronologia: 50 chat + 100 note nel Cassetto",
             "Supporto via Email",
           ],
           icon: <Rocket />,
@@ -266,12 +272,11 @@ const Pricing = () => {
           tagline: "Per sviluppatori seri",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
-            "3000 token AI al mese",
-            "Tutti i tipi di analisi",
-            "Upload ZIP e multi-file",
-            "Collaborazione in tempo reale",
-            "Modelli AI avanzati",
-            "Export e condivisione report",
+            "3.000.000 crediti / mese ≈ ~600 analisi*",
+            "Tutti i tipi di analisi + focus Sicurezza/Performance/Stile",
+            "Fino a 5 file + ZIP (100 KB cad.) + GitHub",
+            "Modelli avanzati sbloccati",
+            "Cronologia: 200 chat + 500 note, coda prioritaria",
             "Supporto prioritario",
           ],
           icon: <Crown />,
@@ -279,25 +284,23 @@ const Pricing = () => {
         },
         {
           id: "enterprise",
-          name: "Enterprise",
+          name: "Team",
           price: {
-            monthly: "9.99",
-            annual: "7.99",
-            annualBilled: "95.88",
+            monthly: "—",
+            annual: "—",
+            annualBilled: "—",
           },
-          tagline: "Scala l'intero team",
-          priceId: "price_1Rx1kF9ddZe187yvEnterprisePlan123",
+          tagline: "Fatturazione centralizzata — lista d’attesa",
           features: [
-            "Token AI illimitati",
-            "Training AI Personalizzato",
-            "Collaborazione Team",
-            "Accesso completo alle API",
-            "SSO / SAML",
-            "Integrazioni personalizzate",
-            "Account Manager Dedicato",
-            "Supporto White-label",
+            "Posti multipli con fatturazione centralizzata (su richiesta)",
+            "Fino a 20 file per richiesta (100 KB cad.)",
+            "Pool crediti condiviso su volumi concordati",
+            "Tutti i tipi di analisi + modelli avanzati",
+            "Supporto prioritario condiviso",
           ],
           icon: <Building2 />,
+          isWaitlist: true,
+          waitlistNote: "Niente prezzo fisso, niente SSO/SAML, niente white-label — solo lista d’attesa.",
         },
       ],
     },
@@ -306,6 +309,10 @@ const Pricing = () => {
   const current = t[language] || t.it;
 
   const handleCheckout = async (plan: Plan) => {
+    if (plan.isWaitlist) {
+      window.location.href = "/feedback?topic=team-waitlist";
+      return;
+    }
     if (plan.price.monthly === "0") {
       window.location.href = "/register";
       return;
@@ -466,6 +473,7 @@ const Pricing = () => {
             const style = PLAN_STYLES[plan.id];
             const isLoading = loading === plan.id;
             const isFree = plan.price.monthly === "0";
+            const isWaitlist = !!plan.isWaitlist;
             const displayPrice =
               billingCycle === "annual" ? plan.price.annual : plan.price.monthly;
 
@@ -538,36 +546,51 @@ const Pricing = () => {
 
                       {/* Price Section */}
                       <div className="flex flex-col mb-6 min-h-[68px]">
-                        <div className="flex items-end gap-1">
-                          <span className="text-xl font-medium text-[#64748b] leading-none mb-1.5">
-                            €
-                          </span>
-                          <motion.span
-                            key={`${plan.id}-${billingCycle}`}
-                            initial={{ opacity: 0, y: -6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-3xl xs:text-4xl sm:text-5xl 3xl:text-6xl font-black tracking-tight text-[#0f172a] leading-none"
-                          >
-                            {displayPrice}
-                          </motion.span>
-                          {!isFree && (
-                            <span className="mb-1 text-sm font-medium text-[#64748b]">
-                              {current.monthlySuffix}
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1.5 text-xs text-[#64748b] min-h-[18px]">
-                          {isFree ? (
-                            <span>{current.freeNote}</span>
-                          ) : billingCycle === "annual" ? (
-                            <span className="text-emerald-600 font-medium">
-                              €{plan.price.annualBilled} {current.billedAnnuallyNote}
-                            </span>
-                          ) : (
-                            <span>{current.billedMonthlyNote}</span>
-                          )}
-                        </div>
+                        {isWaitlist ? (
+                          <>
+                            <div className="flex items-end gap-2">
+                              <span className="text-2xl sm:text-3xl font-black tracking-tight text-[#0f172a] leading-none">
+                                Su richiesta
+                              </span>
+                            </div>
+                            <div className="mt-1.5 text-xs text-[#64748b] min-h-[18px]">
+                              <span>Lista d’attesa — nessun addebito ora</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-end gap-1">
+                              <span className="text-xl font-medium text-[#64748b] leading-none mb-1.5">
+                                €
+                              </span>
+                              <motion.span
+                                key={`${plan.id}-${billingCycle}`}
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-3xl xs:text-4xl sm:text-5xl 3xl:text-6xl font-black tracking-tight text-[#0f172a] leading-none"
+                              >
+                                {displayPrice}
+                              </motion.span>
+                              {!isFree && (
+                                <span className="mb-1 text-sm font-medium text-[#64748b]">
+                                  {current.monthlySuffix}
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1.5 text-xs text-[#64748b] min-h-[18px]">
+                              {isFree ? (
+                                <span>{current.freeNote}</span>
+                              ) : billingCycle === "annual" ? (
+                                <span className="text-emerald-600 font-medium">
+                                  €{plan.price.annualBilled} {current.billedAnnuallyNote}
+                                </span>
+                              ) : (
+                                <span>{current.billedMonthlyNote}</span>
+                              )}
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Features */}
@@ -590,6 +613,12 @@ const Pricing = () => {
                         ))}
                       </ul>
 
+                      {isWaitlist && plan.waitlistNote && (
+                        <p className="mb-4 text-xs leading-snug text-[#94a3b8] border-t border-[#f1f5f9] pt-3">
+                          {plan.waitlistNote}
+                        </p>
+                      )}
+
                       {/* CTA */}
                       <button
                         onClick={() => handleCheckout(plan)}
@@ -600,7 +629,7 @@ const Pricing = () => {
                           <Loader2 size={16} className="animate-spin" />
                         ) : (
                           <>
-                            {current.getStarted}
+                            {isWaitlist ? current.waitlistCta : current.getStarted}
                             <ArrowRight
                               size={14}
                               className="group-hover:translate-x-0.5 transition-transform"
@@ -616,13 +645,27 @@ const Pricing = () => {
           })}
         </div>
 
+        {/* Credits definition - visible */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="max-w-3xl mx-auto mt-10 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 sm:px-5 py-3.5 flex gap-3"
+        >
+          <Info size={16} className="shrink-0 mt-0.5 text-amber-600" />
+          <p className="text-xs sm:text-sm leading-relaxed text-[#475569]">
+            <span className="font-bold text-[#0f172a]">Cosa sono i crediti?</span> {current.creditsFootnote}
+          </p>
+        </motion.div>
+
         {/* Secure note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
-          className="text-center mt-14 flex items-center justify-center gap-2 text-sm text-[#64748b]"
+          className="text-center mt-6 flex items-center justify-center gap-2 text-sm text-[#64748b]"
         >
           <Lock size={13} />
           {current.secure}
