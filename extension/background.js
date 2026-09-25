@@ -261,7 +261,7 @@ chrome.runtime.onInstalled.addListener(() => {
     });
     chrome.contextMenus.create({
       id: "revise-text",
-      title: "Rivedi scrittura con Semplycode",
+      title: "Spiega il codice con Semplycode",
       contexts: ["selection"]
     });
     console.log("Semplycode Context Menus Registered.");
@@ -313,14 +313,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     openPanelWithCode(tab.id, info.selectionText);
   }
   if (info.menuItemId === "revise-text" && info.selectionText) {
-    if (!isProseText(info.selectionText)) {
-      // consenti comunque la revisione se l'utente la richiede esplicitamente da menu
-      if (info.selectionText.trim().length < 20) {
-        console.warn("[Semplycode] Testo troppo breve per la revisione.");
-        return;
-      }
+    if (!isCodeText(info.selectionText)) {
+      console.warn("[Semplycode] Il testo selezionato non sembra essere vero codice — Spiega annullata. Seleziona codice dentro <code>/<pre> o con sintassi riconoscibile.");
+      return;
     }
-    openPanelWithRevision(tab.id, info.selectionText);
+    openPanelWithCode(tab.id, info.selectionText);
   }
 });
 

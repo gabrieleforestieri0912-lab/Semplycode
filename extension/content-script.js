@@ -87,6 +87,38 @@ const COMMON_WORDS = [
 
 const COMMON_WORD_SET = new Set(COMMON_WORDS);
 
+// Tag HTML di codice vs prosa: per attivare il bottone solo su vero codice
+function getSelectionContainerElement(range) {
+  let el = range.commonAncestorContainer;
+  if (el.nodeType === 3) el = el.parentElement;
+  return el instanceof Element ? el : null;
+}
+function isInsideCodeElement(element) {
+  let el = element;
+  while (el && el !== document.body && el !== document.documentElement) {
+    const tag = (el.tagName || '').toLowerCase();
+    if (['code', 'pre', 'kbd', 'samp', 'var', 'tt'].includes(tag)) return true;
+    const cls = (el.className || '').toString().toLowerCase();
+    if (cls.includes('language-') || cls.includes('hljs') || cls.includes('cm-content') || cls.includes('cm-editor') || cls.includes('monaco') || cls.includes('code-block') || (cls.includes('highlight') && !cls.includes('highlight-prose'))) return true;
+    const langAttr = el.getAttribute && (el.getAttribute('data-language') || el.getAttribute('data-lang'));
+    if (langAttr) return true;
+    el = el.parentElement;
+  }
+  return false;
+}
+function isInsideProseElement(element) {
+  let el = element;
+  while (el && el !== document.body) {
+    const tag = (el.tagName || '').toLowerCase();
+    if (['p', 'article', 'section', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4'].includes(tag)) {
+      // se non è dentro code, consideralo prosa strutturata
+      if (!isInsideCodeElement(el)) return true;
+    }
+    el = el.parentElement;
+  }
+  return false;
+}
+
 function looksLikeCode(text) {
   const t = text.trim();
   if (t.length < MIN_SELECTION_LEN) return false;
@@ -375,9 +407,9 @@ function showReviseButton(rect, text) {
     <span class="semplycode-float-icon" aria-hidden="true">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     </span>
-    Rivedi scrittura con Semplycode
+    Spiega il codice con Semplycode
   `;
-  floatBtn.title = 'Invia il testo selezionato per la revisione';
+  floatBtn.title = 'Spiega il codice selezionato';
 
   const top = Math.min(rect.bottom + window.scrollY + 8, window.scrollY + window.innerHeight - 48);
   const left = Math.min(
@@ -391,15 +423,24 @@ function showReviseButton(rect, text) {
   floatBtn.addEventListener('mousedown', (e) => e.preventDefault());
 
   floatBtn.addEventListener('click', () => {
-    const payload = text.trim().slice(0, 8000);
+    const payload = text.trim().slice(0, MAX_SELECTION_LEN);
     if (!chrome.runtime?.id) {
       floatBtn.remove();
       return;
     }
     try {
-      chrome.runtime.sendMessage({ action: 'revise-selection', text: payload }, (response) => {
+      // "Spiega il codice" → invia come analisi codice (non revisione prosa)
+      chrome.runtime.sendMessage({ action: 'analyze-selection', code: payload }, (response) => {
         if (chrome.runtime.lastError) {
           floatBtn.remove();
+          return;
+        }
+        if (response && response.reason === 'not-code') {
+          floatBtn.disabled = false;
+          floatBtn.innerHTML = `<span class="semplycode-warning-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Testo non riconosciuto come codice`;
+          floatBtn.style.borderColor = '#f59e0b';
+          floatBtn.style.color = '#f59e0b';
+          setTimeout(removeUi, 2000);
           return;
         }
         floatBtn.remove();
@@ -423,9 +464,7 @@ function onSelectionEnd() {
   }
 
   const text = sel.toString();
-  const isCode = looksLikeCode(text);
-  const isProse = !isCode && looksLikeProse(text);
-  if (!isCode && !isProse) {
+  if (!text.trim()) {
     removeUi();
     return;
   }
@@ -437,8 +476,23 @@ function onSelectionEnd() {
     return;
   }
 
-  if (isCode) showFloatButton(rect, text);
-  else if (isProse) showReviseButton(rect, text);
+  const containerEl = getSelectionContainerElement(range);
+  const insideCodeTag = containerEl ? isInsideCodeElement(containerEl) : false;
+  const heuristicIsCode = looksLikeCode(text);
+
+  // Si attiva solo se è vero codice: tag HTML da precedenza, altrimenti euristica + non prosa palese in tag prosa
+  const isRealCode = insideCodeTag || heuristicIsCode;
+  if (!isRealCode) {
+    removeUi();
+    return;
+  }
+
+  // Bottone rinominato "Spiega il codice" → mostra solo per vero codice (tag + euristica)
+  if (insideCodeTag) {
+    showReviseButton(rect, text);
+  } else {
+    showFloatButton(rect, text);
+  }
 }
 
 document.addEventListener('mouseup', () => {
