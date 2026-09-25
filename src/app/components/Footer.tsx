@@ -1,7 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Twitter, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -41,8 +40,18 @@ const Footer = () => {
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
+                  <Link href="/#come-funziona" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                    Come Funziona
+                  </Link>
+                </li>
+                <li>
                   <Link href="/#funzionalita" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
                     Funzionalità
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#demo" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
+                    Demo Live
                   </Link>
                 </li>
                 <li>
@@ -70,16 +79,6 @@ const Footer = () => {
                     Invia Feedback
                   </Link>
                 </li>
-                <li>
-                  <Link href="/#come-funziona" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Come Funziona
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/#demo" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Demo Live
-                  </Link>
-                </li>
               </ul>
             </div>
 
@@ -105,40 +104,11 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom bar */}
+        {/* Bottom bar — icone social senza destinazione reale rimosse; GitHub personale rimosso (non canale prodotto) */}
         <div className="border-t border-white/10 pt-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
           <p className="text-slate-400 text-xs sm:text-sm text-center sm:text-left">
             © {new Date().getFullYear()} Semplycode. Tutti i diritti riservati.
           </p>
-
-          <div className="flex items-center gap-6">
-            <Link
-              href="#"
-              className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-400 transition-all duration-200 group"
-              aria-label="Twitter"
-            >
-              <Twitter className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-xs tracking-wide hidden sm:inline">X</span>
-            </Link>
-            <a
-              href="https://github.com/gabrieleforestieri0912-lab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-400 transition-all duration-200 group"
-              aria-label="GitHub"
-            >
-              <Github className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-xs tracking-wide hidden sm:inline">GitHub</span>
-            </a>
-            <Link
-              href="#"
-              className="flex items-center gap-1.5 text-slate-400 hover:text-emerald-400 transition-all duration-200 group"
-              aria-label="Discord"
-            >
-              <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span className="text-xs tracking-wide hidden sm:inline">Discord</span>
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

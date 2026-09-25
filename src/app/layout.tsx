@@ -28,20 +28,11 @@ const jetMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://semplycode.vercel.app"),
   title: {
-    default: "Semplycode | Analisi Intelligente del Codice",
+    default: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
     template: "%s | Semplycode",
   },
   description:
-    "Il tuo compagno AI per analizzare, debuggare e ottimizzare il codice. Analisi intelligente del codice in linguaggio semplice.",
-  keywords: [
-    "analisi codice AI",
-    "debug codice",
-    "assistente programmazione",
-    "ottimizzazione codice AI",
-    "imparare programmazione",
-    "spiegazione codice",
-    "strumenti sviluppatori",
-  ],
+    "Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale. In italiano, 20+ linguaggi, piano gratuito con 10 analisi al giorno.",
   authors: [{ name: "Semplycode" }],
   creator: "Semplycode",
   publisher: "Semplycode",
@@ -61,23 +52,23 @@ export const metadata: Metadata = {
     locale: "it_IT",
     url: "https://semplycode.vercel.app",
     siteName: "Semplycode",
-    title: "Semplycode | Analisi Intelligente del Codice",
+    title: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
     description:
-      "Il tuo compagno AI per analizzare, debuggare e ottimizzare il codice.",
+      "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Semplycode - Analisi Intelligente del Codice",
+        alt: "Semplycode - Smetti di combattere con il codice. Inizia a capirlo. — Esempio reale con bug evidenziato e fix in diff",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Semplycode | Analisi Intelligente del Codice",
+    title: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
     description:
-      "Il tuo compagno AI per analizzare, debuggare e ottimizzare il codice.",
+      "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
     images: ["/og-image.png"],
     creator: "@semplycode",
   },
