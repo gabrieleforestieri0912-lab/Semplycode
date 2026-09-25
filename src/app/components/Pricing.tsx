@@ -484,8 +484,8 @@ const Pricing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                whileHover={{ y: -8 }}
-                className="relative group h-full"
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="relative group h-full will-change-transform"
               >
                 {/* Popular floating badge */}
                 {plan.popular && (
@@ -507,7 +507,7 @@ const Pricing = () => {
                       : "bg-[#e2e8f0] group-hover:bg-gradient-to-br group-hover:from-emerald-300 group-hover:via-teal-300 group-hover:to-emerald-400 group-hover:shadow-xl group-hover:shadow-black/10"
                     }`}
                 >
-                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden flex flex-col">
+                  <div className="relative h-full rounded-[calc(1.5rem-1px)] bg-white overflow-hidden flex flex-col border border-transparent group-hover:border-emerald-100 group-hover:shadow-lg transition-all duration-300">
                     {/* Hover glow */}
                     <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"

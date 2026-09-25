@@ -15,7 +15,6 @@ import {
   BarChart3,
   Code2,
   Bookmark,
-  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
@@ -219,7 +218,6 @@ const Navbar = () => {
               href="/chat"
               className={chatBtnClass}
             >
-              <Sparkles size={14} className="opacity-80" />
               Chat AI
             </Link>
           )}

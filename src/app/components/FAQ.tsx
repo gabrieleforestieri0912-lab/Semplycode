@@ -14,7 +14,7 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="w-full py-16 md:py-24 3xl:py-32 bg-[#f8fafc]">
-      <div className="container mx-auto max-w-3xl 2xl:max-w-4xl 3xl:max-w-5xl 4xl:max-w-6xl">
+      <div className="container mx-auto max-w-2xl 2xl:max-w-3xl 3xl:max-w-3xl 4xl:max-w-4xl px-4 sm:px-0">
         <div className="text-center mb-10 sm:mb-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
