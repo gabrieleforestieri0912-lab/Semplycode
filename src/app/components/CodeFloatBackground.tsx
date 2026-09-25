@@ -267,6 +267,8 @@ function buildScatter(
   const blocks: ScatteredBlock[] = [];
   const rows = 7;
   const yFor = (r: number) => 8 + r * 14; // 8, 22, 36, 50, 64, 78, 92
+  const usedKeys = new Set<string>();
+  const usedTexts = new Set<string>();
 
   for (let r = 0; r < rows; r++) {
     const y = yFor(r);
@@ -277,11 +279,17 @@ function buildScatter(
       const sizes =
         rand() < 0.45 ? [4, 3, 2] : rand() < 0.9 ? [3, 4, 2] : [2, 4, 3];
       let picked: { w: Window; langIdx: number } | null = null;
-      for (const size of sizes) {
-        const res = pickWindow(languages, langIdx, slot.max, size, rand);
-        langIdx = res.nextLangIdx;
-        if (res.window) {
-          picked = { w: res.window, langIdx };
+      // Prova fino a 6 volte evitando duplicati di chiave e testo
+      for (let attempt = 0; attempt < 6 && !picked; attempt++) {
+        for (const size of sizes) {
+          const res = pickWindow(languages, langIdx, slot.max, size, rand);
+          langIdx = res.nextLangIdx;
+          if (!res.window) continue;
+          const w = res.window;
+          const key = `${w.lang}:${w.start}:${w.size}`;
+          const text = SNIPPETS[w.lang].slice(w.start, w.start + w.size).map(l => l.map(([t]) => t).join('')).join('\n').trim();
+          if (usedKeys.has(key) || usedTexts.has(text)) continue;
+          picked = { w, langIdx };
           break;
         }
       }
@@ -291,6 +299,10 @@ function buildScatter(
       const delay = -rand() * dur * 2; // negativo: già "in corsa"
       const range = 6 + rand() * 6; // 6–12px
       const op = opacity * (0.85 + rand() * 0.3);
+      const key = `${picked.w.lang}:${picked.w.start}:${picked.w.size}`;
+      const text = SNIPPETS[picked.w.lang].slice(picked.w.start, picked.w.start + picked.w.size).map(l => l.map(([t]) => t).join('')).join('\n').trim();
+      usedKeys.add(key);
+      usedTexts.add(text);
       blocks.push({
         x,
         y,
