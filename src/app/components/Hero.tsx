@@ -105,13 +105,15 @@ const Hero = () => {
               <ArrowRight size={16} />
             </motion.button>
 
-            <a
-              href="#come-funziona"
-              className="w-full xs:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3.5 text-sm sm:text-[15px] font-semibold text-[#0f172a] hover:text-emerald-600 transition-colors underline-offset-4 hover:underline"
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => document.getElementById('come-funziona')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-full xs:w-auto min-w-[200px] sm:min-w-[200px] inline-flex items-center justify-center gap-1.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm sm:text-[15px] font-semibold border border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f8fafc] hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all"
             >
               Vedi come funziona
               <ArrowRight size={14} className="opacity-60" />
-            </a>
+            </motion.button>
           </motion.div>
 
           {/* Social proof - fatti veri senza glifo */}

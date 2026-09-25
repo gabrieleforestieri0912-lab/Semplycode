@@ -3,7 +3,7 @@
 
 export type CodeSnippet = {
   id: string
-  language: "javascript" | "typescript" | "python" | "jsx"
+  language: "javascript" | "typescript" | "python" | "jsx" | "java" | "go" | "rust" | "php" | "sql" | "cpp" | "csharp" | "css"
   code: string
 }
 
@@ -222,5 +222,113 @@ def timer(func):
         case _:
             print(f"Altro: {item}")
     total += item["price"] if item["qty"] > 0 else 0`,
+  },
+  {
+    id: "java-switch-class",
+    language: "java",
+    code: `class AuthService {
+  String roleFor(int code) {
+    switch (code) {
+      case 200: return "OK";
+      case 401: return isExpired ? "Expired" : "Unauthorized";
+      default: return "Unknown";
+    }
+  }
+  boolean isValid(String s) {
+    return s.matches("^[a-z0-9._%+-]+@[a-z]+\\\\.[a-z]{2,}$");
+  }
+}`,
+  },
+  {
+    id: "go-loop-regex",
+    language: "go",
+    code: `func FilterActive(users []User) []User {
+  re := regexp.MustCompile("^[a-z0-9._%+-]+@")
+  var out []User
+  for _, u := range users {
+    if !u.Active { continue }
+    if re.MatchString(u.Email) {
+      out = append(out, u)
+    }
+  }
+  return out
+}`,
+  },
+  {
+    id: "rust-match-loop",
+    language: "rust",
+    code: `fn classify(n: i32) -> String {
+  match n {
+    0 => "zero".to_string(),
+    n if n % 2 == 0 => format!("even: {}", n),
+    _ => "odd".to_string(),
+  }
+}
+for x in 0..10 {
+  println!("{}", classify(x));
+}`,
+  },
+  {
+    id: "php-ternary-switch",
+    language: "php",
+    code: `function label(int $code): string {
+  return match($code) {
+    200 => "OK",
+    404 => "Not Found",
+    default => $code >= 500 ? "Server Error" : "Unknown",
+  };
+}
+$emailValid = preg_match("/^[\\w.%+-]+@[\\w-]+\\.[a-z]{2,}$/i", $email) ? $email : null;`,
+  },
+  {
+    id: "sql-join-case",
+    language: "sql",
+    code: `SELECT u.name,
+  CASE WHEN u.active THEN 'active' ELSE 'inactive' END as status,
+  COUNT(o.id) as orders
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id
+WHERE u.email ~ '^[a-z0-9._%+-]+@'
+GROUP BY u.id;`,
+  },
+  {
+    id: "cpp-template-loop",
+    language: "cpp",
+    code: `template<typename T>
+class Cache {
+  T get(const string& key) {
+    auto it = store.find(key);
+    return it != store.end() ? it->second : T{};
+  }
+  void sweep() {
+    for (auto &[k, v] : store) {
+      if (v.expired()) store.erase(k);
+    }
+  }
+};`,
+  },
+  {
+    id: "csharp-class-regex",
+    language: "csharp",
+    code: `class Validator {
+  bool IsEmail(string s) => Regex.IsMatch(s, @"^[\\w.%+-]+@[\\w-]+\\.[A-Za-z]{2,}$");
+  string Role(int code) => code switch {
+    200 => "OK",
+    404 => code > 400 ? "Not Found" : "Unknown",
+    _ => "Error"
+  };
+}`,
+  },
+  {
+    id: "css-media-ternary",
+    language: "css",
+    code: `.card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+@media (max-width: 640px) {
+  .card { --cols: 1; }
+}
+.badge::after { content: var(--active) ? "ON" : "OFF"; }`,
   },
 ]

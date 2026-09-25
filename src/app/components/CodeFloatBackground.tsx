@@ -20,7 +20,7 @@ interface CodeFloatBackgroundProps {
   className?: string;
 }
 
-const LANGS = ["javascript", "typescript", "python", "jsx"] as const;
+const LANGS = ["javascript", "typescript", "python", "jsx", "java", "go", "rust", "php", "sql", "cpp", "csharp", "css"] as const;
 type Lang = (typeof LANGS)[number];
 
 interface Palette {
@@ -81,12 +81,36 @@ const KEYWORDS: Record<Lang, ReadonlySet<string>> = {
   python: new Set([
     "def", "return", "import", "from", "as", "class", "if", "elif", "else", "for", "while", "in",
     "not", "and", "or", "try", "except", "finally", "with", "lambda", "yield", "async", "await",
-    "pass", "raise", "is", "None", "True", "False", "global", "nonlocal",
+    "pass", "raise", "is", "None", "True", "False", "global", "nonlocal", "match", "case",
   ]),
   jsx: new Set([
     "async", "await", "const", "let", "var", "function", "return", "if", "else", "for", "while",
     "new", "class", "this", "typeof", "try", "catch", "throw", "import", "from", "export",
     "default", "extends", "null", "undefined", "true", "false",
+  ]),
+  java: new Set([
+    "public", "private", "protected", "class", "interface", "extends", "implements", "return", "if", "else", "for", "while", "switch", "case", "break", "default", "new", "import", "static", "final", "void", "boolean", "String", "int", "true", "false", "null", "throw", "try", "catch",
+  ]),
+  go: new Set([
+    "func", "return", "if", "else", "for", "range", "switch", "case", "default", "break", "continue", "import", "package", "var", "const", "type", "struct", "interface", "map", "chan", "go", "defer", "select",
+  ]),
+  rust: new Set([
+    "fn", "return", "if", "else", "for", "while", "loop", "match", "case", "break", "continue", "let", "mut", "const", "struct", "enum", "impl", "pub", "use", "mod", "crate", "true", "false",
+  ]),
+  php: new Set([
+    "function", "return", "if", "else", "elseif", "for", "foreach", "while", "switch", "case", "break", "default", "class", "public", "private", "protected", "new", "try", "catch", "throw", "match", "echo", "isset",
+  ]),
+  sql: new Set([
+    "SELECT", "FROM", "WHERE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER", "ON", "GROUP", "BY", "ORDER", "HAVING", "INSERT", "UPDATE", "DELETE", "CASE", "WHEN", "THEN", "ELSE", "END", "AS", "AND", "OR", "NOT", "IN", "EXISTS",
+  ]),
+  cpp: new Set([
+    "template", "typename", "class", "public", "private", "return", "if", "else", "for", "while", "switch", "case", "break", "default", "new", "auto", "const", "void", "int", "string", "include", "using", "namespace",
+  ]),
+  csharp: new Set([
+    "class", "public", "private", "protected", "return", "if", "else", "for", "while", "switch", "case", "break", "default", "new", "using", "namespace", "var", "string", "bool", "true", "false", "null", "=>", "is",
+  ]),
+  css: new Set([
+    "media", "import", "display", "grid", "flex", "repeat", "minmax", "auto", "content", "var",
   ]),
 };
 
@@ -157,6 +181,14 @@ const SNIPPETS: Record<Lang, TokenLine[]> = {
   typescript: [],
   python: [],
   jsx: [],
+  java: [],
+  go: [],
+  rust: [],
+  php: [],
+  sql: [],
+  cpp: [],
+  csharp: [],
+  css: [],
 };
 
 const WINDOWS: Window[] = [];
