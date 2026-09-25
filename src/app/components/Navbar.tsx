@@ -96,8 +96,8 @@ const Navbar = () => {
     editor: "Editor",
   };
 
-  // Essenziale: solo sezioni che sopravvivono al restyling (3 voci max per gerarchia)
   const navLinks = [
+    { href: "/#come-funziona", label: "Come Funziona" },
     { href: "/#funzionalita", label: "Funzionalità" },
     { href: "/#prezzi", label: "Prezzi" },
     { href: "/#faq", label: "FAQ" },
