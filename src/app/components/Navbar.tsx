@@ -148,11 +148,10 @@ const Navbar = () => {
     visible: { opacity: 1, x: 0 },
   };
 
+  // Menu minimalista: solo essenziali (il resto è già in navbar)
   const profileItems = [
-    { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
-    { icon: Code2, label: t.editor, href: "/chat" },
     { icon: Bookmark, label: "Il mio Cassetto", href: "/notes" },
-    { icon: Settings, label: "Profilo & Impostazioni", href: "/settings" },
+    { icon: Settings, label: t.settings, href: "/settings" },
   ];
 
   // Hover navbar — solo underline emerald, niente pill
@@ -214,12 +213,21 @@ const Navbar = () => {
         <div className="flex items-center gap-1.5 sm:gap-3">
 
           {sessionUser && (
-            <Link
-              href="/chat"
-              className={chatBtnClass}
-            >
-              Chat AI
-            </Link>
+            <>
+              <Link
+                href="/dashboard"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] hover:text-emerald-600 shadow-sm transition-all"
+              >
+                <BarChart3 size={14} />
+                {t.dashboard}
+              </Link>
+              <Link
+                href="/chat"
+                className={chatBtnClass}
+              >
+                Chat AI
+              </Link>
+            </>
           )}
 
           {sessionUser && (

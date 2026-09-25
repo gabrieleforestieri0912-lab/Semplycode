@@ -14,6 +14,7 @@ interface Step {
   icon: LucideIcon;
   accent: string;
   glow: string;
+  slug: string;
 }
 
 interface Translation {
@@ -46,6 +47,7 @@ const HowItWorks = () => {
           icon: Code2,
           accent: "#10b981",
           glow: "rgba(16,185,129,0.5)",
+          slug: "incolla-o-carica",
         },
         {
           title: "Analysis in plain language",
@@ -53,6 +55,7 @@ const HowItWorks = () => {
           icon: Sparkles,
           accent: "#2dd4bf",
           glow: "rgba(45,212,191,0.5)",
+          slug: "analisi-in-italiano",
         },
         {
           title: "Apply and keep going",
@@ -60,6 +63,7 @@ const HowItWorks = () => {
           icon: GraduationCap,
           accent: "#14b8a6",
           glow: "rgba(20,184,166,0.5)",
+          slug: "applica-e-continua",
         },
       ],
       cta: "Try it now",
@@ -76,6 +80,7 @@ const HowItWorks = () => {
           icon: Code2,
           accent: "#10b981",
           glow: "rgba(16,185,129,0.5)",
+          slug: "incolla-o-carica",
         },
         {
           title: "Analisi in italiano",
@@ -83,6 +88,7 @@ const HowItWorks = () => {
           icon: Sparkles,
           accent: "#2dd4bf",
           glow: "rgba(45,212,191,0.5)",
+          slug: "analisi-in-italiano",
         },
         {
           title: "Applica e continua",
@@ -90,6 +96,7 @@ const HowItWorks = () => {
           icon: GraduationCap,
           accent: "#14b8a6",
           glow: "rgba(20,184,166,0.5)",
+          slug: "applica-e-continua",
         },
       ],
       cta: "Provalo ora",
@@ -214,6 +221,13 @@ const HowItWorks = () => {
                     <p className="text-sm leading-relaxed text-[#64748b]">
                       {item.desc}
                     </p>
+                    <Link
+                      href={`/guide/${item.slug}`}
+                      className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:gap-1.5 transition-all"
+                      style={{ color: item.accent }}
+                    >
+                      {language === 'en' ? 'Full guide' : 'Guida completa'} <ArrowRight size={14} />
+                    </Link>
 
                     {/* Bottom accent bar */}
                     <div
