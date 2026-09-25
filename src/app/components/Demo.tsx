@@ -441,7 +441,8 @@ const DemoSection = () => {
   };
 
   return (
-    <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden group">
+    <>
+      <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden group">
       <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4 px-1 sm:px-2">
@@ -678,22 +679,6 @@ const DemoSection = () => {
           )}
         </div>
       </div>
-
-      <div className="flex justify-center mt-6 sm:mt-8">
-        <Link
-          href="/chat"
-          className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-visible"
-        >
-          <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
-          Prova Chat AI
-          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-          <span className="pointer-events-none absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300" />
-          <span className="pointer-events-none absolute -bottom-1 -left-2 w-1.5 h-1.5 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75" />
-          <span className="pointer-events-none absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100" />
-          <span className="pointer-events-none absolute -top-2 left-1/2 w-1 h-1 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-150" />
-        </Link>
-      </div>
-
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -713,7 +698,22 @@ const DemoSection = () => {
           text-shadow: 0 0 10px rgba(6, 78, 59, 0.5);
         }
       `}</style>
-    </section>
+      </section>
+      <div className="flex justify-center mt-6 sm:mt-8">
+        <Link
+          href="/chat"
+          className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-visible"
+        >
+          <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
+          Prova Chat AI
+          <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+          <span className="pointer-events-none absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-ping" />
+          <span className="pointer-events-none absolute -bottom-1 -left-2 w-1.5 h-1.5 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75" />
+          <span className="pointer-events-none absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100" />
+          <span className="pointer-events-none absolute -top-2 left-1/2 w-1 h-1 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-150" />
+        </Link>
+      </div>
+    </>
   );
 };
 

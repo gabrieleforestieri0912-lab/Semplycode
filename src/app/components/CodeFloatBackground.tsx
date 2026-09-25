@@ -174,6 +174,7 @@ interface Window {
   start: number;
   size: number;
   maxChars: number;
+  isReal: boolean;
 }
 
 const SNIPPETS: Record<Lang, TokenLine[]> = {
@@ -208,11 +209,10 @@ for (const snippet of codeSnippets) {
         if (t.length > 4 && /[A-Za-z0-9]/.test(t)) meaningful++;
       }
       if (meaningful === 0) continue; // evita blocchi di sole parentesi
-      // Solo pezzi reali: funzioni, ternari, regex, cicli, switch, classi — evita return/parantesi/chiave-valore generici
       const windowText = lines.slice(i, i + size).map(l => l.map(([tx]) => tx).join('')).join('\n');
       const isRealPiece = /(function\s+\w+|def\s+\w+\s*\(|class\s+\w+|switch\s*\(|case\s+[^:]+:|for\s*\(|while\s*\(|=>|\?.*:.*:|\/\S+\/[gimuy]*|import\s+.*from|export\s+)/.test(windowText);
-      if (!isRealPiece) continue;
-      WINDOWS.push({ lang, start: start + i, size, maxChars: m });
+      // Mantieni tutti i blocchi ma marca i reali per priorità — evita spazi vuoti
+      WINDOWS.push({ lang, start: start + i, size, maxChars: m, isReal: isRealPiece });
     }
   }
 }
@@ -281,11 +281,20 @@ function pickWindow(
   rand: () => number,
 ): { window: Window | null; nextLangIdx: number } {
   const lang = languages[langIdx % languages.length];
+  // Prima prova pezzi reali per quel linguaggio e dimensione
+  const poolReal = WINDOWS.filter((w) => w.lang === lang && w.size === size && w.isReal && w.maxChars <= maxChars);
+  if (poolReal.length) {
+    return { window: poolReal[Math.floor(rand() * poolReal.length)], nextLangIdx: langIdx + 1 };
+  }
   const pool = WINDOWS.filter((w) => w.lang === lang && w.size === size && w.maxChars <= maxChars);
   if (pool.length) {
     return { window: pool[Math.floor(rand() * pool.length)], nextLangIdx: langIdx + 1 };
   }
-  // Fallback: qualsiasi linguaggio con la stessa dimensione e limiti
+  // Fallback: qualsiasi linguaggio — prima reali, poi generici
+  const anyPoolReal = WINDOWS.filter((w) => w.size === size && w.isReal && w.maxChars <= maxChars);
+  if (anyPoolReal.length) {
+    return { window: anyPoolReal[Math.floor(rand() * anyPoolReal.length)], nextLangIdx: langIdx + 1 };
+  }
   const anyPool = WINDOWS.filter((w) => w.size === size && w.maxChars <= maxChars);
   if (anyPool.length) {
     return { window: anyPool[Math.floor(rand() * anyPool.length)], nextLangIdx: langIdx + 1 };
