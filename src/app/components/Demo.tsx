@@ -51,10 +51,39 @@ interface ErrorWithStatus {
   code?: string;
 }
 
+const DEMO_SAMPLE_CODE = `function calcolaTotale(carrello) {
+  let totale = 0;
+  for (let i = 0; i <= carrello.length; i++) {
+    totale += carrello[i].prezzo;
+  }
+  return totale;
+}`;
+
+const DEMO_SAMPLE_REPORT = `### Errori Trovati
+- **Riga 3 — Off-by-one:** \`i <= carrello.length\` legge \`carrello[carrello.length]\` → \`undefined\` → \`TypeError: Cannot read property 'prezzo' of undefined\` → usa \`i < carrello.length\`
+
+### Spiegazione
+L'indice deve restare in \`0 … length-1\`. Con \`<= \` l'ultima iterazione esce dai limiti dell'array; \`undefined.prezzo\` lancia eccezione e il risultato diventa \`NaN\`.
+
+### Codice Corretto
+\`\`\`javascript
+function calcolaTotale(carrello) {
+  let totale = 0;
+  for (let i = 0; i < carrello.length; i++) {
+    totale += carrello[i].prezzo;
+  }
+  return totale;
+}
+\`\`\`
+
+### Miglioramenti
+1. **Leggibilità** — usa \`.reduce\`: \`carrello.reduce((s, p) => s + p.prezzo, 0)\`
+2. **Robustezza** — valida \`Array.isArray(carrello)\` prima del loop`;
+
 const DemoSection = () => {
-  const [code, setCode] = useState("");
-  const [detectedLang, setDetectedLang] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [code, setCode] = useState(DEMO_SAMPLE_CODE);
+  const [detectedLang, setDetectedLang] = useState("javascript");
+  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
   const [isLoading, setIsLoading] = useState(false);
   const { user: session } = useSupabaseSession();
 
