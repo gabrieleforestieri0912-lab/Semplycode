@@ -31,8 +31,8 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-mono);
   --breakpoint-xs: 30rem;
   --breakpoint-3xl: 112rem;
   --breakpoint-4xl: 160rem;
@@ -42,7 +42,7 @@
    Base layout
    ======================================== */
 html {
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-display);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overflow-x: clip;
@@ -53,7 +53,7 @@ html {
 }
 
 body {
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-display);
   background: var(--background);
   color: var(--foreground);
   scrollbar-width: thin;
