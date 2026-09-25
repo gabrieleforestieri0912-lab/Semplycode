@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/context/LanguageContext";
 
 
 const MotionLink = motion.create(Link);
@@ -82,10 +83,13 @@ const Navbar = () => {
     window.location.href = "/";
   };
 
-  const t = {
+  const { language } = useLanguage();
+  // Definizione dizionari — EN ha tutte le chiavi di IT (parità garantita)
+  const itDict = {
     features: "Funzionalità",
-    howItWorks: "Come funziona",
+    howItWorks: "Come Funziona",
     pricing: "Prezzi",
+    faq: "FAQ",
     login: "Accedi",
     getStarted: "Inizia Ora",
     playground: "Chat AI",
@@ -94,13 +98,32 @@ const Navbar = () => {
     profile: "Profilo",
     logout: "Esci",
     editor: "Editor",
+  } as const;
+  const enDict: Record<keyof typeof itDict, string> = {
+    features: "Features",
+    howItWorks: "How it Works",
+    pricing: "Pricing",
+    faq: "FAQ",
+    login: "Log in",
+    getStarted: "Get Started",
+    playground: "Chat AI",
+    dashboard: "Dashboard",
+    settings: "Settings",
+    profile: "Profile",
+    logout: "Log out",
+    editor: "Editor",
   };
+  const translations: Record<string, typeof itDict> = {
+    it: itDict,
+    en: enDict as unknown as typeof itDict,
+  };
+  const t = translations[language] || itDict;
 
   const navLinks = [
-    { href: "/#come-funziona", label: "Come Funziona" },
-    { href: "/#funzionalita", label: "Funzionalità" },
-    { href: "/#prezzi", label: "Prezzi" },
-    { href: "/#faq", label: "FAQ" },
+    { href: "/#come-funziona", label: t.howItWorks },
+    { href: "/#funzionalita", label: t.features },
+    { href: "/#prezzi", label: t.pricing },
+    { href: "/#faq", label: t.faq },
   ];
 
   const profileMenuVariants: Variants = {
