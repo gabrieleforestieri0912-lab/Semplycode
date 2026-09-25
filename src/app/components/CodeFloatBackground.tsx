@@ -33,28 +33,28 @@ interface Palette {
 }
 
 const LIGHT_PALETTE: Palette = {
-  kw: "#047857",
-  fn: "#6d28d9",
-  str: "#9a3412",
+  kw: "#059669",
+  fn: "#7c3aed",
+  str: "#d97706",
   com: "#64748b",
-  num: "#c2410c",
-  plain: "#334155",
+  num: "#dc2626",
+  plain: "#1e293b",
 };
 
 const DARK_PALETTE: Palette = {
-  kw: "#34d399",
-  fn: "#a78bfa",
-  str: "#fbbf24",
-  com: "#64748b",
-  num: "#f59e0b",
-  plain: "#cbd5e1",
+  kw: "#6ee7b7",
+  fn: "#c4b5fd",
+  str: "#fcd34d",
+  com: "#94a3b8",
+  num: "#f87171",
+  plain: "#e2e8f0",
 };
 
-// Overlay più leggero così il codice dietro resta visibile
+// Overlay più leggero così i blocchi fluttuanti restano visibili come card
 const LIGHT_OVERLAY =
-  "linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.08) 38%, rgba(255,255,255,0.55) 100%)";
+  "linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.04) 38%, rgba(255,255,255,0.35) 100%)";
 const DARK_OVERLAY =
-  "linear-gradient(180deg, rgba(8,13,20,0.55) 0%, rgba(8,13,20,0.08) 38%, rgba(8,13,20,0.55) 100%)";
+  "linear-gradient(180deg, rgba(8,13,20,0.35) 0%, rgba(8,13,20,0.04) 38%, rgba(8,13,20,0.35) 100%)";
 
 /* Variante "sides": overlay orizzontale, trasparente ai bordi (codice visibile) e chiaro al centro (form leggibile) */
 const LIGHT_SIDES_OVERLAY =
@@ -307,7 +307,7 @@ export default function CodeFloatBackground({
   variant = "hero",
   speed = 7,
   languages = LANGS.slice(),
-  opacity = 0.58,
+  opacity = 0.82,
   className = "",
 }: CodeFloatBackgroundProps) {
   const { theme } = useTheme();
@@ -351,7 +351,7 @@ export default function CodeFloatBackground({
           }}
         >
           <div
-            className="code-float-line font-mono text-[13.5px] leading-[1.9] whitespace-nowrap"
+            className="code-float-line"
             style={
               {
                 "--dur": `${b.dur}s`,
@@ -361,15 +361,29 @@ export default function CodeFloatBackground({
               } as React.CSSProperties
             }
           >
-            {SNIPPETS[b.lang].slice(b.start, b.start + b.size).map((line, li) => (
-              <div key={li} className="whitespace-pre" style={{ textShadow: theme === 'dark' ? '0 0 8px rgba(16,185,129,0.15)' : '0 0 0 transparent' }}>
-                {line.map(([text, kind], ti) => (
-                  <span key={ti} style={{ color: palette[kind], fontWeight: kind === 'kw' || kind === 'fn' ? 600 : 400 }}>
-                    {text}
-                  </span>
+            <div
+              className={`rounded-xl border overflow-hidden backdrop-blur shadow-sm ${isSides ? 'bg-transparent border-transparent shadow-none' : theme === 'dark' ? 'bg-[#0f172a]/75 border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.25)]' : 'bg-white/90 border-[#e2e8f0] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'}`}
+            >
+              {!isSides && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${theme === 'dark' ? 'bg-white/[0.04] border-white/10' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
+                  <span className="w-2 h-2 rounded-full bg-red-400/90" />
+                  <span className="w-2 h-2 rounded-full bg-amber-400/90" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-400/90" />
+                  <span className={`ml-2 font-mono text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-400' : 'text-[#64748b]'}`}>{b.lang}</span>
+                </div>
+              )}
+              <div className={`px-3 py-2 font-mono text-[12.5px] leading-[1.7] whitespace-nowrap ${isSides ? 'text-[13.5px] leading-[1.9]' : ''}`}>
+                {SNIPPETS[b.lang].slice(b.start, b.start + b.size).map((line, li) => (
+                  <div key={li} className="whitespace-pre" style={{ textShadow: theme === 'dark' ? '0 0 8px rgba(16,185,129,0.14)' : '0 0 0 transparent' }}>
+                    {line.map(([text, kind], ti) => (
+                      <span key={ti} style={{ color: palette[kind], fontWeight: kind === 'kw' || kind === 'fn' ? 700 : kind === 'str' || kind === 'num' ? 600 : 400 }}>
+                        {text}
+                      </span>
+                    ))}
+                  </div>
                 ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       ))}

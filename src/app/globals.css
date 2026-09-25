@@ -194,22 +194,23 @@ html.dark [class*="from-emerald-500"] { background: #10b981 !important; }
    Solo transform/opacity (GPU-composite).
    ======================================== */
 @keyframes code-float-line {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(var(--range, -10px)); }
+  0%,100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(var(--range, -10px)) rotate(0.35deg); }
 }
 
 @keyframes code-line-pulse {
-  0%,100% { opacity: var(--op, 0.55); }
-  50%      { opacity: calc(var(--op, 0.55) * 0.75); }
+  0%,100% { opacity: var(--op, 0.82); }
+  50%      { opacity: calc(var(--op, 0.82) * 0.78); }
 }
 
 .code-float-line {
-  opacity: var(--op, 0.55);
+  opacity: var(--op, 0.82);
   animation:
     code-float-line var(--dur, 7s) ease-in-out infinite,
     code-line-pulse var(--dur, 7s) ease-in-out infinite;
   animation-delay: var(--delay, 0s);
-  filter: drop-shadow(0 1px 6px rgba(16,185,129,0.08));
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.06));
+  will-change: transform, opacity;
 }
 
 @keyframes code-bg-fade-in {
