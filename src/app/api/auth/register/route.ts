@@ -16,7 +16,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
+    const forwardedHost = req.headers.get('x-forwarded-host');
+    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+    const siteUrl = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
+          ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+          : 'https://semplycode.vercel.app');
     const supabase = await createClient();
     const { error: authError } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),

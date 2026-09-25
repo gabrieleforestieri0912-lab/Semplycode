@@ -57,14 +57,26 @@ export async function GET(req: NextRequest) {
   }
 
   const forwardedHost = req.headers.get('x-forwarded-host');
-  const isLocalEnv = process.env.NODE_ENV === 'development';
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  const host = req.headers.get('host');
   const nextPath = next.startsWith('/') ? next : `/${next}`;
 
-  // In production always prefer the public host (Vercel sets x-forwarded-host)
-  if (!isLocalEnv && forwardedHost) {
-    return NextResponse.redirect(`https://${forwardedHost}${nextPath}`);
-  }
+  // Costruisci l'origin canonico: in produzione mai localhost
+  const getCanonicalOrigin = () => {
+    if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
+    if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      return `${forwardedProto}://${host}`;
+    }
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl.replace(/\/$/, '');
+    }
+    // fallback: sanitizza origin localhost in produzione
+    if (process.env.NODE_ENV !== 'development' && origin.includes('localhost')) {
+      return 'https://semplycode.vercel.app';
+    }
+    return origin;
+  };
 
-  // Local dev or fallback: use the origin from the request URL
-  return NextResponse.redirect(new URL(nextPath, origin));
+  return NextResponse.redirect(`${getCanonicalOrigin()}${nextPath}`);
 }

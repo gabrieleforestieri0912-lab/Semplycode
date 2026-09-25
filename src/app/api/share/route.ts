@@ -10,7 +10,13 @@ export async function POST(req: NextRequest) {
     }
 
     const doc = await createShareLink({ payload, userId, days });
-    const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
+    const forwardedHost = req.headers.get('x-forwarded-host');
+    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+    const base = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
+          ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+          : 'https://semplycode.vercel.app');
     const url = `${base}/share/${doc.token}`;
     return NextResponse.json({ url, token: doc.token });
   } catch (e) {

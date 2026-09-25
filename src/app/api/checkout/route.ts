@@ -86,11 +86,16 @@ async function getOrCreatePrice(planKey: string): Promise<Stripe.Price> {
 }
 
 function getSiteUrl(req: NextRequest): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    req.headers.get('origin') ||
-    'https://semplycode.vercel.app'
-  );
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
+  const host = req.headers.get('host');
+  if (host && !host.includes('localhost')) return `${forwardedProto}://${host}`;
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (envUrl && !envUrl.includes('localhost')) return envUrl.replace(/\/$/, '');
+  const origin = req.headers.get('origin');
+  if (origin && !origin.includes('localhost')) return origin;
+  return 'https://semplycode.vercel.app';
 }
 
 export async function POST(req: NextRequest) {

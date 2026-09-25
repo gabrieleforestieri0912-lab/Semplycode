@@ -23,7 +23,13 @@ export async function POST(req: NextRequest) {
 
     await updateUser(normalizedEmail, { reset_token: resetToken, reset_token_expiry: resetTokenExpiry });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://semplycode.vercel.app';
+    const forwardedHost = req.headers.get('x-forwarded-host');
+    const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+    const siteUrl = forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
+          ? process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')
+          : 'https://semplycode.vercel.app');
     const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`;
 
     const smtpHost = process.env.SMTP_HOST;
