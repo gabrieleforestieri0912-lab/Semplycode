@@ -50,11 +50,11 @@ const DARK_PALETTE: Palette = {
   plain: "#e2e8f0",
 };
 
-// Overlay più leggero così i blocchi fluttuanti restano visibili come card
+// Overlay radiale: centro opaco (testo hero leggibile) e lati trasparenti così i pezzi stanno intorno alle scritte senza contrasto
 const LIGHT_OVERLAY =
-  "linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.04) 38%, rgba(255,255,255,0.35) 100%)";
+  "radial-gradient(ellipse 68% 58% at 50% 42%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.88) 28%, rgba(255,255,255,0.55) 48%, rgba(255,255,255,0.18) 68%, rgba(255,255,255,0) 82%)";
 const DARK_OVERLAY =
-  "linear-gradient(180deg, rgba(8,13,20,0.35) 0%, rgba(8,13,20,0.04) 38%, rgba(8,13,20,0.35) 100%)";
+  "radial-gradient(ellipse 68% 58% at 50% 42%, rgba(8,13,20,0.96) 0%, rgba(8,13,20,0.88) 28%, rgba(8,13,20,0.55) 48%, rgba(8,13,20,0.18) 68%, rgba(8,13,20,0) 82%)";
 
 /* Variante "sides": overlay orizzontale, trasparente ai bordi (codice visibile) e chiaro al centro (form leggibile) */
 const LIGHT_SIDES_OVERLAY =
@@ -220,14 +220,19 @@ interface Slot {
 }
 
 /*
- * Layout anti-sovrapposizione, deterministico.
- * 7 righe orizzontali distanziate del 14% (~98px su hero 700px): un blocco di 4 righe
- * è alto ~99px + fluttuazione → mai in collisione verticale. Ogni riga ha 3 blocchi
- * (posizioni alternate tra le righe per l'effetto "sparso").
+ * Layout: 7 righe. Top/bottom (y 8/92) hanno 3 blocchi, le 5 centrali (intorno al testo hero)
+ * hanno solo 2 blocchi laterali così il codice sta intorno alle scritte senza sovrapporsi
+ * e senza creare contrasto dietro il testo. Max aumentato a 38-42 per evitare troncamenti
+ * (almeno 2 righe garantite da Window size 2-4).
  */
 const HERO_ROWS: Slot[][] = [
-  [{ x: 5, max: 30 }, { x: 40, max: 26 }, { x: 76, max: 20 }],
-  [{ x: 18, max: 24 }, { x: 55, max: 28 }, { x: 88, max: 18 }],
+  [{ x: 7, max: 42 }, { x: 38, max: 40 }, { x: 70, max: 38 }], // y 8  top
+  [{ x: 5, max: 36 }, { x: 85, max: 36 }], // y 22
+  [{ x: 6, max: 34 }, { x: 84, max: 34 }], // y 36
+  [{ x: 5, max: 32 }, { x: 85, max: 32 }], // y 50 centro
+  [{ x: 6, max: 34 }, { x: 84, max: 34 }], // y 64
+  [{ x: 5, max: 36 }, { x: 85, max: 36 }], // y 78
+  [{ x: 7, max: 42 }, { x: 38, max: 40 }, { x: 70, max: 38 }], // y 92 bottom
 ];
 
 /* Login/register: blocchi corti ai lati (sinistra e destra alternati). */
