@@ -114,7 +114,7 @@ const Hero = () => {
             </a>
           </motion.div>
 
-          {/* Social proof - fatti veri senza glifo ✦ */}
+          {/* Social proof - fatti veri senza glifo */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

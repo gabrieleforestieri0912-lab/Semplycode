@@ -1108,7 +1108,7 @@ function QuizModal({
             }`}
           >
             <p className="font-semibold mb-1">
-              {isCorrect ? "Risposta corretta! ✓" : "Non proprio, ecco il perché:"}
+              {isCorrect ? "Risposta corretta!" : "Non proprio, ecco il perche:"}
             </p>
             {quiz.explanation}
             <div className="flex justify-end mt-3">

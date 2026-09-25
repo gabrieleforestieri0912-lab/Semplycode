@@ -1026,9 +1026,9 @@ async function sendToAIStream(messages, onChunk, onDone, onError, extraMode) {
 
 let currentMode = "correction";
 const MODE_HINTS = {
-  correction: "🔧 Correzione — corregge solo gli errori nel codice.",
-  revision: "✨ Revisione — ripulisce e ottimizza il codice.",
-  creation: "🚀 Creazione — ti guida passo-passo a costruire progetti in ogni linguaggio.",
+  correction: "Correzione — corregge solo gli errori nel codice.",
+  revision: "Revisione — ripulisce e ottimizza il codice.",
+  creation: "Creazione — ti guida passo-passo a costruire progetti in ogni linguaggio.",
 };
 function updateModeHint() {
   const hint = $("mode-hint");
@@ -1083,7 +1083,7 @@ function initPlayground() {
       }
       try {
         await navigator.clipboard.writeText(lastAssistantReply);
-        copyNoteBtn.textContent = "Copiato ✓";
+        copyNoteBtn.textContent = "Copiato";
         setTimeout(() => (copyNoteBtn.textContent = "Copia"), 1500);
       } catch (e) {
         showToast("Impossibile copiare: " + e.message);
@@ -1128,7 +1128,7 @@ function initPlayground() {
       },
       (err) => {
         streaming.el.remove();
-        addMessage("assistant", "⚠️ Errore: " + err);
+        addMessage("assistant", "Errore: " + err);
         setAnalyzing(false);
       }
     );
@@ -1163,7 +1163,7 @@ function initPlayground() {
       },
       (err) => {
         streaming.el.remove();
-        addMessage("assistant", "⚠️ Errore: " + err);
+        addMessage("assistant", "Errore: " + err);
         chatSend.disabled = false;
       }
     );
@@ -1211,7 +1211,7 @@ Mantieni il significato originale, non aggiungere contenuti nuovi. Se il testo �
     },
     (err) => {
       streaming.el.remove();
-      addMessage("assistant", "⚠️ Errore revisione: " + err);
+      addMessage("assistant", "Errore revisione: " + err);
     }
   );
 }
@@ -1269,7 +1269,7 @@ async function saveCurrentNote() {
 
     apiFetch(`/notes/${data.note.id}/categorize`, { method: "POST" }).catch(() => {});
     lastAssistantReply = "";
-    showToast("Nota salvata nel cassetto ✓");
+    showToast("Nota salvata nel cassetto");
   } catch (err) {
     showToast("Errore: " + err.message);
   }

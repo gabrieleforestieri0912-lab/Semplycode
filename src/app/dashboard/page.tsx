@@ -184,7 +184,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-[#0f172a] tracking-tight">Dashboard</h1>
-                <p className="text-sm text-[#64748b] mt-0.5">Benvenuto, <span className="text-emerald-600 font-semibold">{user.firstName}</span> 👋</p>
+                <p className="text-sm text-[#64748b] mt-0.5">Benvenuto, <span className="text-emerald-600 font-semibold">{user.firstName}</span></p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                   </div>
                   {usagePct > 80 && (
                     <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                      ⚠️ Stai per esaurire i token mensili. <Link href="/#prezzi" className="underline">Fai l&apos;upgrade</Link>
+                      Stai per esaurire i token mensili. <Link href="/#prezzi" className="underline">Fai l&apos;upgrade</Link>
                     </p>
                   )}
                 </>

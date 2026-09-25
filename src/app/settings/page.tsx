@@ -299,8 +299,8 @@ export default function SettingsPage() {
               onChange={(e) => toggleLanguage(e.target.value as "it" | "en")}
               className="appearance-none w-full px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all cursor-pointer"
             >
-              <option value="it">🇮🇹 Italiano</option>
-              <option value="en">🇬🇧 English</option>
+              <option value="it">Italiano</option>
+              <option value="en">English</option>
             </select>
             <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" />
           </div>

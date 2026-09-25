@@ -360,7 +360,7 @@ const FormattedAIResponse = ({
           : String(children ?? "").replace(/\n$/, "");
 
         return (
-          <div className="my-4 rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
+          <div className="my-4 w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
             <div className="flex items-center justify-between px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
               <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">
                 {lang}
@@ -369,17 +369,11 @@ const FormattedAIResponse = ({
                 type="button"
                 className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
                 onClick={() => {
-                  if (
-                    confirm(
-                      "Applicare questo suggerimento e sovrascrivere l'editor?",
-                    )
-                  ) {
-                    window.dispatchEvent(
-                      new CustomEvent("semplycode:previewApply", {
-                        detail: { code: raw },
-                      }),
-                    );
-                  }
+                  window.dispatchEvent(
+                    new CustomEvent("semplycode:previewApply", {
+                      detail: { code: raw },
+                    }),
+                  );
                 }}
               >
                 Applica
@@ -414,7 +408,7 @@ const FormattedAIResponse = ({
               }`}
             onClick={() => onLineClick?.(lineNum)}
           >
-            <span className="text-[8px]">📍</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
             riga {lineNum}
           </button>
         ))}
@@ -462,7 +456,7 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
       className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
-        className={`max-w-[min(100%,42rem)] rounded-2xl ${isUser
+        className={`${isUser ? "max-w-[min(100%,42rem)]" : "w-full"} rounded-2xl ${isUser
             ? "bg-primary/20 border border-primary/30 text-gray-100 px-4 py-3"
             : "bg-[#061014]/90 border border-emerald-900/25 text-gray-300 px-5 py-4"
           }`}

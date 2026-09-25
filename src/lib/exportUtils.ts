@@ -189,10 +189,9 @@ export function formatFullChatToMarkdown(
 
   for (const m of messages) {
     const isUser = m.role === 'user';
-    const roleIcon = isUser ? '👤' : '🤖';
     const roleLabel = isUser ? 'Utente' : 'Semplycode AI';
 
-    md += `### ${roleIcon} ${roleLabel}\n\n`;
+    md += `### ${roleLabel}\n\n`;
     md += `${m.content.trim()}\n\n`;
     md += `---\n\n`;
   }

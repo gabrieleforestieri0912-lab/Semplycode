@@ -51,34 +51,36 @@ interface ErrorWithStatus {
   code?: string;
 }
 
-const DEMO_SAMPLE_CODE = `function calcolaTotale(carrello) {
-  let totale = 0;
-  for (let i = 0; i <= carrello.length; i++) {
-    totale += carrello[i].prezzo;
-  }
-  return totale;
+const DEMO_SAMPLE_CODE = `async function fetchUserData(userId) {
+  const res = await fetch(\`/api/users/\${userId}\`);
+  const data = await res.json();
+  return data;
 }`;
 
 const DEMO_SAMPLE_REPORT = `### Errori Trovati
-- **Riga 3 — Off-by-one:** \`i <= carrello.length\` legge \`carrello[carrello.length]\` → \`undefined\` → \`TypeError: Cannot read property 'prezzo' of undefined\` → usa \`i < carrello.length\`
+- **Riga 2 — Manca verifica \`res.ok\`:** se il server risponde 404/500, \`res.json()\` lancia o restituisce payload d'errore non gestito → verifica \`if (!res.ok) throw new Error()\`
+- **Righe 1-3 — Nessun \`try/catch\`:** errori di rete o JSON malformato non catturati → l'eccezione sale al chiamante senza contesto
 
 ### Spiegazione
-L'indice deve restare in \`0 … length-1\`. Con \`<= \` l'ultima iterazione esce dai limiti dell'array; \`undefined.prezzo\` lancia eccezione e il risultato diventa \`NaN\`.
+\`fetch\` risolve anche su HTTP error; senza controllo \`res.ok\` e senza blocco \`try/catch\` l'errore diventa \`SyntaxError\` o \`TypeError\` opaco nel chiamante.
 
 ### Codice Corretto
 \`\`\`javascript
-function calcolaTotale(carrello) {
-  let totale = 0;
-  for (let i = 0; i < carrello.length; i++) {
-    totale += carrello[i].prezzo;
+async function fetchUserData(userId) {
+  try {
+    const res = await fetch(\`/api/users/\${userId}\`);
+    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+    return await res.json();
+  } catch (err) {
+    console.error("fetchUserData:", err);
+    throw err;
   }
-  return totale;
 }
 \`\`\`
 
 ### Miglioramenti
-1. **Leggibilità** — usa \`.reduce\`: \`carrello.reduce((s, p) => s + p.prezzo, 0)\`
-2. **Robustezza** — valida \`Array.isArray(carrello)\` prima del loop`;
+1. **Robustezza** — gestisci timeout/abort con \`AbortController\`
+2. **Tipizzazione** — tipizza ritorno \`Promise<User>\` e valida \`userId\``;
 
 const DemoSection = () => {
   const [code, setCode] = useState(DEMO_SAMPLE_CODE);
