@@ -179,4 +179,48 @@ def timer(func):
   }
 }`,
   },
+  {
+    id: "js-switch",
+    language: "javascript",
+    code: `function getStatusLabel(code) {
+  switch (code) {
+    case 200: return "OK";
+    case 404: return "Not Found";
+    case 500: return "Server Error";
+    default: return code >= 400 ? "Error" : "Unknown";
+  }
+}`,
+  },
+  {
+    id: "js-ternary-regex",
+    language: "javascript",
+    code: `const normalize = (value) => {
+  const re = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+  return re.test(value) ? value.trim().toLowerCase() : null;
+};`,
+  },
+  {
+    id: "ts-class-ctor",
+    language: "typescript",
+    code: `class ApiClient {
+  constructor(private baseUrl: string) {}
+  async get<T>(path: string): Promise<T> {
+    const res = await fetch(\`\${this.baseUrl}\${path}\`);
+    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
+    return res.json() as Promise<T>;
+  }
+  isRetryable = (e: Error) => e.message.includes("429") ? true : false;
+}`,
+  },
+  {
+    id: "py-loop-match",
+    language: "python",
+    code: `for i, item in enumerate(items):
+    match item["type"]:
+        case "book":
+            print(f"Libro: {item['title']}")
+        case _:
+            print(f"Altro: {item}")
+    total += item["price"] if item["qty"] > 0 else 0`,
+  },
 ]

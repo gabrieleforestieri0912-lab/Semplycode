@@ -176,6 +176,10 @@ for (const snippet of codeSnippets) {
         if (t.length > 4 && /[A-Za-z0-9]/.test(t)) meaningful++;
       }
       if (meaningful === 0) continue; // evita blocchi di sole parentesi
+      // Solo pezzi reali: funzioni, ternari, regex, cicli, switch, classi — evita return/parantesi/chiave-valore generici
+      const windowText = lines.slice(i, i + size).map(l => l.map(([tx]) => tx).join('')).join('\n');
+      const isRealPiece = /(function\s+\w+|def\s+\w+\s*\(|class\s+\w+|switch\s*\(|case\s+[^:]+:|for\s*\(|while\s*\(|=>|\?.*:.*:|\/\S+\/[gimuy]*|import\s+.*from|export\s+)/.test(windowText);
+      if (!isRealPiece) continue;
       WINDOWS.push({ lang, start: start + i, size, maxChars: m });
     }
   }
@@ -351,7 +355,7 @@ export default function CodeFloatBackground({
           }}
         >
           <div
-            className="code-float-line"
+            className="code-float-line font-mono whitespace-nowrap"
             style={
               {
                 "--dur": `${b.dur}s`,
@@ -361,28 +365,16 @@ export default function CodeFloatBackground({
               } as React.CSSProperties
             }
           >
-            <div
-              className={`rounded-xl border overflow-hidden backdrop-blur shadow-sm ${isSides ? 'bg-transparent border-transparent shadow-none' : theme === 'dark' ? 'bg-[#0f172a]/75 border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.25)]' : 'bg-white/90 border-[#e2e8f0] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'}`}
-            >
-              {!isSides && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 border-b ${theme === 'dark' ? 'bg-white/[0.04] border-white/10' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
-                  <span className="w-2 h-2 rounded-full bg-red-400/90" />
-                  <span className="w-2 h-2 rounded-full bg-amber-400/90" />
-                  <span className="w-2 h-2 rounded-full bg-emerald-400/90" />
-                  <span className={`ml-2 font-mono text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-slate-400' : 'text-[#64748b]'}`}>{b.lang}</span>
+            <div className={`${isSides ? 'text-[13.5px] leading-[1.9]' : 'text-[13px] leading-[1.8]'}`}>
+              {SNIPPETS[b.lang].slice(b.start, b.start + b.size).map((line, li) => (
+                <div key={li} className="whitespace-pre" style={{ textShadow: theme === 'dark' ? '0 0 10px rgba(16,185,129,0.18)' : '0 1px 0 rgba(255,255,255,0.8)' }}>
+                  {line.map(([text, kind], ti) => (
+                    <span key={ti} style={{ color: palette[kind], fontWeight: kind === 'kw' || kind === 'fn' ? 700 : kind === 'str' || kind === 'num' ? 600 : 400 }}>
+                      {text}
+                    </span>
+                  ))}
                 </div>
-              )}
-              <div className={`px-3 py-2 font-mono text-[12.5px] leading-[1.7] whitespace-nowrap ${isSides ? 'text-[13.5px] leading-[1.9]' : ''}`}>
-                {SNIPPETS[b.lang].slice(b.start, b.start + b.size).map((line, li) => (
-                  <div key={li} className="whitespace-pre" style={{ textShadow: theme === 'dark' ? '0 0 8px rgba(16,185,129,0.14)' : '0 0 0 transparent' }}>
-                    {line.map(([text, kind], ti) => (
-                      <span key={ti} style={{ color: palette[kind], fontWeight: kind === 'kw' || kind === 'fn' ? 700 : kind === 'str' || kind === 'num' ? 600 : 400 }}>
-                        {text}
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>
