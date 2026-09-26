@@ -2450,7 +2450,7 @@ export default function Chat() {
             </div>
           )}
           <div
-            className="flex-1 overflow-auto custom-scrollbar font-mono text-sm bg-[#0a0c10] min-h-0"
+            className="flex-1 overflow-auto custom-scrollbar font-mono text-sm bg-[#0a0c10] min-h-0 max-h-[720px]"
 
           >
             {typeof window !== "undefined" && window.innerWidth < 640 ? (
@@ -2533,7 +2533,7 @@ export default function Chat() {
             )}
           </div>
 
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar max-h-[720px]">
             {insightsTab === "full" ? (
               <AnimatePresence mode="wait">
                 {messages.length === 0 && isLoading ? (
