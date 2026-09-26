@@ -691,18 +691,18 @@ const DemoSection = () => {
               </div>
             )}
           </div>
-
-          {!isLoading && code.trim() && (
-            <button
-              onClick={() => performAutoAnalysis(code)}
-              className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/30"
-            >
-              <Brain className="w-4 h-4" />
-              Analizza Codice
-            </button>
-          )}
         </div>
       </div>
+      {!isLoading && code.trim() && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => performAutoAnalysis(code)}
+            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-md"
+          >
+            Analizza Codice
+          </button>
+        </div>
+      )}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
