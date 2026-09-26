@@ -707,10 +707,10 @@ const DemoSection = () => {
           <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
           Prova Chat AI
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-          <span className="pointer-events-none absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-ping" />
-          <span className="pointer-events-none absolute -bottom-1 -left-2 w-1.5 h-1.5 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75" />
-          <span className="pointer-events-none absolute top-1/2 -right-3 w-1 h-1 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100" />
-          <span className="pointer-events-none absolute -top-2 left-1/2 w-1 h-1 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity delay-150" />
+          <span className="pointer-events-none absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md shadow-white/30 group-hover:animate-ping" />
+          <span className="pointer-events-none absolute -bottom-1.5 -left-2 w-2 h-2 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75 shadow-sm group-hover:animate-ping" />
+          <span className="pointer-events-none absolute top-1/2 -right-3.5 w-1.5 h-1.5 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100 shadow-sm group-hover:animate-ping" />
+          <span className="pointer-events-none absolute -top-2 left-1/2 w-1.5 h-1.5 rounded-full bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity delay-150 shadow-sm group-hover:animate-ping" />
         </Link>
       </div>
     </>

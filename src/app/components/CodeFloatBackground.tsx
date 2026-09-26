@@ -258,13 +258,13 @@ interface Slot {
  * (almeno 2 righe garantite da Window size 2-4).
  */
 const HERO_ROWS: Slot[][] = [
-  [{ x: 7, max: 42 }, { x: 38, max: 40 }, { x: 70, max: 38 }], // y 8  top
-  [{ x: 5, max: 36 }, { x: 85, max: 36 }], // y 22
-  [{ x: 6, max: 34 }, { x: 84, max: 34 }], // y 36
-  [{ x: 5, max: 32 }, { x: 85, max: 32 }], // y 50 centro
-  [{ x: 6, max: 34 }, { x: 84, max: 34 }], // y 64
-  [{ x: 5, max: 36 }, { x: 85, max: 36 }], // y 78
-  [{ x: 7, max: 42 }, { x: 38, max: 40 }, { x: 70, max: 38 }], // y 92 bottom
+  [{ x: 7, max: 50 }, { x: 38, max: 48 }, { x: 70, max: 46 }], // y 8  top — 3 blocchi
+  [{ x: 5, max: 42 }, { x: 85, max: 42 }], // y 22 — solo laterali
+  [{ x: 6, max: 40 }, { x: 84, max: 40 }], // y 36 — intorno testo
+  [{ x: 5, max: 38 }, { x: 85, max: 38 }], // y 50 centro — solo laterali, mai dietro h1
+  [{ x: 6, max: 40 }, { x: 84, max: 40 }], // y 64
+  [{ x: 5, max: 42 }, { x: 85, max: 42 }], // y 78
+  [{ x: 7, max: 50 }, { x: 38, max: 48 }, { x: 70, max: 46 }], // y 92 bottom — 3 blocchi
 ];
 
 /* Login/register: blocchi corti ai lati (sinistra e destra alternati). */
@@ -346,10 +346,10 @@ function buildScatter(
       // Sparpagliamento orizzontale: ±7% per non essere allineati, poi clamp per restare visibili per intero
       const rawX = slot.x + (rand() * 14 - 7);
       const x = Math.max(14, Math.min(86, rawX));
-      const dur = speed * (0.7 + rand() * 0.5);
+      const dur = speed * (0.65 + rand() * 0.55);
       const delay = -rand() * dur * 2; // negativo: già "in corsa"
-      const range = 6 + rand() * 6; // 6–12px
-      const op = opacity * (0.85 + rand() * 0.3);
+      const range = 10 + rand() * 10; // 10–20px — fluttuazione più visibile
+      const op = opacity * (0.9 + rand() * 0.25);
       const key = `${picked.w.lang}:${picked.w.start}:${picked.w.size}`;
       const text = SNIPPETS[picked.w.lang].slice(picked.w.start, picked.w.start + picked.w.size).map(l => l.map(([t]) => t).join('')).join('\n').trim();
       usedKeys.add(key);
