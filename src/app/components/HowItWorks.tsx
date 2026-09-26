@@ -47,7 +47,7 @@ const HowItWorks = () => {
           icon: Code2,
           accent: "#10b981",
           glow: "rgba(16,185,129,0.5)",
-          slug: "incolla-o-carica",
+          slug: "paste-or-upload",
         },
         {
           title: "Analysis in plain language",
@@ -55,7 +55,7 @@ const HowItWorks = () => {
           icon: Sparkles,
           accent: "#2dd4bf",
           glow: "rgba(45,212,191,0.5)",
-          slug: "analisi-in-italiano",
+          slug: "analysis",
         },
         {
           title: "Apply and keep going",
@@ -63,7 +63,7 @@ const HowItWorks = () => {
           icon: GraduationCap,
           accent: "#14b8a6",
           glow: "rgba(20,184,166,0.5)",
-          slug: "applica-e-continua",
+          slug: "apply-and-continue",
         },
       ],
       cta: "Try it now",
@@ -80,7 +80,7 @@ const HowItWorks = () => {
           icon: Code2,
           accent: "#10b981",
           glow: "rgba(16,185,129,0.5)",
-          slug: "incolla-o-carica",
+          slug: "paste-or-upload",
         },
         {
           title: "Analisi in italiano",
@@ -88,7 +88,7 @@ const HowItWorks = () => {
           icon: Sparkles,
           accent: "#2dd4bf",
           glow: "rgba(45,212,191,0.5)",
-          slug: "analisi-in-italiano",
+          slug: "analysis",
         },
         {
           title: "Applica e continua",
@@ -96,7 +96,7 @@ const HowItWorks = () => {
           icon: GraduationCap,
           accent: "#14b8a6",
           glow: "rgba(20,184,166,0.5)",
-          slug: "applica-e-continua",
+          slug: "apply-and-continue",
         },
       ],
       cta: "Provalo ora",

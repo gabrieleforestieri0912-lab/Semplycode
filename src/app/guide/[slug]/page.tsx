@@ -20,7 +20,7 @@ type Guide = {
 };
 
 const guides: Record<string, { it: Guide; en: Guide }> = {
-  "incolla-o-carica": {
+  "paste-or-upload": {
     it: {
       badge: "Guida 1 / 3",
       title: "Incolla o carica — come fornire codice a Semplycode",
@@ -86,7 +86,7 @@ const guides: Record<string, { it: Guide; en: Guide }> = {
       cta: "Open Chat AI and paste your snippet",
     },
   },
-  "analisi-in-italiano": {
+  "analysis": {
     it: {
       badge: "Guida 2 / 3",
       title: "Analisi in italiano — riga, causa e fix",
@@ -148,7 +148,7 @@ const guides: Record<string, { it: Guide; en: Guide }> = {
       cta: "Try a full Revision",
     },
   },
-  "applica-e-continua": {
+  "apply-and-continue": {
     it: {
       badge: "Guida 3 / 3",
       title: "Applica e continua — dal fix al Cassetto",
@@ -212,17 +212,25 @@ const guides: Record<string, { it: Guide; en: Guide }> = {
   },
 };
 
+// Alias per retro-compatibilità: vecchi slug italiani → nuovi inglesi (route solo in inglese)
+const alias: Record<string, string> = {
+  "incolla-o-carica": "paste-or-upload",
+  "analisi-in-italiano": "analysis",
+  "applica-e-continua": "apply-and-continue",
+};
+
 export default function GuidePage() {
   const params = useParams<{ slug: string }>();
-  const slug = params?.slug as string;
+  const rawSlug = params?.slug as string;
+  const slug = alias[rawSlug] || rawSlug;
   const { language } = useLanguage();
   const data = guides[slug];
   const guide = data ? (data[language as keyof typeof data] as Guide) || data.it : null;
 
   const iconMap: Record<string, React.ElementType> = {
-    "incolla-o-carica": Code2,
-    "analisi-in-italiano": Sparkles,
-    "applica-e-continua": GraduationCap,
+    "paste-or-upload": Code2,
+    "analysis": Sparkles,
+    "apply-and-continue": GraduationCap,
   };
   const Icon = iconMap[slug] || BookOpen;
 
