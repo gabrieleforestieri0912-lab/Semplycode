@@ -166,13 +166,14 @@ const HowItWorks = () => {
         <div className="relative max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl 4xl:max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-5 2xl:gap-8 3xl:gap-10">
             {current.steps.map((item, i) => (
-              <motion.div
+              <MotionLink
                 key={i}
+                href={`/guide/${item.slug}`}
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ delay: i * 0.15, type: "spring", stiffness: 70 }}
-                className="relative group"
+                className="relative group block h-full"
               >
                 {/* Gradient border wrapper */}
                 <div className="relative h-full rounded-3xl p-px bg-[#e2e8f0] transition-all duration-500 group-hover:bg-gradient-to-br group-hover:from-emerald-400 group-hover:via-teal-400 group-hover:to-emerald-500 group-hover:shadow-xl group-hover:shadow-emerald-500/10">
@@ -221,13 +222,12 @@ const HowItWorks = () => {
                     <p className="text-sm leading-relaxed text-[#64748b]">
                       {item.desc}
                     </p>
-                    <Link
-                      href={`/guide/${item.slug}`}
-                      className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:gap-1.5 transition-all"
+                    <span
+                      className="mt-4 inline-flex items-center gap-1 text-sm font-semibold group-hover:gap-1.5 transition-all"
                       style={{ color: item.accent }}
                     >
-                      {language === 'en' ? 'Full guide' : 'Guida completa'} <ArrowRight size={14} />
-                    </Link>
+                      {language === 'en' ? 'Full guide' : 'Guida completa'} <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                    </span>
 
                     {/* Bottom accent bar */}
                     <div
@@ -236,7 +236,7 @@ const HowItWorks = () => {
                     />
                   </div>
                 </div>
-              </motion.div>
+              </MotionLink>
             ))}
           </div>
 
