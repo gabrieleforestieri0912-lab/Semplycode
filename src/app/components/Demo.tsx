@@ -401,14 +401,25 @@ const DemoSection = () => {
 
   useEffect(() => {
     const key = session?.email
-      ? `demo_code:${session.email}`
-      : `demo_code:anon`;
+      ? `demo_code:v2:${session.email}`
+      : `demo_code:v2:anon`;
     try {
       const saved = localStorage.getItem(key);
       if (saved) {
         setCode(saved);
         const lang = detectLanguage(saved);
         setDetectedLang(lang);
+        // se il saved è vecchio esempio corto, forza il nuovo lungo
+        if (saved.trim().split("\n").length < 50) {
+          setCode(DEMO_SAMPLE_CODE);
+          setDetectedLang("typescript");
+          setMessages([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
+        }
+      } else {
+        // nessun saved → assicurati che il nuovo esempio lungo sia visibile
+        setCode(DEMO_SAMPLE_CODE);
+        setDetectedLang("typescript");
+        setMessages([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
       }
     } catch {
       // ignore
@@ -417,8 +428,8 @@ const DemoSection = () => {
 
   useEffect(() => {
     const key = session?.email
-      ? `demo_code:${session.email}`
-      : `demo_code:anon`;
+      ? `demo_code:v2:${session.email}`
+      : `demo_code:v2:anon`;
     try {
       if (code !== undefined) localStorage.setItem(key, code);
     } catch {
@@ -453,9 +464,6 @@ const DemoSection = () => {
       <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4 px-1 sm:px-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-primary to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-            <Brain className="text-white w-5 h-5" />
-          </div>
           <div>
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-[#0f172a]">
               Analizzatore Codice Live
@@ -502,38 +510,15 @@ const DemoSection = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4 px-1 sm:px-2">
-        {[
-          { id: "correction", label: "Correzione", desc: "Solo fix" },
-          { id: "revision", label: "Revisione", desc: "Ottimizza" },
-          { id: "creation", label: "Creazione", desc: "Da zero" },
-        ].map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id as any)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${mode === m.id ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" : "bg-white text-[#475569] border-[#e2e8f0] hover:border-emerald-200 hover:text-emerald-600"}`}
-          >
-            {m.label} <span className="opacity-60">· {m.desc}</span>
-          </button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[380px] xs:min-h-[440px] lg:min-h-[580px] 2xl:min-h-[660px] 3xl:min-h-[720px]">
         <div className="flex flex-col min-h-[300px] lg:min-h-0 bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:border-emerald-300">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5">
-              <Code2 className="text-primary w-4 h-4" />
-              {detectedLang ? (
-                <span className="text-[11px] font-bold text-[#64748b] font-mono uppercase tracking-widest">
-                  {detectedLang === "unrecognized" ? "code" : detectedLang}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-900"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-900"></div>
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-900"></div>
-            </div>
+          <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
+            <Code2 className="text-primary w-4 h-4" />
+            {detectedLang ? (
+              <span className="text-[11px] font-bold text-[#64748b] font-mono uppercase tracking-widest">
+                {detectedLang === "unrecognized" ? "code" : detectedLang}
+              </span>
+            ) : null}
           </div>
 
           <div className="flex-1 min-h-0 font-mono text-sm overflow-auto custom-scrollbar">
@@ -592,11 +577,28 @@ const DemoSection = () => {
         </div>
 
         <div className="flex flex-col bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm relative min-h-[300px] lg:min-h-0">
-          <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
-            <MessageSquare className="text-emerald-600 w-4 h-4" />
-            <span className="text-[11px] font-bold text-[#64748b] font-mono tracking-widest uppercase">
-              Report
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
+            <div className="flex items-center gap-2.5">
+              <MessageSquare className="text-emerald-600 w-4 h-4" />
+              <span className="text-[11px] font-bold text-[#64748b] font-mono tracking-widest uppercase">
+                Report
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { id: "correction", label: "Correzione" },
+                { id: "revision", label: "Revisione" },
+                { id: "creation", label: "Creazione" },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setMode(m.id as any)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${mode === m.id ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-[#64748b] border-[#e2e8f0] hover:border-emerald-200 hover:text-emerald-600"}`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-h-[380px] lg:max-h-[560px] 2xl:max-h-[640px] custom-scrollbar">
