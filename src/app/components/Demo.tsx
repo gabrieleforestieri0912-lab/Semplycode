@@ -144,9 +144,10 @@ function roleLabel(role: User['role']) {
 
 const DemoSection = () => {
   const [code, setCode] = useState(DEMO_SAMPLE_CODE);
-  const [detectedLang, setDetectedLang] = useState("javascript");
+  const [detectedLang, setDetectedLang] = useState("typescript");
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState<"correction" | "revision" | "creation">("correction");
   const { user: session } = useSupabaseSession();
 
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -340,14 +341,20 @@ const DemoSection = () => {
     ]);
 
     try {
+      const systemPrompt =
+        mode === "creation"
+          ? `Sei un tutor italiano in modalità CREAZIONE: guida passo-passo la costruzione del progetto da zero in ${detectedLang || "typescript"}. Prerequisiti, struttura cartelle, ogni passo con comandi e snippet, fino a progetto funzionante.`
+          : mode === "revision"
+            ? `Sei un esperto Senior Developer in modalità REVISIONE: correggi e ottimizza il codice in ${detectedLang || "typescript"} (naming, DRY, leggibilità, performance, sicurezza). Usa Markdown con sezioni Errori, Codice revisionato, Miglioramenti, Best practice.`
+            : `Sei un esperto Senior Developer in modalità CORREZIONE: correggi SOLO errori sintattici/logici/runtime in ${detectedLang || "typescript"}, mantieni la struttura. Usa Markdown con sezioni Errori, Spiegazione, Codice corretto (solo fix minimi).`;
       const data = await postChat([
         {
           role: "system",
-          content: `Sei un esperto Senior Developer. Rispondi in italiano. Priorità: errori e correzioni, poi miglioramenti. Usa Markdown con sezioni Errori, Spiegazione, Miglioramenti, Codice corretto.`,
+          content: `${systemPrompt} Rispondi in italiano.`,
         },
         {
           role: "user",
-          content: `Analizza questo codice:\n\n\`\`\`${detectedLang || "javascript"}\n${currentCode}\n\`\`\``,
+          content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || "typescript"}\n${currentCode}\n\`\`\``,
         },
       ]);
 
@@ -443,9 +450,7 @@ const DemoSection = () => {
 
   return (
     <>
-      <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden group">
-      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
-
+      <section className="w-full max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px] mx-auto p-3 sm:p-5 md:p-6 3xl:p-8 bg-white rounded-2xl sm:rounded-3xl border border-[#e2e8f0] shadow-2xl my-8 sm:my-12 relative overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3 sm:gap-4 px-1 sm:px-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-linear-to-br from-primary to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
@@ -495,6 +500,22 @@ const DemoSection = () => {
             </>
           )}
         </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-4 px-1 sm:px-2">
+        {[
+          { id: "correction", label: "Correzione", desc: "Solo fix" },
+          { id: "revision", label: "Revisione", desc: "Ottimizza" },
+          { id: "creation", label: "Creazione", desc: "Da zero" },
+        ].map((m) => (
+          <button
+            key={m.id}
+            onClick={() => setMode(m.id as any)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${mode === m.id ? "bg-emerald-500 text-white border-emerald-500 shadow-sm" : "bg-white text-[#475569] border-[#e2e8f0] hover:border-emerald-200 hover:text-emerald-600"}`}
+          >
+            {m.label} <span className="opacity-60">· {m.desc}</span>
+          </button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[380px] xs:min-h-[440px] lg:min-h-[580px] 2xl:min-h-[660px] 3xl:min-h-[720px]">
