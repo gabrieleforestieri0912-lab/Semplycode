@@ -149,11 +149,11 @@ export default function SettingsPage() {
     : "?";
 
   const tokenLabel = {
-    free: "30.000 crediti / mese ≈ ~6 analisi",
-    starter: "1.500.000 crediti / mese ≈ ~300 analisi",
-    pro: "3.000.000 crediti / mese ≈ ~600 analisi",
+    free: "30 crediti / mese ≈ ~6 analisi",
+    starter: "1.500 crediti / mese ≈ ~300 analisi",
+    pro: "3.000 crediti / mese ≈ ~600 analisi",
     enterprise: "Team — lista d’attesa (crediti su richiesta)",
-  }[user?.plan ?? "free"] ?? "30.000 crediti / mese ≈ ~6 analisi";
+  }[user?.plan ?? "free"] ?? "30 crediti / mese ≈ ~6 analisi";
 
   if (!user || status === "loading") {
     return (

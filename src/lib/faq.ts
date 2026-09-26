@@ -12,7 +12,7 @@ export const faqs: FAQItem[] = [
   {
     question: "Devo registrarmi subito?",
     answer:
-      "No. Puoi provare Chat AI come ospite con 3 analisi al giorno. Con un account gratuito hai 30.000 crediti al mese (≈ ~6 analisi), cronologia chat e dashboard. 1 credito = 1 token ≈ 4 caratteri.",
+      "No. Puoi provare Chat AI come ospite con 3 analisi al giorno. Con un account gratuito hai 30 crediti al mese (≈30k token, ~6 analisi), cronologia chat e dashboard. 1 credito = 1.000 token ≈ 4.000 caratteri.",
   },
   {
     question: "Quali linguaggi sono supportati?",
@@ -32,7 +32,7 @@ export const faqs: FAQItem[] = [
   {
     question: "Qual è la differenza tra i piani?",
     answer:
-      "Gratis: 30.000 crediti/mese ≈ ~6 analisi. Starter: 1.500.000 crediti/mese ≈ ~300 analisi e review approfondite. Pro: 3.000.000 crediti/mese ≈ ~600 analisi, ZIP e modelli avanzati. Team: lista d’attesa con fatturazione centralizzata, fino a 20 file.",
+      "Gratis: 30 crediti/mese ≈ ~6 analisi. Starter: 1.500 crediti/mese ≈ ~300 analisi e review approfondite. Pro: 3.000 crediti/mese ≈ ~600 analisi, ZIP e modelli avanzati. Team: lista d’attesa con fatturazione centralizzata, fino a 20 file.",
   },
   {
     question: "L'estensione Chrome è disponibile?",

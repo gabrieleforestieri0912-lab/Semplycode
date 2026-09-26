@@ -120,7 +120,7 @@ const Pricing = () => {
       waitlistCta: "Join waitlist",
       popular: "Most Popular",
       secure: "Secure payments via Stripe · Cancel anytime",
-      creditsFootnote: "1 credit = 1 token ≈ 4 characters (src/lib/tokenBudget.ts:16). ~6 analyses for Free (30k), ~300 for Starter, ~600 for Pro — ~5k credits per analysis (code + response); actual count varies with length.",
+      creditsFootnote: "1 credit = 1,000 tokens ≈ 4,000 characters (src/lib/tokenBudget.ts). Free 30 credits (≈30k tokens), Starter 1,500, Pro 3,000 — ~5 credits per analysis (code + response); actual count varies with length.",
       plans: [
         {
           id: "free",
@@ -132,7 +132,7 @@ const Pricing = () => {
           },
           tagline: "Start building for free",
           features: [
-            "30,000 credits / mo ≈ ~6 analyses*",
+            "30 credits / mo ≈ ~6 analyses*",
             "Standard model",
             "Web Editor + auto language detection",
             "Basic error detection with line + Italian explanation",
@@ -152,7 +152,7 @@ const Pricing = () => {
           tagline: "For growing developers",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
-            "1,500,000 credits / mo ≈ ~300 analyses*",
+            "1,500 credits / mo ≈ ~300 analyses*",
             "In-depth reviews (Correction + Revision)",
             "Up to 3 files (100 KB each) + GitHub import",
             "Export Markdown/code + shareable link",
@@ -172,7 +172,7 @@ const Pricing = () => {
           tagline: "For serious developers",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
-            "3,000,000 credits / mo ≈ ~600 analyses*",
+            "3,000 credits / mo ≈ ~600 analyses*",
             "All analysis types + Security/Performance/Style focus",
             "Up to 5 files + ZIP (100 KB each) + GitHub",
             "Advanced models enabled",
@@ -220,7 +220,7 @@ const Pricing = () => {
       waitlistCta: "Iscriviti alla lista d’attesa",
       popular: "Più Popolare",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
-      creditsFootnote: "1 credito = 1 token ≈ 4 caratteri (src/lib/tokenBudget.ts:16). ~6 analisi per Gratis (30k), ~300 per Starter, ~600 per Pro — ~5.000 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
+      creditsFootnote: "1 credito = 1.000 token ≈ 4.000 caratteri (src/lib/tokenBudget.ts). Gratis 30 crediti (≈30k token), Starter 1.500, Pro 3.000 — ~5 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
       plans: [
         {
           id: "free",
@@ -232,7 +232,7 @@ const Pricing = () => {
           },
           tagline: "Inizia a costruire gratis",
           features: [
-            "30.000 crediti / mese ≈ ~6 analisi*",
+            "30 crediti / mese ≈ ~6 analisi*",
             "Modello standard",
             "Editor web + rilevamento linguaggio automatico",
             "Rilevamento errori base con riga + spiegazione italiana",
@@ -252,7 +252,7 @@ const Pricing = () => {
           tagline: "Per sviluppatori in crescita",
           priceId: "price_1Rx1kF9ddZe187yvStarterPlan123",
           features: [
-            "1.500.000 crediti / mese ≈ ~300 analisi*",
+            "1.500 crediti / mese ≈ ~300 analisi*",
             "Review approfondite (Correzione + Revisione)",
             "Fino a 3 file (100 KB cad.) + import GitHub",
             "Export Markdown/codice e link condivisibile",
@@ -272,7 +272,7 @@ const Pricing = () => {
           tagline: "Per sviluppatori seri",
           priceId: "price_1Rx1kF9ddZe187yvProPlan123",
           features: [
-            "3.000.000 crediti / mese ≈ ~600 analisi*",
+            "3.000 crediti / mese ≈ ~600 analisi*",
             "Tutti i tipi di analisi + focus Sicurezza/Performance/Stile",
             "Fino a 5 file + ZIP (100 KB cad.) + GitHub",
             "Modelli avanzati sbloccati",
