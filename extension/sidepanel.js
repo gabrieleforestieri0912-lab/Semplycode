@@ -1479,7 +1479,6 @@ function initSettings() {
   const logoutBtn = $("logout-btn");
 
   const logout = async () => {
-    if (!confirm("Sei sicuro di voler uscire?")) return;
     await storage.remove(["token", "user"]);
     currentToken = null;
     currentUser = null;

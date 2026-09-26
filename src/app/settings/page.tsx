@@ -96,10 +96,9 @@ export default function SettingsPage() {
   }, [supabaseUser, status, router]);
 
   const handleLogout = async () => {
-    if (!window.confirm("Sei sicuro di voler uscire?")) return;
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/login");
   };
 
   const [exportPath, setExportPath] = useState("");

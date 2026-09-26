@@ -722,7 +722,8 @@ export default function Chat() {
       setTimeout(() => setExportNotice(null), 3500);
     } catch (err) {
       console.error("Export error:", err);
-      alert("Si è verificato un errore durante l'esportazione.");
+      setExportNotice("Errore durante l'esportazione. Riprova.");
+      setTimeout(() => setExportNotice(null), 3500);
     } finally {
       setExportMenuChatId(null);
     }
@@ -954,7 +955,7 @@ export default function Chat() {
     setIsProfileOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const detectLanguage = (codeSnippet: string): string => {

@@ -74,12 +74,11 @@ const Navbar = () => {
   }, [isMobileMenuOpen]);
 
   const handleLogout = async () => {
-    if (!window.confirm("Sei sicuro di voler uscire?")) return;
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const { language } = useLanguage();
