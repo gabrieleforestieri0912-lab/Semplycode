@@ -601,7 +601,7 @@ const DemoSection = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-h-[720px] custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0f172a] max-h-[720px] custom-scrollbar font-mono text-sm">
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-200 shadow-inner">
@@ -625,13 +625,13 @@ const DemoSection = () => {
                 key={i}
                 className="animate-in fade-in zoom-in-95 duration-700"
               >
-                <div className="prose prose-sm max-w-none text-[#475569]">
+                <div className="prose prose-sm prose-invert max-w-none text-[#e2e8f0] font-mono">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
                       h3: ({ ...props }) => (
                         <h3
-                          className="text-primary font-bold text-lg mb-4 mt-6 first:mt-0 flex items-center gap-2"
+                          className="text-emerald-400 font-bold text-lg mb-4 mt-6 first:mt-0 flex items-center gap-2"
                           {...props}
                         />
                       ),
@@ -640,12 +640,12 @@ const DemoSection = () => {
                       ),
                       li: ({ ...props }) => (
                         <li
-                          className="flex items-start gap-2.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-primary/60 before:rounded-full before:mt-2"
+                          className="flex flex-wrap items-start gap-2.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500/60 before:rounded-full before:mt-2 [&>p]:flex-1 [&>p]:min-w-0 [&>p]:break-words"
                           {...props}
                         />
                       ),
                       strong: ({ ...props }) => (
-                        <strong className="text-primary font-bold" {...props} />
+                        <strong className="text-emerald-300 font-bold" {...props} />
                       ),
                       code: ({
                         inline,
@@ -659,15 +659,15 @@ const DemoSection = () => {
                       }) =>
                         inline ? (
                           <code
-                            className="bg-emerald-100 px-1.5 py-0.5 rounded text-emerald-700 text-xs font-mono"
+                            className="bg-emerald-950/70 px-1.5 py-0.5 rounded text-emerald-300 text-xs font-mono inline whitespace-normal break-words align-baseline border border-emerald-800/30"
                             {...props}
                           >
                             {children}
                           </code>
                         ) : (
-                          <pre className="my-4 rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-lg bg-[#f8fafc]">
+                          <pre className="my-4 rounded-2xl overflow-hidden border border-emerald-800/40 shadow-lg bg-[#010409]">
                             <code
-                              className="block bg-[#f8fafc] p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap"
+                              className="block bg-[#010409] p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap text-[#e2e8f0]"
                               {...props}
                             >
                               {children}
