@@ -640,7 +640,7 @@ const DemoSection = () => {
                       ),
                       li: ({ ...props }) => (
                         <li
-                          className="flex items-start gap-2.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-primary/60 before:rounded-full before:mt-2"
+                          className="flex flex-wrap items-start gap-2.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-primary/60 before:rounded-full before:mt-2 [&>p]:flex-1 [&>p]:min-w-0 [&>p]:break-words"
                           {...props}
                         />
                       ),
@@ -659,7 +659,7 @@ const DemoSection = () => {
                       }) =>
                         inline ? (
                           <code
-                            className="bg-emerald-100 px-1.5 py-0.5 rounded text-emerald-700 text-xs font-mono"
+                            className="bg-emerald-100 px-1 py-0.5 rounded text-emerald-700 text-xs font-mono inline whitespace-normal break-words align-baseline"
                             {...props}
                           >
                             {children}
