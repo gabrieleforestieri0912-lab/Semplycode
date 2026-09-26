@@ -161,15 +161,15 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 
 ## Piani e Token
 
-| Piano | Prezzo (Mensile / Annuale) | Budget token mensile | Display |
-|-------|----------------------------|----------------------|---------|
-| Free | 0 € | 100K | 100 |
-| Starter | 4.99 €/m (3.99 €/m ann.) | 1.5M | 1500 |
-| Pro | 7.99 €/m (6.39 €/m ann.) | 3M | 3000 |
-| Enterprise | 9.99 €/m (7.99 €/m ann.) | illimitato | ∞ |
+| Piano | Prezzo (Mensile / Annuale) | Budget crediti mensili | Display | Note |
+|-------|----------------------------|------------------------|---------|------|
+| Free | 0 € | 100K | 100.000 ≈ ~20 analisi | 1 credito = 1 token ≈ 4 char |
+| Starter | 4.99 €/m (3.99 €/m ann.) | 1.5M | 1.500.000 ≈ ~300 analisi | — |
+| Pro | 7.99 €/m (6.39 €/m ann.) | 3M | 3.000.000 ≈ ~600 analisi | — |
+| Team | Su richiesta (lista d’attesa) | Su volumi concordati | — | Fino a 20 file, pool condiviso |
 
-- Ospiti (senza account): budget giornaliero di 30K token gestito lato server via Redis (`GUEST_DAILY_TOKEN_BUDGET`).
-- Il display mostra i token in migliaia (100 / 1500 / 3000 / illimitati); i budget reali in `src/lib/tokenBudget.ts`.
+- Ospiti (senza account): budget giornaliero di 30K crediti gestito lato server via Redis (`GUEST_DAILY_TOKEN_BUDGET`).
+- Il display mostra i crediti con stima analisi (~5k crediti/analisi); i budget reali in `src/lib/tokenBudget.ts`.
 - **Flusso checkout**: `POST /api/checkout` con `{ priceId, planId, interval }` → sessione Stripe → webhook `checkout.session.completed` aggiorna `subscription_status` e `plan`.
 
 ---

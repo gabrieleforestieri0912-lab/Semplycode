@@ -149,11 +149,11 @@ export default function SettingsPage() {
     : "?";
 
   const tokenLabel = {
-    free: "100 token AI / mese",
-    starter: "1.500 token AI / mese",
-    pro: "3.000 token AI / mese",
-    enterprise: "Token AI illimitati",
-  }[user?.plan ?? "free"] ?? "100 token AI / mese";
+    free: "100.000 crediti / mese ≈ ~20 analisi",
+    starter: "1.500.000 crediti / mese ≈ ~300 analisi",
+    pro: "3.000.000 crediti / mese ≈ ~600 analisi",
+    enterprise: "Team — lista d’attesa (crediti su richiesta)",
+  }[user?.plan ?? "free"] ?? "100.000 crediti / mese ≈ ~20 analisi";
 
   if (!user || status === "loading") {
     return (

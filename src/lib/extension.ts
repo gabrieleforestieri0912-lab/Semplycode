@@ -1,6 +1,6 @@
-// URL dello store dell'estensione.
-// TODO: sostituire con l'URL reale della listing quando l'estensione
-// verrà pubblicata sul Chrome Web Store.
+// URL dello store dell'estensione — placeholder finché non pubblicata.
+// UI gestisce già lo stato "In arrivo" senza link cliccabile (ExtensionSection).
+// Sostituire con URL reale con ID a 32 char quando la listing sarà pubblicata.
 export const CHROME_STORE_URL =
   "https://chromewebstore.google.com/detail/semplycode-ai-co-pilot";
 

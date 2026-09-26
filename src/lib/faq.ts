@@ -12,7 +12,7 @@ export const faqs: FAQItem[] = [
   {
     question: "Devo registrarmi subito?",
     answer:
-      "No. Puoi provare Chat AI come ospite con 3 analisi al giorno. Con un account gratuito hai 100 token AI al mese, cronologia chat e dashboard.",
+      "No. Puoi provare Chat AI come ospite con 3 analisi al giorno. Con un account gratuito hai 100.000 crediti al mese (≈ ~20 analisi), cronologia chat e dashboard. 1 credito = 1 token ≈ 4 caratteri.",
   },
   {
     question: "Quali linguaggi sono supportati?",
@@ -32,12 +32,12 @@ export const faqs: FAQItem[] = [
   {
     question: "Qual è la differenza tra i piani?",
     answer:
-      "Gratuito: 100 token AI al mese. Starter: 1500 token AI al mese e review approfondite. Pro: 3000 token AI al mese, modelli avanzati e supporto prioritario. Enterprise: token illimitati e funzionalità dedicate per i team.",
+      "Gratis: 100.000 crediti/mese ≈ ~20 analisi. Starter: 1.500.000 crediti/mese ≈ ~300 analisi e review approfondite. Pro: 3.000.000 crediti/mese ≈ ~600 analisi, ZIP e modelli avanzati. Team: lista d’attesa con fatturazione centralizzata, fino a 20 file.",
   },
   {
     question: "L'estensione Chrome è disponibile?",
     answer:
-      "Sì. Scarica l'estensione dal Chrome Web Store e analizza il codice selezionato su qualsiasi pagina web direttamente nel pannello laterale.",
+      "In arrivo: la listing sul Chrome Web Store è in preparazione (src/lib/extension.ts). Analizza codice su qualsiasi pagina dal pannello laterale una volta pubblicata; il codice analizzato non viene salvato di default.",
   },
   {
     question: "Serve connessione internet?",
