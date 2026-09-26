@@ -19,6 +19,11 @@ import { perl } from "@codemirror/legacy-modes/mode/perl";
 import { lua } from "@codemirror/legacy-modes/mode/lua";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { pascal } from "@codemirror/legacy-modes/mode/pascal";
+import { java, cpp, c, csharp, kotlin } from "@codemirror/legacy-modes/mode/clike";
+import { swift } from "@codemirror/legacy-modes/mode/swift";
+import { fortran } from "@codemirror/legacy-modes/mode/fortran";
+import { cobol } from "@codemirror/legacy-modes/mode/cobol";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
 import {
   Code2,
   MessageSquare,
@@ -292,35 +297,31 @@ const DemoSection = () => {
       case "javascript":
         return javascript();
       case "java":
-        return javascript();
+        return StreamLanguage.define(java as any);
       case "c":
-        return javascript();
+        return StreamLanguage.define(c as any);
       case "cpp":
-        return javascript();
+        return StreamLanguage.define(cpp as any);
       case "csharp":
-        return javascript();
+        return StreamLanguage.define(csharp as any);
       case "kotlin":
-        return javascript();
+        return StreamLanguage.define(kotlin as any);
       case "swift":
-        return javascript();
+        return StreamLanguage.define(swift as any);
       case "ruby":
-         
         return StreamLanguage.define(ruby as any);
       case "perl":
-         
         return StreamLanguage.define(perl as any);
       case "lua":
-         
         return StreamLanguage.define(lua as any);
       case "pascal":
-         
         return StreamLanguage.define(pascal as any);
       case "shell":
-        return javascript();
+        return StreamLanguage.define(shell as any);
       case "fortran":
-        return javascript();
+        return StreamLanguage.define(fortran as any);
       case "cobol":
-        return javascript();
+        return StreamLanguage.define(cobol as any);
       case "xml":
         return html();
       case "markdown":
