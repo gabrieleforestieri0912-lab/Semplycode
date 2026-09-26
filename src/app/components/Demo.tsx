@@ -272,7 +272,7 @@ const DemoSection = () => {
 
     if (/^\s*---\s*\n|^#\s+\w+/.test(trimmed)) return "markdown";
 
-    return "javascript";
+    return "";
   };
 
   const getLanguageExtension = (lang: string) => {
@@ -328,7 +328,7 @@ const DemoSection = () => {
       case "markdown":
         return javascript();
       default:
-        return javascript();
+        return [];
     }
   };
 
@@ -343,10 +343,10 @@ const DemoSection = () => {
     try {
       const systemPrompt =
         mode === "creation"
-          ? `Sei un tutor italiano in modalità CREAZIONE: guida passo-passo la costruzione del progetto da zero in ${detectedLang || "typescript"}. Prerequisiti, struttura cartelle, ogni passo con comandi e snippet, fino a progetto funzionante.`
+          ? `Sei un tutor italiano in modalità CREAZIONE: guida passo-passo la costruzione del progetto da zero${detectedLang ? ` in ${detectedLang}` : ""}. Prerequisiti, struttura cartelle, ogni passo con comandi e snippet, fino a progetto funzionante.`
           : mode === "revision"
-            ? `Sei un esperto Senior Developer in modalità REVISIONE: correggi e ottimizza il codice in ${detectedLang || "typescript"} (naming, DRY, leggibilità, performance, sicurezza). Usa Markdown con sezioni Errori, Codice revisionato, Miglioramenti, Best practice.`
-            : `Sei un esperto Senior Developer in modalità CORREZIONE: correggi SOLO errori sintattici/logici/runtime in ${detectedLang || "typescript"}, mantieni la struttura. Usa Markdown con sezioni Errori, Spiegazione, Codice corretto (solo fix minimi).`;
+            ? `Sei un esperto Senior Developer in modalità REVISIONE: correggi e ottimizza il codice${detectedLang ? ` in ${detectedLang}` : ""} (naming, DRY, leggibilità, performance, sicurezza). Usa Markdown con sezioni Errori, Codice revisionato, Miglioramenti, Best practice.`
+            : `Sei un esperto Senior Developer in modalità CORREZIONE: correggi SOLO errori sintattici/logici/runtime${detectedLang ? ` in ${detectedLang}` : ""}, mantieni la struttura. Usa Markdown con sezioni Errori, Spiegazione, Codice corretto (solo fix minimi).`;
       const data = await postChat([
         {
           role: "system",
@@ -354,7 +354,7 @@ const DemoSection = () => {
         },
         {
           role: "user",
-          content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || "typescript"}\n${currentCode}\n\`\`\``,
+          content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
         },
       ]);
 
