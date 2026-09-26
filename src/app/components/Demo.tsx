@@ -521,7 +521,7 @@ const DemoSection = () => {
             ) : null}
           </div>
 
-          <div className="flex-1 min-h-0 font-mono text-sm overflow-auto custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-[720px] font-mono text-sm overflow-auto custom-scrollbar">
             <CodeMirror
               value={code}
               onChange={(val: string) => {
@@ -540,8 +540,8 @@ const DemoSection = () => {
                 getLanguageExtension(detectedLang),
                 EditorView.lineWrapping,
                 EditorView.theme({
-                  "&": { height: "100%" },
-                  ".cm-scroller": { overflow: "auto" },
+                  "&": { maxHeight: "720px" },
+                  ".cm-scroller": { overflow: "auto", maxHeight: "720px" },
                   ".cm-content": { minHeight: "0" },
                 }),
               ]}
@@ -570,8 +570,8 @@ const DemoSection = () => {
                 completionKeymap: true,
                 lintKeymap: true,
               }}
-              style={{ fontSize: 14, height: "100%" }}
-              className="h-full"
+              style={{ fontSize: 14, height: "100%", maxHeight: "720px" }}
+              className="h-full max-h-[720px]"
             />
           </div>
         </div>
@@ -601,7 +601,7 @@ const DemoSection = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-h-[380px] lg:max-h-[560px] 2xl:max-h-[640px] custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 max-h-[720px] custom-scrollbar">
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-200 shadow-inner">
