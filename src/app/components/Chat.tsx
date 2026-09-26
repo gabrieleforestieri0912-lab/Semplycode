@@ -346,7 +346,7 @@ const FormattedAIResponse = ({
         if (inline) {
           return (
             <code
-              className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono"
+              className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono inline whitespace-normal break-words align-baseline"
               {...props}
             >
               {children}
