@@ -615,6 +615,7 @@ export default function Chat() {
   }, []);
 
   const [insightsTab, setInsightsTab] = useState<"full" | "files">("full");
+  const [showGithubComposer, setShowGithubComposer] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [isDraggingFiles, setIsDraggingFiles] = useState(false);
@@ -2391,37 +2392,6 @@ export default function Chat() {
               <span className="shrink-0" aria-hidden />
             )}
             <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-              <div className="flex items-center rounded-full bg-[#0d1117] border border-emerald-900/30 p-1 gap-1" role="tablist" aria-label="Modalità AI">
-                {(['correction','revision','creation'] as const).map((mode) => {
-                  const active = analysisType === mode;
-                  const label = ANALYSIS_TYPE_LABELS[mode];
-                  const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      title={desc}
-                      onClick={() => setAnalysisType(mode)}
-                      className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-400 hover:text-emerald-300 hover:bg-emerald-900/30'}`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              <select
-                value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
-                className="bg-[#0d1117]/80 border border-emerald-900/30 rounded-xl px-2 py-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider focus:outline-none focus:border-primary hidden lg:block"
-                title="Altre analisi (legacy)"
-              >
-                <option value="">Altro…</option>
-                {(['full','security','performance','style','debug'] as const).map((k) => (
-                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
-                ))}
-              </select>
               <QuotaBadge className="hidden sm:flex" />
               <input
                 ref={fileInputRef}
@@ -2635,6 +2605,38 @@ export default function Chat() {
                       transition={{ type: "spring", stiffness: 320, damping: 30 }}
                       className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
                     >
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label="Modalità AI">
+                        {(['correction','revision','creation'] as const).map((mode) => {
+                          const active = analysisType === mode;
+                          const label = ANALYSIS_TYPE_LABELS[mode];
+                          const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
+                          return (
+                            <button
+                              key={mode}
+                              type="button"
+                              role="tab"
+                              aria-selected={active}
+                              title={desc}
+                              onClick={() => setAnalysisType(mode)}
+                              className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-400 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                        <select
+                          value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
+                          onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
+                          className="bg-[#010409] border border-emerald-900/30 rounded-full px-3 py-1.5 text-[11px] font-bold text-gray-400 focus:outline-none focus:border-primary"
+                          title="Altre analisi"
+                          aria-label="Altre modalità di analisi"
+                        >
+                          <option value="">Altro…</option>
+                          {(['full','security','performance','style','debug'] as const).map((k) => (
+                            <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="flex gap-2 items-end">
                         <textarea
                           value={chatInput}
@@ -2664,6 +2666,85 @@ export default function Chat() {
                           )}
                         </button>
                       </div>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all"
+                        >
+                          <FileText size={13} />
+                          File
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isZipLoading}
+                          onClick={() => zipInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
+                        >
+                          <Archive size={13} />
+                          {isZipLoading ? "ZIP…" : "ZIP"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowGithubComposer((v) => !v)}
+                          aria-expanded={showGithubComposer}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40"}`}
+                        >
+                          <Github size={13} />
+                          GitHub
+                        </button>
+                        {uploadedFiles.length > 0 && (
+                          <span className="text-[10px] text-primary font-mono ml-1">
+                            {uploadedFiles.length}/{MAX_UPLOAD_FILES} file
+                          </span>
+                        )}
+                      </div>
+                      {showGithubComposer && (
+                        <div className="flex gap-2 mt-2.5">
+                          <input
+                            type="url"
+                            value={githubUrl}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setGithubUrl(e.target.value)}
+                            onKeyDown={(e: ReactKeyboardEvent<HTMLInputElement>) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                importFromGitHub();
+                              }
+                            }}
+                            placeholder="https://github.com/.../blob/main/file.js"
+                            className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-primary"
+                          />
+                          <button
+                            type="button"
+                            disabled={isGithubLoading || !githubUrl.trim()}
+                            onClick={importFromGitHub}
+                            className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
+                          >
+                            {isGithubLoading ? "…" : "Importa"}
+                          </button>
+                        </div>
+                      )}
+                      {uploadedFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                          {uploadedFiles.map((file, index) => (
+                            <span
+                              key={`${file.name}-${index}`}
+                              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#061014] border border-emerald-900/30 text-[11px] text-gray-300"
+                            >
+                              <FileText size={11} className="text-primary/70" />
+                              <span className="max-w-[140px] truncate">{file.name}</span>
+                              <button
+                                type="button"
+                                aria-label={`Rimuovi ${file.name}`}
+                                onClick={() => removeUploadedFile(index)}
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                              >
+                                <X size={11} />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </motion.div>
                     <div className="flex flex-wrap justify-center gap-2 max-w-xs mt-5">
                       {["Trova bug", "Ottimizza", "Spiega codice", "Suggerisci fix"].map((suggestion) => (
@@ -2883,6 +2964,38 @@ export default function Chat() {
 
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI">
+              {(['correction','revision','creation'] as const).map((mode) => {
+                const active = analysisType === mode;
+                const label = ANALYSIS_TYPE_LABELS[mode];
+                const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    title={desc}
+                    onClick={() => setAnalysisType(mode)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-500 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              <select
+                value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
+                className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
+                title="Altre analisi"
+                aria-label="Altre modalità di analisi"
+              >
+                <option value="">Altro…</option>
+                {(['full','security','performance','style','debug'] as const).map((k) => (
+                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex gap-2 items-end">
               <textarea
                 value={chatInput}
@@ -2917,6 +3030,85 @@ export default function Chat() {
                 )}
               </button>
             </div>
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
+              >
+                <FileText size={12} />
+                File
+              </button>
+              <button
+                type="button"
+                disabled={isZipLoading}
+                onClick={() => zipInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
+              >
+                <Archive size={12} />
+                {isZipLoading ? "ZIP…" : "ZIP"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowGithubComposer((v) => !v)}
+                aria-expanded={showGithubComposer}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40"}`}
+              >
+                <Github size={12} />
+                GitHub
+              </button>
+              {uploadedFiles.length > 0 && (
+                <span className="text-[10px] text-primary font-mono ml-1">
+                  {uploadedFiles.length}/{MAX_UPLOAD_FILES} file
+                </span>
+              )}
+            </div>
+            {showGithubComposer && (
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="url"
+                  value={githubUrl}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setGithubUrl(e.target.value)}
+                  onKeyDown={(e: ReactKeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      importFromGitHub();
+                    }
+                  }}
+                  placeholder="https://github.com/.../blob/main/file.js"
+                  className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  disabled={isGithubLoading || !githubUrl.trim()}
+                  onClick={importFromGitHub}
+                  className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
+                >
+                  {isGithubLoading ? "…" : "Importa"}
+                </button>
+              </div>
+            )}
+            {uploadedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {uploadedFiles.map((file, index) => (
+                  <span
+                    key={`${file.name}-${index}`}
+                    className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#061014] border border-emerald-900/30 text-[11px] text-gray-300"
+                  >
+                    <FileText size={11} className="text-primary/70" />
+                    <span className="max-w-[140px] truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      aria-label={`Rimuovi ${file.name}`}
+                      onClick={() => removeUploadedFile(index)}
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             <p className="text-[10px] text-gray-600 mt-1.5 text-center">
               Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
             </p>
