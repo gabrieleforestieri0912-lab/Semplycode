@@ -57,6 +57,8 @@ import {
   FileCode,
   FolderInput,
   FolderX,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
@@ -564,6 +566,28 @@ export default function Chat() {
   const router = useRouter();
   const { user: sessionUser } = useSupabaseSession();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("semplycode:sidebar-pinned");
+      if (saved === "1") {
+        setIsSidebarPinned(true);
+        setIsSidebarExpanded(true);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const toggleSidebarPin = () => {
+    setIsSidebarPinned((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("semplycode:sidebar-pinned", next ? "1" : "0");
+      } catch { /* ignore */ }
+      if (next) setIsSidebarExpanded(true);
+      return next;
+    });
+  };
   const [code, setCode] = useState("");
   const [detectedLang, setDetectedLang] = useState("javascript");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1632,10 +1656,10 @@ export default function Chat() {
     }, 3000);
   };
 
-  const SIDEBAR_WIDTH = 260;
-  const SIDEBAR_COLLAPSED = 70;
+  const SIDEBAR_WIDTH = 320;
+  const SIDEBAR_COLLAPSED = 76;
   const showSidebarLabels =
-    isSidebarExpanded || (!isDesktop && isMobileSidebarOpen);
+    isSidebarPinned || isSidebarExpanded || (!isDesktop && isMobileSidebarOpen);
   const labelReveal = showSidebarLabels
     ? "opacity-100 max-w-[200px] delay-100"
     : "opacity-0 max-w-0 delay-0";
@@ -1645,7 +1669,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans">
       <AnimatePresence>
-        {isDesktop && isSidebarExpanded && (
+        {isDesktop && isSidebarExpanded && !isSidebarPinned && (
           <motion.div
             key="sidebar-backdrop"
             initial={{ opacity: 0 }}
@@ -1669,7 +1693,7 @@ export default function Chat() {
       <motion.aside
         initial={false}
         animate={{
-          width: isDesktop ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH,
+          width: isDesktop ? (isSidebarPinned || isSidebarExpanded ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED) : SIDEBAR_WIDTH,
           x: isDesktop ? 0 : isMobileSidebarOpen ? 0 : "-100%",
         }}
         transition={{ type: "tween", duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
@@ -1679,76 +1703,88 @@ export default function Chat() {
           initial={false}
           animate={{
             width: isDesktop
-              ? isSidebarExpanded
+              ? isSidebarPinned || isSidebarExpanded
                 ? SIDEBAR_WIDTH
                 : SIDEBAR_COLLAPSED
               : SIDEBAR_WIDTH,
           }}
           transition={{ type: "tween", duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
           onMouseEnter={() => {
-            if (isDesktop) setIsSidebarExpanded(true);
+            if (isDesktop && !isSidebarPinned) setIsSidebarExpanded(true);
           }}
           onMouseLeave={() => {
-            if (isDesktop) {
+            if (isDesktop && !isSidebarPinned) {
               setIsSidebarExpanded(false);
               setIsProfileOpen(false);
             }
           }}
-          className={`h-full bg-[#0d1117] border-r border-emerald-900/30 ${isDesktop
+          className={`h-full bg-[#0d1117] border-r border-emerald-900/30 ${isDesktop && !isSidebarPinned
               ? "absolute left-0 top-0 shadow-2xl overflow-hidden"
-              : "relative overflow-hidden"
+              : "relative overflow-hidden shadow-none"
             }`}
         >
           <div
             className="h-full flex flex-col"
             style={{ width: SIDEBAR_WIDTH }}
           >
-            <div className="flex items-center border-b border-emerald-900/20 h-16 shrink-0 w-full min-w-0">
-              <div className="w-[70px] shrink-0 flex justify-center items-center py-4">
+            <div className="flex items-center border-b border-emerald-900/20 h-[72px] shrink-0 w-full min-w-0 px-2">
+              <div className="w-[60px] shrink-0 flex justify-center items-center py-4">
                 <Link href="/" className="shrink-0 block">
                   <img
                     src="/semplycode.png"
                     alt="Semplycode"
-                    className="w-10 h-10 rounded-xl"
+                    className="w-11 h-11 rounded-xl"
                   />
                 </Link>
               </div>
               {showSidebarLabels && (
                 <span
-                  className={`font-bold text-white whitespace-nowrap overflow-hidden transition-all duration-150 ease-out pr-3 ${labelReveal}`}
+                  className={`font-bold text-[17px] text-white whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
                 >
                   Semplycode
                 </span>
               )}
+              {showSidebarLabels && isDesktop && (
+                <button
+                  type="button"
+                  onClick={toggleSidebarPin}
+                  title={isSidebarPinned ? "Sblocca sidebar (chiudi su hover-out)" : "Fissa sidebar aperta"}
+                  aria-label={isSidebarPinned ? "Sblocca sidebar" : "Fissa sidebar"}
+                  aria-pressed={isSidebarPinned}
+                  className={`ml-auto mr-1 shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border transition-all ${isSidebarPinned ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "bg-[#061014] border-emerald-900/20 text-gray-500 hover:text-white hover:border-emerald-500/40"}`}
+                >
+                  {isSidebarPinned ? <PinOff size={16} /> : <Pin size={16} />}
+                </button>
+              )}
             </div>
 
-            <nav className="flex-1 py-4 px-3 min-h-0 overflow-y-auto overflow-x-hidden">
+            <nav className="flex-1 py-5 px-4 min-h-0 overflow-y-auto overflow-x-hidden">
               {!showSidebarLabels ? (
-                <div className="flex flex-col items-center gap-3 py-2">
-                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
-                    <Plus size={18} />
+                <div className="flex flex-col items-center gap-3.5 py-2">
+                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
+                    <Plus size={20} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Cerca chat" aria-label="Cerca chat" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <Search size={16} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Cerca chat" aria-label="Cerca chat" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <Search size={18} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Progetti" aria-label="Progetti" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <FolderKanban size={16} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Progetti" aria-label="Progetti" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FolderKanban size={18} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Chat recenti" aria-label="Chat recenti" className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <FileCode size={16} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Chat recenti" aria-label="Chat recenti" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FileCode size={18} />
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {user ? (
                     <>
                       <button
                         type="button"
                         onClick={startNewChat}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white transition-all"
+                        className="w-full flex items-center gap-3.5 p-3.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white transition-all shadow-sm"
                       >
-                        <Plus size={18} className="shrink-0" />
-                        <span className="text-sm font-semibold whitespace-nowrap">
+                        <Plus size={20} className="shrink-0" />
+                        <span className="text-[15px] font-semibold whitespace-nowrap">
                           Nuova Chat
                         </span>
                       </button>
@@ -1756,25 +1792,25 @@ export default function Chat() {
                       {/* Search filter */}
                       {chatHistory.length > 0 && (
                         <div className="relative mb-2">
-                          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-600" />
+                          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
                           <input
                             type="text"
                             value={historySearch}
                             onChange={(e) => setHistorySearch(e.target.value)}
                             placeholder="Cerca chat..."
-                            className="w-full bg-[#061014] border border-emerald-900/20 rounded-lg pl-8 pr-2 py-1.5 text-xs text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/40"
+                            className="w-full bg-[#061014] border border-emerald-900/20 rounded-xl pl-9 pr-3 py-2 text-[13px] text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/40"
                           />
                         </div>
                       )}
 
                       {/* --- SEZIONE PROGETTI --- */}
-                      <div className="pt-1 pb-2 border-b border-emerald-900/20 space-y-2">
+                      <div className="pt-1.5 pb-2.5 border-b border-emerald-900/20 space-y-2.5">
                         <div className="flex items-center justify-between px-1">
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                            <FolderKanban size={13} className="text-emerald-400" />
+                          <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                            <FolderKanban size={15} className="text-emerald-400" />
                             <span>Progetti</span>
                             {projects.length > 0 && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/20">
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/20">
                                 {projects.length}
                               </span>
                             )}
@@ -1782,11 +1818,11 @@ export default function Chat() {
                           <button
                             type="button"
                             onClick={() => setIsCreatingProject(!isCreatingProject)}
-                            className="p-1 text-gray-400 hover:text-emerald-400 rounded-md hover:bg-emerald-950/40 transition-colors"
+                            className="p-1.5 text-gray-400 hover:text-emerald-400 rounded-lg hover:bg-emerald-950/40 transition-colors"
                             title="Nuovo progetto"
                             aria-label="Crea nuovo progetto"
                           >
-                            <FolderPlus size={14} />
+                            <FolderPlus size={16} />
                           </button>
                         </div>
 
@@ -2045,12 +2081,12 @@ export default function Chat() {
                       </div>
 
                       {/* --- SEZIONE CHAT RECENTI / SENZA PROGETTO --- */}
-                      <div className="space-y-1 pt-1">
-                        <div className="flex items-center justify-between px-1 mb-1">
-                          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                      <div className="space-y-1.5 pt-1.5">
+                        <div className="flex items-center justify-between px-1 mb-1.5">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
                             {projects.length > 0 ? "Senza Progetto" : "Chat Recenti"}
                           </span>
-                          <span className="text-[10px] text-gray-600">
+                          <span className="text-[11px] text-gray-600">
                             {chatHistory.filter((c) => !chatProjectMap[c._id]).length}
                           </span>
                         </div>
@@ -2091,7 +2127,7 @@ export default function Chat() {
                                     loadChat(chat);
                                   }
                                 }}
-                                className={`group flex items-center justify-between gap-1 p-2 rounded-lg cursor-pointer text-xs outline-none transition-colors ${currentChatId === chat._id
+                                className={`group flex items-center justify-between gap-1.5 p-2.5 rounded-xl cursor-pointer text-[13px] outline-none transition-colors ${currentChatId === chat._id
                                     ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
                                     : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
                                   }`}
@@ -2205,7 +2241,7 @@ export default function Chat() {
               )}
             </nav>
 
-            <div className="p-3 border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60">
+            <div className="p-4 border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60">
               {user ? (
                 <div className="relative">
                   <button
@@ -2215,9 +2251,9 @@ export default function Chat() {
                       setIsProfileOpen(next);
                       if (next && isDesktop) setIsSidebarExpanded(true);
                     }}
-                    className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0"
+                    className="w-full flex items-center gap-3.5 p-2.5 rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0"
                   >
-                    <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
+                    <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
                       {user.image ? (
                         <img
                           src={user.image}
@@ -2226,21 +2262,21 @@ export default function Chat() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User size={16} className="text-white" />
+                        <User size={18} className="text-white" />
                       )}
                     </div>
                     <div
                       className={`flex-1 text-left min-w-0 overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
                     >
-                      <p className="text-sm font-medium text-white truncate whitespace-nowrap">
+                      <p className="text-[15px] font-medium text-white truncate whitespace-nowrap">
                         {user.firstName || user.email?.split("@")[0]}
                       </p>
-                      <p className="text-xs text-gray-500 truncate whitespace-nowrap">
+                      <p className="text-[13px] text-gray-500 truncate whitespace-nowrap">
                         {user.email}
                       </p>
                     </div>
                     <ChevronDown
-                      size={16}
+                      size={18}
                       className={`shrink-0 text-gray-500 overflow-hidden transition-all duration-150 ease-out ${showSidebarLabels ? "opacity-100 w-4 delay-100" : "opacity-0 w-0"} ${isProfileOpen ? "rotate-180" : ""}`}
                     />
                   </button>
