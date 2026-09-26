@@ -6,7 +6,7 @@
 
 -- ─────────────────────────────────────────────────────────────
 -- 1) SISTEMA A TOKEN PER LA CHAT AI
--- Budget mensili: Free 100K · Starter 1,5M · Pro 3M · Enterprise illimitati.
+-- Budget mensili: Free 30K · Starter 1,5M · Pro 3M · Enterprise illimitati.
 -- Gli ospiti (no account) hanno un budget giornaliero di 30K token
 -- gestito lato server via Redis (nessuna colonna necessaria).
 -- ─────────────────────────────────────────────────────────────

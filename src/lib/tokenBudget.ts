@@ -3,7 +3,7 @@
  * `null` = illimitato.
  */
 export const PLAN_TOKEN_BUDGETS: Record<string, number | null> = {
-  free: 100_000,
+  free: 30_000,
   starter: 1_500_000,
   pro: 3_000_000,
   enterprise: null,

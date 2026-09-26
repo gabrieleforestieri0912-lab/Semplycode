@@ -163,7 +163,7 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 
 | Piano | Prezzo (Mensile / Annuale) | Budget crediti mensili | Display | Note |
 |-------|----------------------------|------------------------|---------|------|
-| Free | 0 € | 100K | 100.000 ≈ ~20 analisi | 1 credito = 1 token ≈ 4 char |
+| Free | 0 € | 30K | 30.000 ≈ ~6 analisi | 1 credito = 1 token ≈ 4 char |
 | Starter | 4.99 €/m (3.99 €/m ann.) | 1.5M | 1.500.000 ≈ ~300 analisi | — |
 | Pro | 7.99 €/m (6.39 €/m ann.) | 3M | 3.000.000 ≈ ~600 analisi | — |
 | Team | Su richiesta (lista d’attesa) | Su volumi concordati | — | Fino a 20 file, pool condiviso |
@@ -262,7 +262,7 @@ Il prompt system viene costruito in `analysisPrompts.ts`:
 ## Rate Limiting
 
 - **Ospiti**: 30K token/giorno (via Redis + cookie guest).
-- **Free**: 100K token/mese.
+- **Free**: 30K token/mese (≈ ~6 analisi).
 - **Starter**: 1.5M token/mese · **Pro**: 3M token/mese · **Enterprise**: illimitato.
 - **Login code**: max 3 richieste/minuto.
 

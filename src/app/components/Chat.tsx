@@ -2450,7 +2450,7 @@ export default function Chat() {
             </div>
           )}
           <div
-            className="flex-1 overflow-auto custom-scrollbar font-mono text-sm bg-[#0a0c10] min-h-0 max-h-[720px]"
+            className="flex-1 overflow-auto custom-scrollbar font-mono text-sm bg-[#0a0c10] min-h-0 max-h-[720px] relative"
 
           >
             {typeof window !== "undefined" && window.innerWidth < 640 ? (
@@ -2468,6 +2468,23 @@ export default function Chat() {
                 detectedLang={detectedLang}
               />
             )}
+            <AnimatePresence>
+              {!code.trim() && uploadedFiles.length === 0 && (
+                <motion.div
+                  key="editor-center-hint"
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -24, scale: 0.97 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none p-6"
+                >
+                  <div className="pointer-events-auto text-center max-w-sm bg-[#0d1117]/90 border border-emerald-900/30 rounded-2xl px-6 py-5 shadow-2xl">
+                    <p className="text-sm font-semibold text-white mb-1">Incolla il codice al centro</p>
+                    <p className="text-xs text-gray-500">Appena invii, l&apos;editor si compatta e la chat scorre in fondo con animazione</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
@@ -2564,15 +2581,55 @@ export default function Chat() {
                 ) : messages.length === 0 && !isLoading ? (
                   <motion.div
                     key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
                     className="h-full flex flex-col items-center justify-center text-center px-4"
                   >
                     <Sparkles size={36} className="mb-3 text-primary" />
-                    <p className="text-sm text-gray-400 mb-6">
+                    <p className="text-sm text-gray-400 mb-2">
                       Incolla il codice nell&apos;editor e l&apos;analisi partirà automaticamente
                     </p>
-                    <div className="flex flex-wrap justify-center gap-2 max-w-xs">
+                    <p className="text-xs text-gray-600 mb-5">
+                      oppure chiedi qui sotto — l&apos;input parte dal centro
+                    </p>
+                    <motion.div
+                      layoutId="chat-composer"
+                      transition={{ type: "spring", stiffness: 320, damping: 30 }}
+                      className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
+                    >
+                      <div className="flex gap-2 items-end">
+                        <textarea
+                          value={chatInput}
+                          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
+                          onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              sendChatMessage(chatInput);
+                            }
+                          }}
+                          rows={2}
+                          placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
+                          className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none custom-scrollbar"
+                          disabled={isLoading}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => sendChatMessage(chatInput)}
+                          disabled={!chatInput.trim() || isLoading}
+                          aria-label="Invia messaggio"
+                          className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
+                        >
+                          {isLoading ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <Send size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                    <div className="flex flex-wrap justify-center gap-2 max-w-xs mt-5">
                       {["Trova bug", "Ottimizza", "Spiega codice", "Suggerisci fix"].map((suggestion) => (
                         <button
                           key={suggestion}
@@ -2788,7 +2845,8 @@ export default function Chat() {
             )}
           </div>
 
-          <div className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+          {messages.length === 0 && !isLoading ? null : (
+          <motion.div layoutId="chat-composer" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
             <div className="flex gap-2 items-end">
               <textarea
                 value={chatInput}
@@ -2826,7 +2884,8 @@ export default function Chat() {
             <p className="text-[10px] text-gray-600 mt-1.5 text-center">
               Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
             </p>
-          </div>
+          </motion.div>
+          )}
         </section>
 
 

@@ -148,6 +148,7 @@ const DemoSection = () => {
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<"correction" | "revision" | "creation">("correction");
+  const [hasInteracted, setHasInteracted] = useState(false);
   const { user: session } = useSupabaseSession();
 
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -335,6 +336,7 @@ const DemoSection = () => {
   const performAutoAnalysis = async (currentCode: string) => {
     if (!currentCode.trim() || currentCode.length < 10) return;
 
+    setHasInteracted(true);
     setIsLoading(true);
     setMessages([
       { role: "assistant", content: "_AI sta analizzando il tuo codice..._" },
@@ -391,6 +393,7 @@ const DemoSection = () => {
   const handleCodeChange = (value: string) => {
     setCode(value);
     if (value.trim()) {
+      setHasInteracted(true);
       const lang = detectLanguage(value);
       setDetectedLang(lang);
     } else {
@@ -510,8 +513,8 @@ const DemoSection = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[380px] xs:min-h-[440px] lg:min-h-[580px] 2xl:min-h-[660px] 3xl:min-h-[720px]">
-        <div className="flex flex-col min-h-[300px] lg:min-h-0 bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:border-emerald-300">
+      <motion.div layout initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[380px] xs:min-h-[440px] lg:min-h-[580px] 2xl:min-h-[660px] 3xl:min-h-[720px]">
+        <motion.div layout transition={{ type: "spring", stiffness: 260, damping: 28 }} className={`flex flex-col min-h-[300px] lg:min-h-0 bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm transition-all duration-300 hover:border-emerald-300 ${!hasInteracted && !code.trim() ? "lg:col-span-2 max-w-2xl w-full mx-auto" : ""}`}>
           <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
             <Code2 className="text-primary w-4 h-4" />
             {detectedLang ? (
@@ -574,7 +577,7 @@ const DemoSection = () => {
               className="h-full max-h-[720px]"
             />
           </div>
-        </div>
+        </motion.div>
 
         <div className="flex flex-col bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm relative min-h-[300px] lg:min-h-0">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
@@ -692,16 +695,16 @@ const DemoSection = () => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
       {!isLoading && code.trim() && (
-        <div className="flex justify-center mt-6">
+        <motion.div layout initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="flex justify-center mt-6">
           <button
             onClick={() => performAutoAnalysis(code)}
             className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-md"
           >
             Analizza Codice
           </button>
-        </div>
+        </motion.div>
       )}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

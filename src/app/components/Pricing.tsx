@@ -115,12 +115,12 @@ const Pricing = () => {
       monthlySuffix: "/mo",
       billedMonthlyNote: "Billed monthly",
       billedAnnuallyNote: "/year billed annually",
-      freeNote: "Free forever, no card needed · ~20 analyses / mo",
+      freeNote: "Free forever, no card needed · ~6 analyses / mo",
       getStarted: "Get Started",
       waitlistCta: "Join waitlist",
       popular: "Most Popular",
       secure: "Secure payments via Stripe · Cancel anytime",
-      creditsFootnote: "1 credit = 1 token ≈ 4 characters (src/lib/tokenBudget.ts). ~20 analyses estimated on ~5k credits per analysis (code + response); actual count varies with length.",
+      creditsFootnote: "1 credit = 1 token ≈ 4 characters (src/lib/tokenBudget.ts:16). ~6 analyses for Free (30k), ~300 for Starter, ~600 for Pro — ~5k credits per analysis (code + response); actual count varies with length.",
       plans: [
         {
           id: "free",
@@ -132,7 +132,7 @@ const Pricing = () => {
           },
           tagline: "Start building for free",
           features: [
-            "100,000 credits / mo ≈ ~20 analyses*",
+            "30,000 credits / mo ≈ ~6 analyses*",
             "Standard model",
             "Web Editor + auto language detection",
             "Basic error detection with line + Italian explanation",
@@ -215,12 +215,12 @@ const Pricing = () => {
       monthlySuffix: "/mese",
       billedMonthlyNote: "Fatturazione mensile",
       billedAnnuallyNote: "/anno fatturati annualmente",
-      freeNote: "Sempre gratis, nessuna carta richiesta · ~20 analisi / mese",
+      freeNote: "Sempre gratis, nessuna carta richiesta · ~6 analisi / mese",
       getStarted: "Inizia Ora",
       waitlistCta: "Iscriviti alla lista d’attesa",
       popular: "Più Popolare",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
-      creditsFootnote: "1 credito = 1 token ≈ 4 caratteri (src/lib/tokenBudget.ts:16). ~20 analisi stimate su ~5.000 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
+      creditsFootnote: "1 credito = 1 token ≈ 4 caratteri (src/lib/tokenBudget.ts:16). ~6 analisi per Gratis (30k), ~300 per Starter, ~600 per Pro — ~5.000 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
       plans: [
         {
           id: "free",
@@ -232,7 +232,7 @@ const Pricing = () => {
           },
           tagline: "Inizia a costruire gratis",
           features: [
-            "100.000 crediti / mese ≈ ~20 analisi*",
+            "30.000 crediti / mese ≈ ~6 analisi*",
             "Modello standard",
             "Editor web + rilevamento linguaggio automatico",
             "Rilevamento errori base con riga + spiegazione italiana",

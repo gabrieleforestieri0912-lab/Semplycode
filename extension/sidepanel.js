@@ -315,10 +315,10 @@ const ACCOUNT_PLANS = [
     id: "free",
     name: "Gratis",
     price: "0",
-    tokensLabel: "100.000",
-    tokensNote: "crediti/mese ≈ ~20 analisi",
+    tokensLabel: "30.000",
+    tokensNote: "crediti/mese ≈ ~6 analisi",
     features: [
-      "100.000 crediti / mese ≈ ~20 analisi",
+      "30.000 crediti / mese ≈ ~6 analisi",
       "Modello standard",
       "Editor web + rilevamento lingua",
       "Rilevamento errori base + spiegazione",

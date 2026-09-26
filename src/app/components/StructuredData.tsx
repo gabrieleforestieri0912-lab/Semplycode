@@ -61,7 +61,7 @@ const softwareSchema = {
         name: "Gratis",
         price: "0",
         priceCurrency: "EUR",
-        description: "100.000 crediti / mese ≈ ~20 analisi — 1 credito ≈ 4 caratteri",
+        description: "30.000 crediti / mese ≈ ~6 analisi — 1 credito ≈ 4 caratteri",
       },
       {
         "@type": "Offer",

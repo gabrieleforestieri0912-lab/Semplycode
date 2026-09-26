@@ -155,7 +155,7 @@ export default function DashboardPage() {
   const allChats: ChatItem[] = historyData?.chats || [];
   const allNotes: NoteItem[] = notesData?.notes || [];
   const recentChats = allChats.slice(0, 6);
-  const resolvedStats = stats || { tokensUsed: 0, chats: allChats.length, remainingTokens: 100000, tokenLimit: 100000, plan: 'free' };
+  const resolvedStats = stats || { tokensUsed: 0, chats: allChats.length, remainingTokens: 30000, tokenLimit: 30000, plan: 'free' };
   const planLabel = { enterprise: 'Enterprise', pro: 'Pro', starter: 'Starter' }[resolvedStats.plan] || 'Gratuito';
   const remainingLabel = resolvedStats.remainingTokens === null ? '∞' : formatTokens(resolvedStats.remainingTokens ?? 0);
   const weeklyActivity = buildWeeklyActivity(allChats);
