@@ -3,6 +3,7 @@
 import useSWR from "swr";
 import Link from "next/link";
 import { formatTokens } from "@/lib/tokenBudget";
+import { useLanguage } from "@/context/LanguageContext";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -11,6 +12,24 @@ interface QuotaBadgeProps {
 }
 
 export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      guest: "Ospite",
+      free: "Gratuito",
+      today: "oggi",
+      perMonth: "al mese",
+      register: "Registrati",
+    },
+    en: {
+      guest: "Guest",
+      free: "Free",
+      today: "today",
+      perMonth: "/mo",
+      register: "Sign up",
+    },
+  }[language];
+
   const { data: stats, mutate } = useSWR("/api/usage/stats", fetcher, {
     revalidateOnFocus: false,
     refreshInterval: 60000,
@@ -38,8 +57,8 @@ export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
         : stats.plan === "starter"
           ? "Starter"
           : stats.plan === "guest"
-            ? "Ospite"
-            : "Gratuito";
+            ? t.guest
+            : t.free;
 
   const exhausted = stats.remainingTokens === 0;
 
@@ -49,14 +68,14 @@ export default function QuotaBadge({ className = "" }: QuotaBadgeProps) {
     >
       <span className="text-gray-500">{planLabel}</span>
       <span className="text-primary">
-        {remaining}/{limit} {stats.plan === "guest" ? "oggi" : "al mese"}
+        {remaining}/{limit} {stats.plan === "guest" ? t.today : t.perMonth}
       </span>
       {stats.plan === "guest" && exhausted && (
         <Link
           href="/register"
           className="text-primary underline normal-case tracking-normal"
         >
-          Registrati
+          {t.register}
         </Link>
       )}
       {stats.plan !== "guest" && stats.plan !== "enterprise" && exhausted && (

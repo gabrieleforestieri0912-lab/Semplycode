@@ -15,6 +15,7 @@ import Navbar from '@/app/components/Navbar';
 import Footer from '@/app/components/Footer';
 import { formatTokens } from '@/lib/tokenBudget';
 import { SkeletonPage } from '@/app/components/Skeleton';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface UserInfo { firstName: string; lastName: string; email: string; }
 
@@ -49,16 +50,16 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-function getDayName(dateStr: string, short = true) {
+function getDayName(dateStr: string, short = true, locale = 'it-IT') {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('it-IT', { weekday: short ? 'short' : 'long' });
+  return d.toLocaleDateString(locale, { weekday: short ? 'short' : 'long' });
 }
 
 function isoToDate(s: string | undefined) {
   return s ? new Date(s) : null;
 }
 
-function buildWeeklyActivity(chats: ChatItem[]) {
+function buildWeeklyActivity(chats: ChatItem[], locale = 'it-IT') {
   const days: Record<string, number> = {};
   const now = new Date();
   for (let i = 6; i >= 0; i--) {
@@ -73,7 +74,7 @@ function buildWeeklyActivity(chats: ChatItem[]) {
     const key = new Date(raw).toISOString().slice(0, 10);
     if (key in days) days[key]++;
   }
-  return Object.entries(days).map(([date, count]) => ({ date, count, label: getDayName(date) }));
+  return Object.entries(days).map(([date, count]) => ({ date, count, label: getDayName(date, true, locale) }));
 }
 
 function buildLanguageStats(chats: ChatItem[]) {
@@ -124,6 +125,110 @@ const container: Variants = { hidden: { opacity: 0 }, visible: { opacity: 1, tra
 const item: Variants = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } } };
 
 export default function DashboardPage() {
+  const { language } = useLanguage();
+  const locale = language === 'en' ? 'en-US' : 'it-IT';
+  const t = {
+    it: {
+      welcome: 'Benvenuto,',
+      dayStreak: 'giorni di fila',
+      free: 'Gratuito',
+      tokensLeft: 'Token rimasti',
+      unlimited: 'illimitati',
+      ofPrefix: 'su',
+      perMonthSuffix: '/mese',
+      used: 'Usati',
+      projected: 'Proiezione:',
+      totalSessions: 'sessioni totali',
+      notes: 'Note',
+      categorized: 'categorizzate',
+      activityTitle: 'Attività ultimi 7 giorni',
+      activitySub: 'Numero di chat AI per giorno',
+      total: 'totali',
+      languages: 'Linguaggi',
+      noLangs: 'Inizia una chat per vedere i tuoi linguaggi preferiti.',
+      plan: 'Piano',
+      active: 'ATTIVO',
+      unlimitedTokens: 'Token illimitati',
+      usedThisMonth: 'token usati questo mese',
+      managePlan: 'Gestisci piano',
+      monthlyUsage: 'Utilizzo mensile',
+      runningOut: 'Stai per esaurire i token mensili.',
+      upgrade: "Fai l'upgrade",
+      quickActions: 'Azioni rapide',
+      analyzeCode: 'Analizza codice',
+      drawer: 'Il Cassetto',
+      noteWord: 'note',
+      settings: 'Impostazioni',
+      accountTheme: 'Account & tema',
+      moreTokens: 'Più token',
+      recentSessions: 'Sessioni recenti',
+      openEditor: 'Apri editor',
+      newAnalysis: 'Nuova analisi',
+      noSessions: 'Nessuna sessione ancora',
+      noSessionsSub: 'Inizia una chat AI per vedere qui la cronologia',
+      startNow: 'Inizia ora',
+      nextSteps: 'Prossimi passi',
+      tip1Title: 'Analizza un progetto',
+      tip1Body: 'Incolla più file o un ZIP e chiedi un feedback architetturale completo.',
+      tip2Title: 'Rivedi le note',
+      tip2BodyA: 'Hai',
+      tip2BodyB: 'note da ripassare nel Cassetto.',
+      tip3Title: 'Mantieni lo streak',
+      tip3BodyOn: 'Sei a {n} giorni consecutivi! Continua così.',
+      tip3BodyOff: "Inizia oggi la tua prima sessione per accendere lo streak.",
+      updatedLive: 'aggiornato in tempo reale',
+    },
+    en: {
+      welcome: 'Welcome,',
+      dayStreak: 'day streak',
+      free: 'Free',
+      tokensLeft: 'Tokens left',
+      unlimited: 'unlimited',
+      ofPrefix: 'of',
+      perMonthSuffix: '/mo',
+      used: 'Used',
+      projected: 'Projected:',
+      totalSessions: 'total sessions',
+      notes: 'Notes',
+      categorized: 'categorized',
+      activityTitle: 'Last 7 days activity',
+      activitySub: 'AI chats per day',
+      total: 'total',
+      languages: 'Languages',
+      noLangs: 'Start a chat to see your favorite languages.',
+      plan: 'Plan',
+      active: 'ACTIVE',
+      unlimitedTokens: 'Unlimited tokens',
+      usedThisMonth: 'tokens used this month',
+      managePlan: 'Manage plan',
+      monthlyUsage: 'Monthly usage',
+      runningOut: "You're running out of monthly tokens.",
+      upgrade: 'Upgrade',
+      quickActions: 'Quick actions',
+      analyzeCode: 'Analyze code',
+      drawer: 'My Drawer',
+      noteWord: 'notes',
+      settings: 'Settings',
+      accountTheme: 'Account & theme',
+      moreTokens: 'More tokens',
+      recentSessions: 'Recent sessions',
+      openEditor: 'Open editor',
+      newAnalysis: 'New analysis',
+      noSessions: 'No sessions yet',
+      noSessionsSub: 'Start an AI chat to see history here',
+      startNow: 'Start now',
+      nextSteps: 'Next steps',
+      tip1Title: 'Analyze a project',
+      tip1Body: 'Paste multiple files or a ZIP and ask for a full architectural review.',
+      tip2Title: 'Review your notes',
+      tip2BodyA: 'You have',
+      tip2BodyB: 'notes to review in the Drawer.',
+      tip3Title: 'Keep the streak',
+      tip3BodyOn: "You're on a {n}-day streak! Keep going.",
+      tip3BodyOff: 'Start your first session today to ignite the streak.',
+      updatedLive: 'updated in real time',
+    },
+  }[language];
   const router = useRouter();
   const { user: supabaseUser, status } = useSupabaseSession();
   const user: UserInfo | null = supabaseUser
@@ -156,9 +261,9 @@ export default function DashboardPage() {
   const allNotes: NoteItem[] = notesData?.notes || [];
   const recentChats = allChats.slice(0, 6);
   const resolvedStats = stats || { tokensUsed: 0, chats: allChats.length, remainingTokens: 30000, tokenLimit: 30000, plan: 'free' };
-  const planLabel = { enterprise: 'Enterprise', pro: 'Pro', starter: 'Starter' }[resolvedStats.plan] || 'Gratuito';
+  const planLabel = { enterprise: 'Enterprise', pro: 'Pro', starter: 'Starter' }[resolvedStats.plan] || t.free;
   const remainingLabel = resolvedStats.remainingTokens === null ? '∞' : formatTokens(resolvedStats.remainingTokens ?? 0);
-  const weeklyActivity = buildWeeklyActivity(allChats);
+  const weeklyActivity = buildWeeklyActivity(allChats, locale);
   const maxActivity = Math.max(...weeklyActivity.map((d) => d.count), 1);
   const langStats = buildLanguageStats(allChats);
   const streak = calcStreak(allChats);
@@ -184,14 +289,14 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-black text-[#0f172a] tracking-tight">Dashboard</h1>
-                <p className="text-sm text-[#64748b] mt-0.5">Benvenuto, <span className="text-emerald-600 font-semibold">{user.firstName}</span></p>
+                <p className="text-sm text-[#64748b] mt-0.5">{t.welcome} <span className="text-emerald-600 font-semibold">{user.firstName}</span></p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               {streak > 0 && (
                 <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-2">
                   <Flame className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm font-bold text-orange-600">{streak} giorni di fila</span>
+                  <span className="text-sm font-bold text-orange-600">{streak} {t.dayStreak}</span>
                 </div>
               )}
               <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">
@@ -211,13 +316,13 @@ export default function DashboardPage() {
                   <div className="w-8 h-8 bg-emerald-50 rounded-xl flex items-center justify-center">
                     <Zap className="w-4 h-4 text-emerald-500" />
                   </div>
-                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Token rimasti</span>
+                  <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">{t.tokensLeft}</span>
                 </div>
                 <p className="text-4xl font-black text-[#0f172a] tracking-tighter">{remainingLabel}</p>
                 <div className="mt-3 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all" style={{ width: `${100 - usagePct}%` }} />
                 </div>
-                <p className="text-xs text-[#64748b] mt-1.5">{resolvedStats.tokenLimit == null ? 'illimitati' : `su ${formatTokens(resolvedStats.tokenLimit)}/mese`}</p>
+                <p className="text-xs text-[#64748b] mt-1.5">{resolvedStats.tokenLimit == null ? t.unlimited : `${t.ofPrefix} ${formatTokens(resolvedStats.tokenLimit)}${t.perMonthSuffix}`}</p>
               </div>
             </div>
 
@@ -229,12 +334,12 @@ export default function DashboardPage() {
                   <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center">
                     <TrendingUp className="w-4 h-4 text-violet-500" />
                   </div>
-                  <span className="text-xs font-semibold text-violet-600 uppercase tracking-wide">Usati</span>
+                  <span className="text-xs font-semibold text-violet-600 uppercase tracking-wide">{t.used}</span>
                 </div>
                 <p className="text-4xl font-black text-[#0f172a] tracking-tighter">{formatTokens(resolvedStats.tokensUsed)}</p>
                 {tokenTrend && (
                   <p className="text-xs text-[#64748b] mt-2">
-                    Proiezione: <span className={`font-semibold ${tokenTrend.pct > 100 ? 'text-red-500' : 'text-violet-500'}`}>{formatTokens(tokenTrend.projected)}</span>
+                    {t.projected} <span className={`font-semibold ${tokenTrend.pct > 100 ? 'text-red-500' : 'text-violet-500'}`}>{formatTokens(tokenTrend.projected)}</span>
                   </p>
                 )}
               </div>
@@ -251,7 +356,7 @@ export default function DashboardPage() {
                   <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Chat AI</span>
                 </div>
                 <p className="text-4xl font-black text-[#0f172a] tracking-tighter">{allChats.length}</p>
-                <p className="text-xs text-[#64748b] mt-2">sessioni totali</p>
+                <p className="text-xs text-[#64748b] mt-2">{t.totalSessions}</p>
               </div>
             </div>
 
@@ -263,10 +368,10 @@ export default function DashboardPage() {
                   <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">
                     <BookOpen className="w-4 h-4 text-amber-500" />
                   </div>
-                  <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">Note</span>
+                  <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">{t.notes}</span>
                 </div>
                 <p className="text-4xl font-black text-[#0f172a] tracking-tighter">{allNotes.length}</p>
-                <p className="text-xs text-[#64748b] mt-2">{readyNotes} categorizzate</p>
+                <p className="text-xs text-[#64748b] mt-2">{readyNotes} {t.categorized}</p>
               </div>
             </div>
           </motion.div>
@@ -278,11 +383,11 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="font-bold text-[#0f172a] flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-emerald-500" /> Attività ultimi 7 giorni
+                    <Activity className="w-4 h-4 text-emerald-500" /> {t.activityTitle}
                   </h2>
-                  <p className="text-xs text-[#64748b] mt-0.5">Numero di chat AI per giorno</p>
+                  <p className="text-xs text-[#64748b] mt-0.5">{t.activitySub}</p>
                 </div>
-                <span className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-medium">{allChats.length} totali</span>
+                <span className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-medium">{allChats.length} {t.total}</span>
               </div>
               <div className="flex items-end gap-3 h-36">
                 {weeklyActivity.map((day, i) => {
@@ -307,7 +412,7 @@ export default function DashboardPage() {
             {/* Language breakdown */}
             <div className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm">
               <h2 className="font-bold text-[#0f172a] flex items-center gap-2 mb-4">
-                <Globe className="w-4 h-4 text-violet-500" /> Linguaggi
+                <Globe className="w-4 h-4 text-violet-500" /> {t.languages}
               </h2>
               {langStats.length > 0 ? (
                 <div className="space-y-3">
@@ -324,7 +429,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-[#64748b] mt-4">Inizia una chat per vedere i tuoi linguaggi preferiti.</p>
+                <p className="text-sm text-[#64748b] mt-4">{t.noLangs}</p>
               )}
             </div>
           </motion.div>
@@ -335,21 +440,21 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                 <div>
                   <h2 className="font-bold text-[#0f172a] flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-amber-500" /> Piano {planLabel}
-                    <span className="ml-1 px-2 py-0.5 text-xs bg-emerald-50 text-emerald-600 rounded-full font-medium">ATTIVO</span>
+                    <Crown className="w-4 h-4 text-amber-500" /> {t.plan} {planLabel}
+                    <span className="ml-1 px-2 py-0.5 text-xs bg-emerald-50 text-emerald-600 rounded-full font-medium">{t.active}</span>
                   </h2>
                   <p className="text-xs text-[#64748b] mt-0.5">
-                    {resolvedStats.tokenLimit == null ? 'Token illimitati' : `${formatTokens(resolvedStats.tokensUsed)} / ${formatTokens(resolvedStats.tokenLimit)} token usati questo mese`}
+                    {resolvedStats.tokenLimit == null ? t.unlimitedTokens : `${formatTokens(resolvedStats.tokensUsed)} / ${formatTokens(resolvedStats.tokenLimit)} ${t.usedThisMonth}`}
                   </p>
                 </div>
                 <Link href="/#prezzi" className="text-sm text-emerald-600 hover:underline flex items-center gap-1 whitespace-nowrap font-medium">
-                  Gestisci piano <ArrowRight className="w-4 h-4" />
+                  {t.managePlan} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
               {resolvedStats.tokenLimit != null && (
                 <>
                   <div className="flex items-center justify-between text-xs text-[#64748b] mb-1.5">
-                    <span>Utilizzo mensile</span>
+                    <span>{t.monthlyUsage}</span>
                     <span className={`font-semibold ${usagePct > 80 ? 'text-red-500' : usagePct > 60 ? 'text-amber-500' : 'text-emerald-600'}`}>{Math.round(usagePct)}%</span>
                   </div>
                   <div className="h-2.5 bg-[#f1f5f9] rounded-full overflow-hidden">
@@ -360,7 +465,7 @@ export default function DashboardPage() {
                   </div>
                   {usagePct > 80 && (
                     <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                      Stai per esaurire i token mensili. <Link href="/#prezzi" className="underline">Fai l&apos;upgrade</Link>
+                      {t.runningOut} <Link href="/#prezzi" className="underline">{t.upgrade}</Link>
                     </p>
                   )}
                 </>
@@ -371,14 +476,14 @@ export default function DashboardPage() {
           {/* ── Quick actions ── */}
           <motion.div variants={item}>
             <h2 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-500" /> Azioni rapide
+              <Sparkles className="w-5 h-5 text-emerald-500" /> {t.quickActions}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { href: '/chat', icon: Code2, label: 'Chat AI', sub: 'Analizza codice', color: 'emerald' },
-                { href: '/notes', icon: BookOpen, label: 'Il Cassetto', sub: `${allNotes.length} note`, color: 'amber' },
-                { href: '/settings', icon: Sparkles, label: 'Impostazioni', sub: 'Account & tema', color: 'violet' },
-                { href: '/#prezzi', icon: CreditCard, label: 'Upgrade', sub: 'Più token', color: 'blue' },
+                { href: '/chat', icon: Code2, label: 'Chat AI', sub: t.analyzeCode, color: 'emerald' },
+                { href: '/notes', icon: BookOpen, label: t.drawer, sub: `${allNotes.length} ${t.noteWord}`, color: 'amber' },
+                { href: '/settings', icon: Sparkles, label: t.settings, sub: t.accountTheme, color: 'violet' },
+                { href: '/#prezzi', icon: CreditCard, label: 'Upgrade', sub: t.moreTokens, color: 'blue' },
               ].map(({ href, icon: Icon, label, sub, color }) => (
                 <Link key={href} href={href}>
                   <div className={`group bg-white border border-[#e2e8f0] rounded-2xl p-4 hover:border-${color}-300 hover:shadow-md transition-all cursor-pointer h-full`}>
@@ -397,10 +502,10 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-[#0f172a] flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-500" /> Sessioni recenti
+                <Clock className="w-5 h-5 text-blue-500" /> {t.recentSessions}
               </h2>
               <Link href="/chat" className="text-sm text-emerald-600 hover:underline flex items-center gap-1">
-                Apri editor <ChevronRight className="w-4 h-4" />
+                {t.openEditor} <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             {recentChats.length > 0 ? (
@@ -420,10 +525,10 @@ export default function DashboardPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-medium text-[#0f172a] group-hover:text-emerald-600 transition-colors text-sm truncate">
-                            {chat.title || 'Nuova analisi'}
+                            {chat.title || t.newAnalysis}
                           </p>
                           <p className="text-xs text-[#64748b]">
-                            {chat.language || 'code'} · {date ? new Date(date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '–'}
+                            {chat.language || 'code'} · {date ? new Date(date).toLocaleDateString(locale, { day: '2-digit', month: 'short' }) : '–'}
                           </p>
                         </div>
                       </div>
@@ -435,10 +540,10 @@ export default function DashboardPage() {
             ) : (
               <div className="bg-white border border-[#e2e8f0] rounded-2xl p-8 text-center">
                 <MessageSquare className="w-10 h-10 text-[#cbd5e1] mx-auto mb-3" />
-                <p className="text-sm font-medium text-[#64748b]">Nessuna sessione ancora</p>
-                <p className="text-xs text-[#94a3b8] mt-1">Inizia una chat AI per vedere qui la cronologia</p>
+                <p className="text-sm font-medium text-[#64748b]">{t.noSessions}</p>
+                <p className="text-xs text-[#94a3b8] mt-1">{t.noSessionsSub}</p>
                 <Link href="/chat" className="inline-flex items-center gap-1 mt-4 text-sm text-emerald-600 font-medium hover:underline">
-                  Inizia ora <ArrowRight className="w-4 h-4" />
+                  {t.startNow} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             )}
@@ -447,13 +552,13 @@ export default function DashboardPage() {
           {/* ── Tips ── */}
           <motion.div variants={item}>
             <h2 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-amber-500" /> Prossimi passi
+              <Lightbulb className="w-5 h-5 text-amber-500" /> {t.nextSteps}
             </h2>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
-                { icon: Target, color: 'emerald', title: 'Analizza un progetto', body: 'Incolla più file o un ZIP e chiedi un feedback architetturale completo.', href: '/chat' },
-                { icon: Award, color: 'amber', title: 'Rivedi le note', body: `Hai ${allNotes.filter((n) => n.leitner_box === 1 || !n.leitner_box).length} note da ripassare nel Cassetto.`, href: '/notes' },
-                { icon: Flame, color: 'orange', title: 'Mantieni lo streak', body: streak > 0 ? `Sei a ${streak} giorni consecutivi! Continua così.` : 'Inizia oggi la tua prima sessione per accendere lo streak.', href: '/chat' },
+                { icon: Target, color: 'emerald', title: t.tip1Title, body: t.tip1Body, href: '/chat' },
+                { icon: Award, color: 'amber', title: t.tip2Title, body: `${t.tip2BodyA} ${allNotes.filter((n) => n.leitner_box === 1 || !n.leitner_box).length} ${t.tip2BodyB}`, href: '/notes' },
+                { icon: Flame, color: 'orange', title: t.tip3Title, body: streak > 0 ? t.tip3BodyOn.replace('{n}', String(streak)) : t.tip3BodyOff, href: '/chat' },
               ].map(({ icon: Icon, color, title, body, href }) => (
                 <Link key={title} href={href}>
                   <div className={`group bg-white border border-[#e2e8f0] rounded-2xl p-5 hover:border-${color}-200 hover:shadow-sm cursor-pointer transition-all h-full`}>
@@ -471,7 +576,7 @@ export default function DashboardPage() {
           {/* ── Footer note ── */}
           <motion.div variants={item} className="flex justify-end pt-2 border-t border-[#f1f5f9]">
             <p className="text-xs text-[#94a3b8]">
-              <span className="font-semibold text-emerald-600">Semplycode</span> · aggiornato in tempo reale
+              <span className="font-semibold text-emerald-600">Semplycode</span> · {t.updatedLive}
             </p>
           </motion.div>
         </motion.div>

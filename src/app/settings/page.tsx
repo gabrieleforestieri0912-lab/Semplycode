@@ -49,12 +49,20 @@ const cardVariants: Variants = {
 };
 
 function PlanBadge({ plan }: { plan: string }) {
-  const map: Record<string, { label: string; color: string }> = {
-    free:       { label: "Piano Gratuito",  color: "bg-slate-100 text-slate-600 border-slate-200" },
-    starter:    { label: "Piano Starter",   color: "bg-blue-50 text-blue-600 border-blue-200" },
-    pro:        { label: "Piano Pro",       color: "bg-violet-50 text-violet-600 border-violet-200" },
-    enterprise: { label: "Enterprise",     color: "bg-amber-50 text-amber-600 border-amber-200" },
-  };
+  const { language } = useLanguage();
+  const map: Record<string, { label: string; color: string }> = language === "en"
+    ? {
+        free:       { label: "Free Plan",     color: "bg-slate-100 text-slate-600 border-slate-200" },
+        starter:    { label: "Starter Plan",  color: "bg-blue-50 text-blue-600 border-blue-200" },
+        pro:        { label: "Pro Plan",      color: "bg-violet-50 text-violet-600 border-violet-200" },
+        enterprise: { label: "Enterprise",    color: "bg-amber-50 text-amber-600 border-amber-200" },
+      }
+    : {
+        free:       { label: "Piano Gratuito",  color: "bg-slate-100 text-slate-600 border-slate-200" },
+        starter:    { label: "Piano Starter",   color: "bg-blue-50 text-blue-600 border-blue-200" },
+        pro:        { label: "Piano Pro",       color: "bg-violet-50 text-violet-600 border-violet-200" },
+        enterprise: { label: "Enterprise",     color: "bg-amber-50 text-amber-600 border-amber-200" },
+      };
   const { label, color } = map[plan] ?? map.free;
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${color}`}>
@@ -72,6 +80,78 @@ export default function SettingsPage() {
   const [feedback, setFeedback] = useState<FeedbackInfo | null>(null);
   const { language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const t = {
+    it: {
+      activeAccount: "Account attivo",
+      personalInfo: "Informazioni personali",
+      firstName: "Nome",
+      lastName: "Cognome",
+      emailLocked: "L'email non può essere modificata.",
+      subscription: "Abbonamento",
+      tokensFree: "30 crediti / mese ≈ ~6 analisi",
+      tokensStarter: "1.500 crediti / mese ≈ ~300 analisi",
+      tokensPro: "3.000 crediti / mese ≈ ~600 analisi",
+      tokensEnterprise: "Team — lista d’attesa (crediti su richiesta)",
+      language: "Lingua",
+      theme: "Tema",
+      darkTheme: "Tema scuro",
+      lightTheme: "Tema chiaro",
+      darkDesc: "Passa al tema chiaro per una visuale più luminosa",
+      lightDesc: "Passa al tema scuro per minore affaticamento visivo",
+      toggleTheme: "Cambia tema",
+      exportTitle: "Esportazione & Download",
+      customizable: "Personalizzabile",
+      exportDesc: "Configura il percorso o prefisso di salvataggio per i file di codice (.py, .ts, .js, .html, ecc.) e le chat AI esportate.",
+      exportPathLabel: "Cartella o Percorso di destinazione preferito",
+      exportPathPh: "es. C:/Progetti/Semplycode oppure Semplycode/Exports",
+      exportHint: "Suggerimento: puoi anche impostare la cartella dei download predefinita nelle impostazioni del tuo browser per salvare i file scaricati direttamente in questo percorso.",
+      prefixLabel: "Includi nome cartella come prefisso file",
+      prefixExA: "Es.",
+      prefixExB: "per identificare subito la provenienza del file.",
+      savedOk: "Modifiche e impostazioni di esportazione salvate con successo.",
+      saveFailed: "Salvataggio non riuscito",
+      noChanges: "Nessuna modifica da salvare",
+      saveChangesTitle: "Salva le modifiche",
+      saving: "Salvataggio...",
+      save: "Salva Modifiche",
+      logout: "Esci dall'account",
+    },
+    en: {
+      activeAccount: "Active account",
+      personalInfo: "Personal info",
+      firstName: "First name",
+      lastName: "Last name",
+      emailLocked: "Email cannot be changed.",
+      subscription: "Subscription",
+      tokensFree: "30 credits / mo ≈ ~6 analyses",
+      tokensStarter: "1,500 credits / mo ≈ ~300 analyses",
+      tokensPro: "3,000 credits / mo ≈ ~600 analyses",
+      tokensEnterprise: "Team — waitlist (credits on request)",
+      language: "Language",
+      theme: "Theme",
+      darkTheme: "Dark theme",
+      lightTheme: "Light theme",
+      darkDesc: "Switch to the light theme for a brighter view",
+      lightDesc: "Switch to the dark theme for less eye strain",
+      toggleTheme: "Toggle theme",
+      exportTitle: "Export & Download",
+      customizable: "Customizable",
+      exportDesc: "Configure the save path or prefix for code files (.py, .ts, .js, .html, etc.) and exported AI chats.",
+      exportPathLabel: "Preferred destination folder or path",
+      exportPathPh: "e.g. C:/Projects/Semplycode or Semplycode/Exports",
+      exportHint: "Tip: you can also set the default download folder in your browser settings to save downloaded files directly to this path.",
+      prefixLabel: "Include folder name as file prefix",
+      prefixExA: "E.g.",
+      prefixExB: "to immediately identify the file origin.",
+      savedOk: "Changes and export settings saved successfully.",
+      saveFailed: "Save failed",
+      noChanges: "No changes to save",
+      saveChangesTitle: "Save changes",
+      saving: "Saving...",
+      save: "Save Changes",
+      logout: "Log out",
+    },
+  }[language];
 
   useEffect(() => {
     if (status === "loading") return;
@@ -140,12 +220,12 @@ export default function SettingsPage() {
         body: JSON.stringify({ firstName: user!.firstName, lastName: user!.lastName }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Salvataggio non riuscito");
+      if (!response.ok) throw new Error(data.error || t.saveFailed);
       setUser((cur) => ({ ...cur!, ...data.user }));
       // Allinea gli snapshot ai valori appena salvati: il bottone torna disattivato.
       setSavedName({ firstName: user!.firstName, lastName: user!.lastName });
       setSavedExport({ path: exportPath.trim(), prefix: exportAutoPrefix });
-      setFeedback({ type: "success", message: "Modifiche e impostazioni di esportazione salvate con successo." });
+      setFeedback({ type: "success", message: t.savedOk });
     } catch (error) {
       setFeedback({ type: "error", message: (error as Error).message });
     } finally {
@@ -158,11 +238,11 @@ export default function SettingsPage() {
     : "?";
 
   const tokenLabel = {
-    free: "30 crediti / mese ≈ ~6 analisi",
-    starter: "1.500 crediti / mese ≈ ~300 analisi",
-    pro: "3.000 crediti / mese ≈ ~600 analisi",
-    enterprise: "Team — lista d’attesa (crediti su richiesta)",
-  }[user?.plan ?? "free"] ?? "30 crediti / mese ≈ ~6 analisi";
+    free: t.tokensFree,
+    starter: t.tokensStarter,
+    pro: t.tokensPro,
+    enterprise: t.tokensEnterprise,
+  }[user?.plan ?? "free"] ?? t.tokensFree;
 
   const isDirty =
     !!user &&
@@ -225,7 +305,7 @@ export default function SettingsPage() {
                 <PlanBadge plan={user.plan} />
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border bg-emerald-50 text-emerald-600 border-emerald-200">
                   <Shield className="w-3 h-3" />
-                  Account attivo
+                  {t.activeAccount}
                 </span>
               </div>
             </div>
@@ -238,11 +318,11 @@ export default function SettingsPage() {
           className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm"
         >
           <h2 className="text-sm font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
-            <User className="w-4 h-4 text-emerald-500" /> Informazioni personali
+            <User className="w-4 h-4 text-emerald-500" /> {t.personalInfo}
           </h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-[#64748b] mb-1.5">Nome</label>
+              <label className="block text-xs font-medium text-[#64748b] mb-1.5">{t.firstName}</label>
               <input
                 type="text"
                 value={user.firstName}
@@ -251,7 +331,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-[#64748b] mb-1.5">Cognome</label>
+              <label className="block text-xs font-medium text-[#64748b] mb-1.5">{t.lastName}</label>
               <input
                 type="text"
                 value={user.lastName}
@@ -276,7 +356,7 @@ export default function SettingsPage() {
             disabled
             className="w-full px-4 py-2.5 bg-[#f1f5f9] border border-[#e2e8f0] rounded-xl text-sm text-[#94a3b8] cursor-not-allowed"
           />
-          <p className="text-xs text-[#94a3b8] mt-2">L&apos;email non può essere modificata.</p>
+          <p className="text-xs text-[#94a3b8] mt-2">{t.emailLocked}</p>
         </motion.div>
 
         {/* ── Piano ─────────────────────────────────────── */}
@@ -285,7 +365,7 @@ export default function SettingsPage() {
           className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm"
         >
           <h2 className="text-sm font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-emerald-500" /> Abbonamento
+            <CreditCard className="w-4 h-4 text-emerald-500" /> {t.subscription}
           </h2>
           <div className="flex items-center justify-between bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4">
             <div>
@@ -309,7 +389,7 @@ export default function SettingsPage() {
           className="bg-white border border-[#e2e8f0] rounded-2xl p-6 shadow-sm"
         >
           <h2 className="text-sm font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-emerald-500" /> Lingua
+            <Globe className="w-4 h-4 text-emerald-500" /> {t.language}
           </h2>
           <div className="relative">
             <select
@@ -331,23 +411,21 @@ export default function SettingsPage() {
         >
           <h2 className="text-sm font-semibold text-[#0f172a] mb-4 flex items-center gap-2">
             {theme === "dark" ? <Sun className="w-4 h-4 text-emerald-500" /> : <Moon className="w-4 h-4 text-emerald-500" />}
-            Tema
+            {t.theme}
           </h2>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-[#0f172a]">
-                {theme === "dark" ? "Tema scuro" : "Tema chiaro"}
+                {theme === "dark" ? t.darkTheme : t.lightTheme}
               </p>
               <p className="text-xs text-[#64748b] mt-0.5">
-                {theme === "dark"
-                  ? "Passa al tema chiaro per una visuale più luminosa"
-                  : "Passa al tema scuro per minore affaticamento visivo"}
+                {theme === "dark" ? t.darkDesc : t.lightDesc}
               </p>
             </div>
             {/* Toggle switch */}
             <button
               onClick={toggleTheme}
-              aria-label="Cambia tema"
+              aria-label={t.toggleTheme}
               className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
                 theme === "dark" ? "bg-emerald-500" : "bg-[#cbd5e1]"
               }`}
@@ -368,31 +446,31 @@ export default function SettingsPage() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[#0f172a] flex items-center gap-2">
-              <FolderDown className="w-4 h-4 text-emerald-500" /> Esportazione & Download
+              <FolderDown className="w-4 h-4 text-emerald-500" /> {t.exportTitle}
             </h2>
             <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-              Personalizzabile
+              {t.customizable}
             </span>
           </div>
           <p className="text-xs text-[#64748b] mb-4 leading-relaxed">
-            Configura il percorso o prefisso di salvataggio per i file di codice (.py, .ts, .js, .html, ecc.) e le chat AI esportate.
+            {t.exportDesc}
           </p>
 
           <div className="space-y-4">
             <div>
               <label htmlFor="export-path-input" className="block text-xs font-semibold text-[#334155] mb-1.5">
-                Cartella o Percorso di destinazione preferito
+                {t.exportPathLabel}
               </label>
               <input
                 id="export-path-input"
                 type="text"
                 value={exportPath}
                 onChange={(e) => setExportPath(e.target.value)}
-                placeholder="es. C:/Progetti/Semplycode oppure Semplycode/Exports"
+                placeholder={t.exportPathPh}
                 className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-xs text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-mono transition-all"
               />
               <p className="text-[11px] text-[#94a3b8] mt-1.5 leading-relaxed">
-                Suggerimento: puoi anche impostare la cartella dei download predefinita nelle impostazioni del tuo browser per salvare i file scaricati direttamente in questo percorso.
+                {t.exportHint}
               </p>
             </div>
 
@@ -404,9 +482,9 @@ export default function SettingsPage() {
                 className="rounded border-[#cbd5e1] text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
               />
               <div className="text-xs">
-                <span className="font-semibold text-[#0f172a] block">Includi nome cartella come prefisso file</span>
+                <span className="font-semibold text-[#0f172a] block">{t.prefixLabel}</span>
                 <span className="text-[#64748b] text-[11px]">
-                  Es. <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">Exports_solution.py</code> per identificare subito la provenienza del file.
+                  {t.prefixExA} <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">Exports_solution.py</code> {t.prefixExB}
                 </span>
               </div>
             </label>
@@ -435,11 +513,11 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={loading || !isDirty}
-            title={!isDirty ? "Nessuna modifica da salvare" : "Salva le modifiche"}
+            title={!isDirty ? t.noChanges : t.saveChangesTitle}
             className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold shadow shadow-emerald-500/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allow disabled:hover:brightness-100"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {loading ? "Salvataggio..." : "Salva Modifiche"}
+            {loading ? t.saving : t.save}
           </button>
 
           <button
@@ -447,7 +525,7 @@ export default function SettingsPage() {
             className="flex-1 py-3 border border-red-200 text-red-500 rounded-xl text-sm font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
-            Esci dall&apos;account
+            {t.logout}
           </button>
         </motion.div>
 

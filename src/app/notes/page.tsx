@@ -32,6 +32,7 @@ import {
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { SkeletonSettings } from "@/app/components/Skeleton";
+import { useLanguage } from "../../context/LanguageContext";
 import type {
   Note,
   NoteWithRelations,
@@ -68,25 +69,157 @@ function langLabel(lang: string): string {
   return LANGUAGE_LABELS[lang] || lang.charAt(0).toUpperCase() + lang.slice(1);
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("it-IT", {
+function formatDate(iso: string, locale = "it-IT"): string {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-function formatNextReview(iso: string | null): string {
+function formatNextReview(iso: string | null, language: "it" | "en" = "it"): string {
   if (!iso) return "";
   const diff = new Date(iso).getTime() - Date.now();
   const days = Math.ceil(diff / (24 * 60 * 60 * 1000));
-  if (days <= 0) return "oggi";
-  if (days === 1) return "domani";
-  return `tra ${days} giorni`;
+  if (days <= 0) return language === "en" ? "today" : "oggi";
+  if (days === 1) return language === "en" ? "tomorrow" : "domani";
+  return language === "en" ? `in ${days} days` : `tra ${days} giorni`;
 }
+
+const STRINGS = {
+  it: {
+    drawer: "Il mio Cassetto",
+    notesSaved: "note salvate",
+    categoriesWord: "categorie",
+    toReview: "da ripassare",
+    searchPh: "Cerca nelle note...",
+    suggA: "Hai",
+    noteWord: "note",
+    suggOn: "su",
+    suggB: "Raggruppale in un percorso di apprendimento per ripassarle insieme.",
+    createPath: "Crea percorso",
+    dismissSugg: "Ignora suggerimento",
+    allNotes: "Tutte le note",
+    toReviewCap: "Da ripassare",
+    pendingCats: "In attesa di categorie",
+    categories: "Categorie",
+    noCatsYet: "Le categorie compaiono qui dopo la prima analisi.",
+    paths: "Percorsi",
+    noPathsYet: "Crea percorsi per ripassare argomenti correlati.",
+    noNotes: "Nessuna nota qui",
+    emptyBodyA: "Salva le spiegazioni dall'analisi del codice con il bottone",
+    saveToDrawer: "Salva nel cassetto",
+    analyzeCode: "Analizza codice",
+    noteTitle: "Titolo della nota",
+    noCats: "Nessuna categoria ancora —",
+    categorizeNow: "categorizza ora",
+    reanalyze: "ri-analizza",
+    origCode: "Codice originale",
+    hideCode: "Nascondi codice",
+    showCode: "Mostra codice",
+    chars: "caratteri",
+    explanation: "Spiegazione",
+    reviewLevel: "Livello ripasso",
+    nextReview: "Prossimo ripasso:",
+    reviewNow: "Ripassa ora",
+    relatedNotes: "Note correlate",
+    fromChat: "Da chat",
+    savedManually: "Salvata manualmente",
+    delete: "Elimina",
+    expandCode: "Espandi codice",
+    extension: "Estensione",
+    categorizing: "Categorizzazione...",
+    review: "Ripasso",
+    reviewVerb: "Ripassa",
+    codeNote: "Nota di codice",
+    nextReviewShort: "prossimo ripasso",
+    quizTitle: "Mini-quiz di ripasso",
+    closeQuiz: "Chiudi quiz",
+    correct: "Risposta corretta!",
+    wrong: "Non proprio, ecco il perche:",
+    continue: "Continua",
+    close: "Chiudi",
+    loadError: "Errore caricamento note",
+    pathError: "Errore creazione percorso",
+    deleteError: "Errore eliminazione",
+    renameError: "Errore salvataggio titolo",
+    catError: "Errore categorizzazione",
+    quizError: "Errore generazione quiz",
+    noteDeleted: "Nota eliminata",
+    catsUpdated: "Categorie aggiornate",
+    pathCreated: "Percorso «{n}» creato!",
+    confirmDelete: "Eliminare questa nota?",
+  },
+  en: {
+    drawer: "My Drawer",
+    notesSaved: "saved notes",
+    categoriesWord: "categories",
+    toReview: "to review",
+    searchPh: "Search notes...",
+    suggA: "You have",
+    noteWord: "notes",
+    suggOn: "on",
+    suggB: "Group them into a learning path to review them together.",
+    createPath: "Create path",
+    dismissSugg: "Dismiss suggestion",
+    allNotes: "All notes",
+    toReviewCap: "To review",
+    pendingCats: "Pending categories",
+    categories: "Categories",
+    noCatsYet: "Categories will appear here after your first analysis.",
+    paths: "Paths",
+    noPathsYet: "Create paths to review related topics.",
+    noNotes: "No notes here",
+    emptyBodyA: "Save explanations from code analysis with the button",
+    saveToDrawer: "Save to drawer",
+    analyzeCode: "Analyze code",
+    noteTitle: "Note title",
+    noCats: "No categories yet —",
+    categorizeNow: "categorize now",
+    reanalyze: "re-analyze",
+    origCode: "Original code",
+    hideCode: "Hide code",
+    showCode: "Show code",
+    chars: "characters",
+    explanation: "Explanation",
+    reviewLevel: "Review level",
+    nextReview: "Next review:",
+    reviewNow: "Review now",
+    relatedNotes: "Related notes",
+    fromChat: "From chat",
+    savedManually: "Saved manually",
+    delete: "Delete",
+    expandCode: "Expand code",
+    extension: "Extension",
+    categorizing: "Categorizing...",
+    review: "Review",
+    reviewVerb: "Review",
+    codeNote: "Code note",
+    nextReviewShort: "next review",
+    quizTitle: "Quick review quiz",
+    closeQuiz: "Close quiz",
+    correct: "Correct answer!",
+    wrong: "Not quite, here's why:",
+    continue: "Continue",
+    close: "Close",
+    loadError: "Failed to load notes",
+    pathError: "Failed to create path",
+    deleteError: "Failed to delete",
+    renameError: "Failed to save title",
+    catError: "Categorization failed",
+    quizError: "Failed to generate quiz",
+    noteDeleted: "Note deleted",
+    catsUpdated: "Categories updated",
+    pathCreated: "Path «{n}» created!",
+    confirmDelete: "Delete this note?",
+  },
+};
 
 export default function NotesPage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = STRINGS[language];
+  const locale = language === "en" ? "en-US" : "it-IT";
   const { user: sessionUser, status } = useSupabaseSession();
 
   const [notes, setNotes] = useState<NoteWithRelations[]>([]);
@@ -141,11 +274,11 @@ export default function NotesPage() {
       setPaths(pathsData.paths || []);
       setDueNotes(dueData.notes || []);
     } catch (error) {
-      showToast((error as Error).message || "Errore caricamento note");
+      showToast((error as Error).message || t.loadError);
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, t.loadError]);
 
   // Categorizzazione asincrona: alla prima apertura il cassetto recupera
   // le note rimaste in "pending" (non bloccante).
@@ -230,10 +363,10 @@ export default function NotesPage() {
     try {
       await api.paths.create(suggestion.categoryName, suggestion.noteIds);
       dismissSuggestion(suggestion.categoryName);
-      showToast(`Percorso «${suggestion.categoryName}» creato!`);
+      showToast(t.pathCreated.replace("{n}", suggestion.categoryName));
       loadAll();
     } catch (error) {
-      showToast((error as Error).message || "Errore creazione percorso");
+      showToast((error as Error).message || t.pathError);
     } finally {
       setCreatingPath(null);
     }
@@ -308,14 +441,14 @@ export default function NotesPage() {
   };
 
   const handleDelete = async (noteId: string) => {
-    if (!confirm("Eliminare questa nota?")) return;
+    if (!confirm(t.confirmDelete)) return;
     try {
       await api.notes.remove(noteId);
       setSelectedNoteId(null);
-      showToast("Nota eliminata");
+      showToast(t.noteDeleted);
       loadAll();
     } catch (error) {
-      showToast((error as Error).message || "Errore eliminazione");
+      showToast((error as Error).message || t.deleteError);
     }
   };
 
@@ -325,17 +458,17 @@ export default function NotesPage() {
       await api.notes.update(noteId, { title: title.trim() });
       loadNotes();
     } catch (error) {
-      showToast((error as Error).message || "Errore salvataggio titolo");
+      showToast((error as Error).message || t.renameError);
     }
   };
 
   const recategorize = async (noteId: string) => {
     try {
       await api.notes.categorize(noteId);
-      showToast("Categorie aggiornate");
+      showToast(t.catsUpdated);
       loadAll();
     } catch (error) {
-      showToast((error as Error).message || "Errore categorizzazione");
+      showToast((error as Error).message || t.catError);
     }
   };
 
@@ -349,7 +482,7 @@ export default function NotesPage() {
       setQuiz(data.quiz);
       setQuizNoteId(noteId);
     } catch (error) {
-      showToast((error as Error).message || "Errore generazione quiz");
+      showToast((error as Error).message || t.quizError);
     } finally {
       setQuizLoading(false);
     }
@@ -423,13 +556,13 @@ export default function NotesPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-[#0f172a]">
-                  Il mio Cassetto
+                  {t.drawer}
                 </h1>
                 <p className="text-sm text-[#64748b] mt-1">
-                  {notes.length} note salvate · {categories.length} categorie
+                  {notes.length} {t.notesSaved} · {categories.length} {t.categoriesWord}
                   {dueNotes.length > 0 && (
                     <span className="ml-2 inline-flex items-center gap-1 text-[#b45309] bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 text-xs font-semibold">
-                      <Clock size={12} /> {dueNotes.length} da ripassare
+                      <Clock size={12} /> {dueNotes.length} {t.toReview}
                     </span>
                   )}
                 </p>
@@ -441,7 +574,7 @@ export default function NotesPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Cerca nelle note..."
+                placeholder={t.searchPh}
                 className="w-full bg-white border border-[#e2e8f0] rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
               />
             </div>
@@ -459,9 +592,8 @@ export default function NotesPage() {
               >
                 <Layers className="text-emerald-600 w-5 h-5 shrink-0" />
                 <p className="text-sm text-emerald-900 flex-1">
-                  Hai <strong>{s.noteIds.length} note</strong> su{" "}
-                  <strong>«{s.categoryName}»</strong>. Raggruppale in un percorso
-                  di apprendimento per ripassarle insieme.
+                  {t.suggA} <strong>{s.noteIds.length} {t.noteWord}</strong> {t.suggOn}{" "}
+                  <strong>«{s.categoryName}»</strong>. {t.suggB}
                 </p>
                 <button
                   type="button"
@@ -474,13 +606,13 @@ export default function NotesPage() {
                   ) : (
                     <Plus size={14} />
                   )}
-                  Crea percorso
+                  {t.createPath}
                 </button>
                 <button
                   type="button"
                   onClick={() => dismissSuggestion(s.categoryName)}
                   className="shrink-0 text-emerald-600/60 hover:text-emerald-800 transition-colors"
-                  aria-label="Ignora suggerimento"
+                  aria-label={t.dismissSugg}
                 >
                   <X size={16} />
                 </button>
@@ -498,32 +630,32 @@ export default function NotesPage() {
                   setActiveCategory(null);
                 }}
                 icon={<Layers size={14} />}
-                label="Tutte le note"
+                label={t.allNotes}
                 count={notes.length}
               />
               <FilterButton
                 active={activeFilter === "due"}
                 onClick={() => setActiveFilter("due")}
                 icon={<GraduationCap size={14} />}
-                label="Da ripassare"
+                label={t.toReviewCap}
                 count={dueNotes.length}
               />
               <FilterButton
                 active={activeFilter === "pending"}
                 onClick={() => setActiveFilter("pending")}
                 icon={<Sparkles size={14} />}
-                label="In attesa di categorie"
+                label={t.pendingCats}
                 count={notes.filter((n) => n.status === "pending").length}
               />
 
               <div className="pt-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 px-2">
-                  Categorie
+                  {t.categories}
                 </p>
                 <div className="space-y-1">
                   {categories.length === 0 && (
                     <p className="text-xs text-[#94a3b8] px-2">
-                      Le categorie compaiono qui dopo la prima analisi.
+                      {t.noCatsYet}
                     </p>
                   )}
                   {categories.map((cat) => {
@@ -549,12 +681,12 @@ export default function NotesPage() {
 
               <div className="pt-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 px-2">
-                  Percorsi
+                  {t.paths}
                 </p>
                 <div className="space-y-1">
                   {paths.length === 0 && (
                     <p className="text-xs text-[#94a3b8] px-2">
-                      Crea percorsi per ripassare argomenti correlati.
+                      {t.noPathsYet}
                     </p>
                   )}
                   {paths.map((p) => (
@@ -584,16 +716,16 @@ export default function NotesPage() {
               ) : visibleNotes.length === 0 ? (
                 <div className="text-center py-20 bg-white border border-[#e2e8f0] rounded-3xl">
                   <Bookmark className="w-10 h-10 text-[#cbd5e1] mx-auto mb-3" />
-                  <p className="font-semibold text-[#0f172a]">Nessuna nota qui</p>
+                  <p className="font-semibold text-[#0f172a]">{t.noNotes}</p>
                   <p className="text-sm text-[#64748b] mt-1 max-w-sm mx-auto">
-                    Salva le spiegazioni dall&apos;analisi del codice con il
-                    bottone <strong>Salva nel cassetto</strong>.
+                    {t.emptyBodyA}{" "}
+                    <strong>{t.saveToDrawer}</strong>.
                   </p>
                   <Link
                     href="/chat"
                     className="inline-flex items-center gap-2 mt-5 text-sm font-semibold text-white bg-primary hover:bg-primary/90 rounded-xl px-4 py-2 transition-colors"
                   >
-                    <Code2 size={15} /> Analizza codice
+                    <Code2 size={15} /> {t.analyzeCode}
                   </Link>
                 </div>
               ) : (
@@ -707,6 +839,9 @@ function NoteCard({
   index: number;
   onOpen: () => void;
 }) {
+  const { language } = useLanguage();
+  const t = STRINGS[language];
+  const locale = language === "en" ? "en-US" : "it-IT";
   const [expanded, setExpanded] = useState(false);
   return (
     <motion.div
@@ -724,29 +859,29 @@ function NoteCard({
             </span>
             {note.source_type === "extension" && (
               <span className="inline-flex items-center gap-1 text-[10px] text-[#475569] bg-[#f1f5f9] rounded-full px-2 py-0.5">
-                <Globe size={10} /> Estensione
+                <Globe size={10} /> {t.extension}
               </span>
             )}
             {note.status === "pending" && (
               <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                <Sparkles size={10} /> Categorizzazione...
+                <Sparkles size={10} /> {t.categorizing}
               </span>
             )}
             {note.due && (
               <span className="inline-flex items-center gap-1 text-[10px] text-[#b45309] bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                <Clock size={10} /> Ripasso
+                <Clock size={10} /> {t.review}
               </span>
             )}
           </div>
           <h3 className="font-bold text-[#0f172a] leading-snug line-clamp-2">
-            {note.title || "Nota di codice"}
+            {note.title || t.codeNote}
           </h3>
           <div className="mt-2 text-[10px] text-[#94a3b8] flex items-center gap-2">
-            <Calendar size={11} /> {formatDate(note.created_at)}
+            <Calendar size={11} /> {formatDate(note.created_at, locale)}
             {note.next_review_at && (
               <>
                 <span>·</span>
-                <GraduationCap size={11} /> prossimo ripasso {formatNextReview(note.next_review_at)}
+                <GraduationCap size={11} /> {t.nextReviewShort} {formatNextReview(note.next_review_at, language)}
               </>
             )}
           </div>
@@ -758,7 +893,7 @@ function NoteCard({
             setExpanded(!expanded);
           }}
           className="shrink-0 text-[#94a3b8] hover:text-primary transition-colors"
-          aria-label="Espandi codice"
+          aria-label={t.expandCode}
         >
           <Code2 size={16} />
         </button>
@@ -808,6 +943,9 @@ function NoteDetailModal({
   onQuiz: () => void;
   quizLoading: boolean;
 }) {
+  const { language } = useLanguage();
+  const t = STRINGS[language];
+  const locale = language === "en" ? "en-US" : "it-IT";
   const [title, setTitle] = useState(note.title);
   const [showCode, setShowCode] = useState(false);
 
@@ -842,10 +980,10 @@ function NoteDetailModal({
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={() => title.trim() && onRename(title)}
                 className="font-bold text-[#0f172a] text-lg w-full bg-transparent focus:outline-none focus:border-b focus:border-emerald-400 px-0.5"
-                aria-label="Titolo della nota"
+                aria-label={t.noteTitle}
               />
               <p className="text-[11px] text-[#94a3b8]">
-                {langLabel(note.language)} · {formatDate(note.created_at)}
+                {langLabel(note.language)} · {formatDate(note.created_at, locale)}
                 {note.source_url && (
                   <span className="ml-2 inline-flex items-center gap-1 text-primary">
                     <Globe size={10} /> {new URL(note.source_url).hostname}
@@ -866,13 +1004,13 @@ function NoteDetailModal({
               ) : (
                 <GraduationCap size={13} />
               )}
-              Ripassa
+              {t.reviewVerb}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="p-2 text-[#64748b] hover:text-[#0f172a] rounded-lg hover:bg-[#f1f5f9] transition-colors"
-              aria-label="Chiudi"
+              aria-label={t.close}
             >
               <X size={18} />
             </button>
@@ -884,18 +1022,18 @@ function NoteDetailModal({
           {/* Categorie */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
-              Categorie
+              {t.categories}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {note.categories.length === 0 && (
                 <span className="text-xs text-[#64748b] italic">
-                  Nessuna categoria ancora —{" "}
+                  {t.noCats}{" "}
                   <button
                     type="button"
                     onClick={onRecategorize}
                     className="text-emerald-600 font-semibold hover:underline"
                   >
-                    categorizza ora
+                    {t.categorizeNow}
                   </button>
                 </span>
               )}
@@ -913,7 +1051,7 @@ function NoteDetailModal({
                   onClick={onRecategorize}
                   className="text-[11px] text-[#64748b] hover:text-emerald-600 flex items-center gap-1 px-1 transition-colors"
                 >
-                  <RefreshCw size={11} /> ri-analizza
+                  <RefreshCw size={11} /> {t.reanalyze}
                 </button>
               )}
             </div>
@@ -922,7 +1060,7 @@ function NoteDetailModal({
           {/* Codice */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 flex items-center gap-1.5">
-              <Code2 size={12} /> Codice originale
+              <Code2 size={12} /> {t.origCode}
             </p>
             <div className="rounded-xl border border-[#e2e8f0] overflow-hidden">
               <button
@@ -930,7 +1068,7 @@ function NoteDetailModal({
                 onClick={() => setShowCode(!showCode)}
                 className="w-full px-3 py-1.5 text-[11px] text-[#64748b] bg-[#f8fafc] hover:bg-[#f1f5f9] text-left transition-colors"
               >
-                {showCode ? "Nascondi codice" : "Mostra codice"} ({note.snippet_code.length} caratteri)
+                {showCode ? t.hideCode : t.showCode} ({note.snippet_code.length} {t.chars})
               </button>
               {showCode && (
                 <pre className="max-h-72 overflow-auto bg-[#0b0f1a] text-emerald-300 text-xs p-4 font-mono leading-relaxed custom-scrollbar">
@@ -943,7 +1081,7 @@ function NoteDetailModal({
           {/* Spiegazione */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2 flex items-center gap-1.5">
-              <FileText size={12} /> Spiegazione
+              <FileText size={12} /> {t.explanation}
             </p>
             <div className="text-sm text-[#334155] leading-relaxed notes-markdown">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.explanation}</ReactMarkdown>
@@ -954,14 +1092,14 @@ function NoteDetailModal({
           {note.leitner_box > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center justify-between">
               <p className="text-sm text-amber-900">
-                Livello ripasso{" "}
+                {t.reviewLevel}{" "}
                 <strong>
                   {"●".repeat(note.leitner_box)}
                   {"○".repeat(4 - note.leitner_box)}
                 </strong>
                 {note.next_review_at && (
                   <span className="block text-xs text-amber-700 mt-0.5">
-                    Prossimo ripasso: {formatNextReview(note.next_review_at)}
+                    {t.nextReview} {formatNextReview(note.next_review_at, language)}
                   </span>
                 )}
               </p>
@@ -970,7 +1108,7 @@ function NoteDetailModal({
                 onClick={onQuiz}
                 className="text-xs font-semibold text-amber-800 border border-amber-300 rounded-lg px-3 py-1.5 hover:bg-amber-100 transition-colors"
               >
-                Ripassa ora
+                {t.reviewNow}
               </button>
             </div>
           )}
@@ -979,7 +1117,7 @@ function NoteDetailModal({
           {note.related && note.related.length > 0 && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
-                Note correlate
+                {t.relatedNotes}
               </p>
               <div className="space-y-2">
                 {note.related.map((rel) => (
@@ -1002,14 +1140,14 @@ function NoteDetailModal({
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-[#e2e8f0]">
           <p className="text-[11px] text-[#94a3b8]">
-            {note.source_ref ? `Da chat: ${note.source_ref}` : "Salvata manualmente"}
+            {note.source_ref ? `${t.fromChat}: ${note.source_ref}` : t.savedManually}
           </p>
           <button
             type="button"
             onClick={onDelete}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg px-3 py-2 transition-colors"
           >
-            <Trash2 size={13} /> Elimina
+            <Trash2 size={13} /> {t.delete}
           </button>
         </div>
       </motion.div>
@@ -1030,6 +1168,8 @@ function QuizModal({
 }) {
   const answered = answer !== null;
   const isCorrect = answered && answer === quiz.correct;
+  const { language } = useLanguage();
+  const t = STRINGS[language];
 
   return (
     <motion.div
@@ -1050,13 +1190,13 @@ function QuizModal({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-emerald-700">
             <GraduationCap className="w-5 h-5" />
-            <h3 className="font-bold text-[#0f172a]">Mini-quiz di ripasso</h3>
+            <h3 className="font-bold text-[#0f172a]">{t.quizTitle}</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 text-[#64748b] hover:text-[#0f172a] rounded-lg hover:bg-[#f1f5f9] transition-colors"
-            aria-label="Chiudi quiz"
+            aria-label={t.closeQuiz}
           >
             <X size={18} />
           </button>
@@ -1108,7 +1248,7 @@ function QuizModal({
             }`}
           >
             <p className="font-semibold mb-1">
-              {isCorrect ? "Risposta corretta!" : "Non proprio, ecco il perche:"}
+              {isCorrect ? t.correct : t.wrong}
             </p>
             {quiz.explanation}
             <div className="flex justify-end mt-3">
@@ -1117,7 +1257,7 @@ function QuizModal({
                 onClick={onClose}
                 className="text-xs font-semibold text-white bg-primary hover:bg-primary/90 rounded-lg px-3 py-1.5 transition-colors"
               >
-                Continua
+                {t.continue}
               </button>
             </div>
           </motion.div>

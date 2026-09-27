@@ -5,8 +5,50 @@ import Link from "next/link";
 import { ArrowRight, Copy, Check, RefreshCw, Loader2, MonitorSmartphone } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function ExtensionLinkPage() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      title: "Collega l'estensione",
+      subtitle: "Usa questo codice per accedere dall'estensione Chrome con lo stesso account.",
+      generating: "Generazione codice...",
+      validNote: "Valido 2 minuti · uso singolo",
+      copied: "Copiato!",
+      copy: "Copia codice",
+      newCodeTitle: "Genera un nuovo codice",
+      genError: "Errore generazione codice",
+      copyError: "Impossibile copiare automaticamente: seleziona e copia il codice.",
+      howTo: "Come collegare",
+      step1: "Copia il codice qui sopra",
+      step2a: "Apri l'estensione Semplycode → sezione",
+      step2b: "Impostazioni",
+      step3a: "Incolla il codice in",
+      step3b: "“Collega account webapp”",
+      step3c: "e premi",
+      step3d: "Collega",
+    },
+    en: {
+      title: "Link the extension",
+      subtitle: "Use this code to sign in from the Chrome extension with the same account.",
+      generating: "Generating code...",
+      validNote: "Valid 2 minutes · single use",
+      copied: "Copied!",
+      copy: "Copy code",
+      newCodeTitle: "Generate a new code",
+      genError: "Code generation failed",
+      copyError: "Could not copy automatically: select and copy the code.",
+      howTo: "How to link",
+      step1: "Copy the code above",
+      step2a: "Open the Semplycode extension →",
+      step2b: "Settings",
+      step3a: "Paste the code into",
+      step3b: "“Link webapp account”",
+      step3c: "and press",
+      step3d: "Link",
+    },
+  }[language];
   const [code, setCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -21,10 +63,10 @@ export default function ExtensionLinkPage() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Errore generazione codice");
+      if (!res.ok) throw new Error(data.error || t.genError);
       setCode(data.code);
     } catch (err) {
-      setError((err as Error).message || "Errore generazione codice");
+      setError((err as Error).message || t.genError);
     } finally {
       setLoading(false);
     }
@@ -41,7 +83,7 @@ export default function ExtensionLinkPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Impossibile copiare automaticamente: seleziona e copia il codice.");
+      setError(t.copyError);
     }
   };
 
@@ -64,17 +106,17 @@ export default function ExtensionLinkPage() {
               </span>
               <div>
                 <h1 className="text-xl font-extrabold text-[#0f172a] dark:text-[#f1f5f9]">
-                  Collega l&apos;estensione
+                  {t.title}
                 </h1>
                 <p className="text-xs text-[#64748b]">
-                  Usa questo codice per accedere dall&apos;estensione Chrome con lo stesso account.
+                  {t.subtitle}
                 </p>
               </div>
             </div>
 
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-10 text-sm text-[#64748b]">
-                <Loader2 size={16} className="animate-spin" /> Generazione codice...
+                <Loader2 size={16} className="animate-spin" /> {t.generating}
               </div>
             ) : code ? (
               <>
@@ -83,7 +125,7 @@ export default function ExtensionLinkPage() {
                     {code}
                   </div>
                   <p className="text-[11px] text-[#94a3b8] mt-2">
-                    Valido 2 minuti · uso singolo
+                    {t.validNote}
                   </p>
                 </div>
 
@@ -94,13 +136,13 @@ export default function ExtensionLinkPage() {
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 transition-colors"
                   >
                     {copied ? <Check size={15} /> : <Copy size={15} />}
-                    {copied ? "Copiato!" : "Copia codice"}
+                    {copied ? t.copied : t.copy}
                   </button>
                   <button
                     type="button"
                     onClick={generateCode}
                     className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-semibold border border-[#e2e8f0] dark:border-[#1e293b] text-[#475569] hover:text-[#0f172a] transition-colors"
-                    title="Genera un nuovo codice"
+                    title={t.newCodeTitle}
                   >
                     <RefreshCw size={15} />
                   </button>
@@ -112,17 +154,17 @@ export default function ExtensionLinkPage() {
 
             <div className="mt-6 pt-5 border-t border-[#e2e8f0] dark:border-[#1e293b]">
               <p className="text-xs font-bold uppercase tracking-wider text-[#94a3b8] mb-2">
-                Come collegare
+                {t.howTo}
               </p>
               <ol className="text-sm text-[#475569] dark:text-[#94a3b8] space-y-1.5 list-decimal pl-5">
-                <li>Copia il codice qui sopra</li>
+                <li>{t.step1}</li>
                 <li>
-                  Apri l&apos;estensione Semplycode → sezione{" "}
-                  <strong>Impostazioni</strong>
+                  {t.step2a}{" "}
+                  <strong>{t.step2b}</strong>
                 </li>
                 <li>
-                  Incolla il codice in <strong>&quot;Collega account webapp&quot;</strong> e
-                  premi <strong>Collega</strong>
+                  {t.step3a} <strong>{t.step3b}</strong> {t.step3c}{" "}
+                  <strong>{t.step3d}</strong>
                 </li>
               </ol>
             </div>

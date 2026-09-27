@@ -44,7 +44,8 @@ import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X } from "lu
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { postChatStream, formatApiError } from "@/lib/playgroundApi";
-import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS, REVIEWER_DEPTH_RULES } from "@/lib/analysisPrompts";
+import { buildAnalysisSystemPrompt, REVIEWER_DEPTH_RULES, getAnalysisTypeLabels, getAnalysisTypeDescriptions } from "@/lib/analysisPrompts";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Message {
   role: "user" | "assistant";
@@ -122,7 +123,7 @@ function stripThinking(content: string): string {
 }
 
 /** Rendering del report AI identico alla chat (niente font-mono, tipografia prose, code block con header). */
-const DemoAIResponse = ({ content }: { content: string }) => {
+const DemoAIResponse = ({ content, lang }: { content: string; lang: "it" | "en" }) => {
   return (
     <div className="relative text-left [&>*:first-child]:mt-0">
       <ReactMarkdown
@@ -175,7 +176,7 @@ const DemoAIResponse = ({ content }: { content: string }) => {
               );
             }
             const match = /language-(\w+)/.exec(className || "");
-            const lang = match?.[1] || "codice";
+            const codeLang = match?.[1] || (lang === "en" ? "code" : "codice");
             const raw = Array.isArray(children)
               ? children.join("")
               : String(children ?? "").replace(/\n$/, "");
@@ -183,7 +184,7 @@ const DemoAIResponse = ({ content }: { content: string }) => {
               <div className="my-4 w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
                 <div className="flex items-center justify-between px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">
-                    {lang}
+                    {codeLang}
                   </span>
                   <button
                     type="button"
@@ -196,7 +197,7 @@ const DemoAIResponse = ({ content }: { content: string }) => {
                       }
                     }}
                   >
-                    Copia
+                    {lang === "en" ? "Copy" : "Copia"}
                   </button>
                 </div>
                 <pre className="p-4 overflow-x-auto m-0 demo-scroll">
@@ -217,12 +218,13 @@ const DemoAIResponse = ({ content }: { content: string }) => {
 
 interface DemoMessageProps {
   message: Message;
+  lang: "it" | "en";
   isLastAssistant?: boolean;
   onRegenerate?: () => void;
 }
 
 /** Bolla messaggio identica alla chat: utente a destra, AI a sinistra con avatar e azioni. */
-const DemoMessage = ({ message, isLastAssistant, onRegenerate }: DemoMessageProps) => {
+const DemoMessage = ({ message, lang, isLastAssistant, onRegenerate }: DemoMessageProps) => {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const displayContent = isUser ? message.content : stripThinking(message.content);
@@ -264,27 +266,27 @@ const DemoMessage = ({ message, isLastAssistant, onRegenerate }: DemoMessageProp
           </p>
         ) : (
           <>
-            <DemoAIResponse content={displayContent} />
+            <DemoAIResponse content={displayContent} lang={lang} />
             {displayContent && (
               <div className="flex items-center gap-1 mt-3 pt-2 border-t border-emerald-900/15">
                 <button
                   type="button"
                   onClick={handleCopy}
                   className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-primary rounded-md hover:bg-emerald-900/15 transition-all"
-                  title="Copia risposta"
+                  title={lang === "en" ? "Copy answer" : "Copia risposta"}
                 >
                   {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? "Copiato" : "Copia"}
+                  {copied ? (lang === "en" ? "Copied" : "Copiato") : (lang === "en" ? "Copy" : "Copia")}
                 </button>
                 {isLastAssistant && onRegenerate && (
                   <button
                     type="button"
                     onClick={onRegenerate}
                     className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-emerald-400 rounded-md hover:bg-emerald-900/15 transition-all ml-auto"
-                    title="Rielabora"
+                    title={lang === "en" ? "Regenerate" : "Rielabora"}
                   >
                     <RefreshCw size={12} />
-                    Rielabora
+                    {lang === "en" ? "Regenerate" : "Rielabora"}
                   </button>
                 )}
               </div>
@@ -380,10 +382,108 @@ function roleLabel(role: User['role']) {
 2. **Validazione** — normalizza email con \`email.trim().toLowerCase()\` prima di \`regex.test\`
 3. **Seed** — aggiungi utenti di esempio prima del loop riga 54 per test visivo`;
 
+const DEMO_SAMPLE_REPORT_EN = `### Errors Found
+- **Line 9 — Email regex:** pattern ok but missing full anchoring for cases with spaces → use \`trim()\` before testing
+- **Line 31-35 — Switch with ternary in default:** works but hard to read; better to extract \`isGuest\` or add an explicit \`case 'guest'\`
+- **Line 54-56 — Loop over empty store:** cold \`store.list()\` is empty, the log shows nothing — only useful after seeding
+
+### Explanation
+The code is already valid; the issues are minor style/robustness points. The line citation is precise because the file exceeds 50 lines (check lines 31 and 54 cited correctly). The regex is tested with \`re.test ? trim : null\` and the switch uses \`? :\` in the default.
+
+### Corrected Code (minimal fixes only)
+\`\`\`typescript
+function roleLabel(role: User['role']) {
+  switch (role) {
+    case 'admin': return 'Administrator';
+    case 'user': return 'User';
+    case 'guest': return 'Guest';
+    default: return 'Unknown';
+  }
+}
+\`\`\`
+
+### Revision — Improvements
+1. **Clarity** — replace the ternary in the default with an explicit case
+2. **Validation** — normalize email with \`email.trim().toLowerCase()\` before \`regex.test\`
+3. **Seed** — add sample users before the line 54 loop for a visual test`;
+
 const DemoSection = () => {
+  const { user: session } = useSupabaseSession();
+  const { language: uiLang } = useLanguage();
+  const sampleReport = uiLang === "en" ? DEMO_SAMPLE_REPORT_EN : DEMO_SAMPLE_REPORT;
+  const t = {
+    it: {
+      title: "Analizzatore Codice Live",
+      subtitle: "Analisi AI in Tempo Reale",
+      analyzing: "Analizzando...",
+      newTitle: "Nuova Analisi",
+      newLabel: "Nuova",
+      clearAll: "Cancella tutto",
+      editorPlaceholder: "// Incolla qui il tuo codice per l'analisi immediata...",
+      emptyTitle: "Inizia la tua Analisi",
+      emptyBodyA: "Incolla un frammento di codice per ricevere un report completo dall'",
+      analyzingStatus: "Analisi del codice in corso…",
+      creditsOut: "Crediti esauriti",
+      limitGuestMsg: "Hai esaurito le analisi ospite. Crea un account gratuito per 10 analisi al giorno.",
+      limitPlanMsg: "Hai esaurito i token mensili. Fai l'upgrade per continuare ad analizzare.",
+      createAccount: "Crea account gratuito",
+      seePlans: "Vedi i piani",
+      upgrade: "Fai l'upgrade",
+      close: "Chiudi",
+      askPlaceholder: "Chiedi all'AI qualsiasi cosa sul codice...",
+      modeLabel: "Modalità di analisi",
+      attachFile: "Allega file",
+      uploadFolder: "Carica una cartella o un intero progetto",
+      folderLabel: "Carica cartella",
+      zipLabel: "Carica archivio ZIP",
+      githubLabel: "Importa da GitHub",
+      sendLabel: "Invia messaggio",
+      importBtn: "Importa",
+      removePrefix: "Rimuovi",
+      hintA: "Invio con Enter",
+      hintB: "Shift+Enter per andare a capo",
+      hintC: "L'AI ha sempre il contesto del codice corrente",
+      tryChat: "Prova Chat AI",
+      freeExtra: "\n\nCrea un account gratuito su semplycode per 10 analisi al giorno.",
+    },
+    en: {
+      title: "Live Code Analyzer",
+      subtitle: "Real-Time AI Analysis",
+      analyzing: "Analyzing...",
+      newTitle: "New Analysis",
+      newLabel: "New",
+      clearAll: "Clear all",
+      editorPlaceholder: "// Paste your code here for instant analysis...",
+      emptyTitle: "Start Your Analysis",
+      emptyBodyA: "Paste a code snippet to get a full report from the ",
+      analyzingStatus: "Analyzing code…",
+      creditsOut: "Credits exhausted",
+      limitGuestMsg: "You've used all guest analyses. Create a free account for 10 analyses a day.",
+      limitPlanMsg: "You've used all monthly tokens. Upgrade to keep analyzing.",
+      createAccount: "Create free account",
+      seePlans: "See plans",
+      upgrade: "Upgrade",
+      close: "Close",
+      askPlaceholder: "Ask the AI anything about the code...",
+      modeLabel: "Analysis mode",
+      attachFile: "Attach file",
+      uploadFolder: "Upload a folder or a whole project",
+      folderLabel: "Upload folder",
+      zipLabel: "Upload ZIP archive",
+      githubLabel: "Import from GitHub",
+      sendLabel: "Send message",
+      importBtn: "Import",
+      removePrefix: "Remove",
+      hintA: "Enter to send",
+      hintB: "Shift+Enter for a new line",
+      hintC: "The AI always has the current code context",
+      tryChat: "Try Chat AI",
+      freeExtra: "\n\nCreate a free semplycode account for 10 analyses a day.",
+    },
+  }[uiLang];
   const [code, setCode] = useState(DEMO_SAMPLE_CODE);
   const [detectedLang, setDetectedLang] = useState("typescript");
-  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
+  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: sampleReport }]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -397,7 +497,8 @@ const DemoSection = () => {
   const [isZipLoading, setIsZipLoading] = useState(false);
   /** Crediti esauriti: mostra la card con invito a registrarsi / fare upgrade. */
   const [limitCTA, setLimitCTA] = useState<{ message: string; code?: string } | null>(null);
-  const { user: session } = useSupabaseSession();
+  const typeLabels = getAnalysisTypeLabels(uiLang);
+  const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -642,7 +743,7 @@ const DemoSection = () => {
           hasErrorContext: false,
         }) +
         "\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.";
-      const typeLabel = ANALYSIS_TYPE_LABELS[analysisType] || analysisType;
+      const typeLabel = typeLabels[analysisType] || analysisType;
       await postChatStream(
         [
           {
@@ -651,7 +752,9 @@ const DemoSection = () => {
           },
           {
             role: "user",
-            content: `Analizza questo codice (modalità ${typeLabel}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
+            content: uiLang === "en"
+              ? `Analyze this code (${typeLabel} mode):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``
+              : `Analizza questo codice (modalità ${typeLabel}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
           },
         ],
         (chunk) => {
@@ -699,10 +802,7 @@ const DemoSection = () => {
     } catch (error) {
       const err = error as ErrorWithStatus;
       const msg = formatApiError(err as Error);
-      const extra =
-        err?.status === 429
-          ? "\n\nCrea un account gratuito su semplycode per 10 analisi al giorno."
-          : "";
+      const extra = err?.status === 429 ? t.freeExtra : "";
       if (err?.status === 429 || isLimitError(msg, err?.code)) {
         setLimitCTA({ message: `${msg}${extra}`, code: err?.code });
       }
@@ -735,12 +835,12 @@ const DemoSection = () => {
     let accumulatedContent = "";
 
     try {
-      const typeLabel = ANALYSIS_TYPE_LABELS[analysisType] || analysisType;
+      const typeLabel = typeLabels[analysisType] || analysisType;
       await postChatStream(
         [
           {
             role: "system",
-            content: `Sei un esperto Code Reviewer italiano in modalità ${typeLabel}. Rispondi in italiano in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+            content: `Sei un esperto Code Reviewer italiano in modalità ${typeLabel}. Rispondi sempre nella stessa lingua del messaggio dell'utente (italiano o inglese), in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
           },
           ...updatedMessages,
         ],
@@ -956,13 +1056,13 @@ const DemoSection = () => {
         if (saved.trim().split("\n").length < 50) {
           setCode(DEMO_SAMPLE_CODE);
           setDetectedLang("typescript");
-          setMessages([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
+          setMessages([{ role: "assistant", content: sampleReport }]);
         }
       } else {
         // nessun saved → assicurati che il nuovo esempio lungo sia visibile
         setCode(DEMO_SAMPLE_CODE);
         setDetectedLang("typescript");
-        setMessages([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
+        setMessages([{ role: "assistant", content: sampleReport }]);
       }
     } catch {
       // ignore
@@ -1015,11 +1115,11 @@ const DemoSection = () => {
         <div className="flex items-center gap-3">
           <div>
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-[#0f172a]">
-              Analizzatore Codice Live
+              {t.title}
             </h2>
             <p className="text-xs text-[#64748b] font-mono flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-              Analisi AI in Tempo Reale
+              {t.subtitle}
             </p>
           </div>
         </div>
@@ -1029,7 +1129,7 @@ const DemoSection = () => {
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-3.5 py-1.5">
               <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
               <span className="text-xs font-medium text-emerald-600">
-                Analizzando...
+                {t.analyzing}
               </span>
             </div>
           )}
@@ -1039,10 +1139,10 @@ const DemoSection = () => {
               <button
                 onClick={handleNewAnalysis}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-colors text-xs font-medium"
-                title="Nuova Analisi"
+                title={t.newTitle}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Nuova
+                {t.newLabel}
               </button>
               <button
                 onClick={() => {
@@ -1053,7 +1153,7 @@ const DemoSection = () => {
                   setLimitCTA(null);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors text-xs font-medium"
-                title="Cancella tutto"
+                title={t.clearAll}
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -1106,7 +1206,7 @@ const DemoSection = () => {
                 }),
               ]}
               theme={oneDark}
-              placeholder="// Incolla qui il tuo codice per l'analisi immediata..."
+              placeholder={t.editorPlaceholder}
               basicSetup={{
                 lineNumbers: true,
                 highlightActiveLineGutter: true,
@@ -1159,11 +1259,10 @@ const DemoSection = () => {
                 </div>
                 <div className="space-y-2">
                   <p className="text-lg font-bold text-[#e2e8f0]">
-                    Inizia la tua Analisi
+                    {t.emptyTitle}
                   </p>
                   <p className="text-sm text-[#94a3b8] max-w-70 leading-relaxed mx-auto">
-                    Incolla un frammento di codice per ricevere un report
-                    completo dall&apos;
+                    {t.emptyBodyA}
                     <span className="text-primary font-bold">AI Engine</span>.
                   </p>
                 </div>
@@ -1183,6 +1282,7 @@ const DemoSection = () => {
                     <DemoMessage
                       key={`${msg.role}-${i}`}
                       message={msg}
+                      lang={uiLang}
                       isLastAssistant={isLast && msg.role === "assistant"}
                       onRegenerate={
                         isLast && msg.role === "assistant" && !isLoading
@@ -1206,7 +1306,7 @@ const DemoSection = () => {
                       <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-[#061014]/90 border border-emerald-900/25">
                         <Loader2 size={15} className="animate-spin text-primary shrink-0" />
                         <span className="text-xs text-gray-300">
-                          Analisi del codice in corso…
+                          {t.analyzingStatus}
                         </span>
                         <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 tabular-nums">
                           {elapsedSec}s
@@ -1219,10 +1319,12 @@ const DemoSection = () => {
                   <div className="flex justify-start">
                     <div className="flex-1 min-w-0 rounded-2xl bg-[#061014]/90 border border-amber-500/30 px-5 py-4">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-2">
-                        Crediti esauriti
+                        {t.creditsOut}
                       </p>
                       <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                        {limitCTA.message}
+                        {uiLang === "en"
+                          ? (isGuestLimit(limitCTA.message, limitCTA.code) ? t.limitGuestMsg : t.limitPlanMsg)
+                          : limitCTA.message}
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
                         {isGuestLimit(limitCTA.message, limitCTA.code) ? (
@@ -1231,13 +1333,13 @@ const DemoSection = () => {
                               href="/register"
                               className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
                             >
-                              Crea account gratuito
+                              {t.createAccount}
                             </Link>
                             <Link
                               href="/#pricing"
                               className="flex-1 text-center py-2.5 rounded-xl border border-emerald-900/30 text-gray-300 text-sm hover:text-primary hover:border-primary/40 transition-colors"
                             >
-                              Vedi i piani
+                              {t.seePlans}
                             </Link>
                           </>
                         ) : (
@@ -1246,14 +1348,14 @@ const DemoSection = () => {
                               href="/#pricing"
                               className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
                             >
-                              Fai l&apos;upgrade
+                              {t.upgrade}
                             </Link>
                             <button
                               type="button"
                               onClick={() => setLimitCTA(null)}
                               className="flex-1 py-2.5 rounded-xl border border-emerald-900/30 text-gray-400 text-sm hover:text-primary transition-colors"
                             >
-                              Chiudi
+                              {t.close}
                             </button>
                           </>
                         )}
@@ -1318,7 +1420,7 @@ const DemoSection = () => {
                   el.style.height = "auto";
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
-                placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
+                placeholder={t.askPlaceholder}
                 className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] demo-scroll"
                 disabled={isLoading || !code.trim()}
               />
@@ -1328,20 +1430,20 @@ const DemoSection = () => {
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     if (e.target.value) setAnalysisType(e.target.value);
                   }}
-                  title="Modalità di analisi"
-                  aria-label="Modalità di analisi"
+                  title={t.modeLabel}
+                  aria-label={t.modeLabel}
                 >
                   {(['correction', 'revision', 'creation', 'security', 'performance', 'style', 'debug'] as const).map((m) => (
-                    <option key={m} value={m} title={ANALYSIS_TYPE_DESCRIPTIONS[m]}>
-                      {ANALYSIS_TYPE_LABELS[m]}
+                    <option key={m} value={m} title={typeDescs[m]}>
+                      {typeLabels[m]}
                     </option>
                   ))}
                 </select>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  title="Allega file"
-                  aria-label="Allega file"
+                  title={t.attachFile}
+                  aria-label={t.attachFile}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
                 >
                   <FileText size={15} />
@@ -1349,8 +1451,8 @@ const DemoSection = () => {
                 <button
                   type="button"
                   onClick={() => folderInputRef.current?.click()}
-                  title="Carica una cartella o un intero progetto"
-                  aria-label="Carica cartella"
+                  title={t.uploadFolder}
+                  aria-label={t.folderLabel}
                   className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
                 >
                   <FolderPlus size={15} />
@@ -1359,8 +1461,8 @@ const DemoSection = () => {
                   type="button"
                   disabled={isZipLoading}
                   onClick={() => zipInputRef.current?.click()}
-                  title="Carica archivio ZIP"
-                  aria-label="Carica ZIP"
+                  title={t.zipLabel}
+                  aria-label={t.zipLabel}
                   className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0 disabled:opacity-50"
                 >
                   <Archive size={15} />
@@ -1369,8 +1471,8 @@ const DemoSection = () => {
                   type="button"
                   onClick={() => setShowGithubComposer((v) => !v)}
                   aria-expanded={showGithubComposer}
-                  title="Importa da GitHub"
-                  aria-label="Importa da GitHub"
+                  title={t.githubLabel}
+                  aria-label={t.githubLabel}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${showGithubComposer ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary hover:bg-emerald-900/20"}`}
                 >
                   <Github size={15} />
@@ -1385,7 +1487,7 @@ const DemoSection = () => {
                   type="button"
                   onClick={() => sendChatMessage(chatInput)}
                   disabled={!chatInput.trim() || isLoading || !code.trim()}
-                  aria-label="Invia messaggio"
+                  aria-label={t.sendLabel}
                   className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
                 >
                   {isLoading ? (
@@ -1417,7 +1519,7 @@ const DemoSection = () => {
                   onClick={importFromGitHub}
                   className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
                 >
-                  {isGithubLoading ? "…" : "Importa"}
+                  {isGithubLoading ? "…" : t.importBtn}
                 </button>
               </div>
             )}
@@ -1433,7 +1535,7 @@ const DemoSection = () => {
                     <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                     <button
                       type="button"
-                      aria-label={`Rimuovi ${file.path ?? file.name}`}
+                      aria-label={`${t.removePrefix} ${file.path ?? file.name}`}
                       onClick={() => removeAttachment(index)}
                       className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
                     >
@@ -1444,7 +1546,7 @@ const DemoSection = () => {
               </div>
             )}
             <p className="text-[10px] text-gray-600 mt-1.5 text-center">
-              Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
+              {t.hintA} &middot; {t.hintB} &middot; {t.hintC}
             </p>
           </div>
         </div>
@@ -1487,7 +1589,7 @@ const DemoSection = () => {
           className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-visible"
         >
           <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
-          Prova Chat AI
+          {t.tryChat}
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
           <span className="pointer-events-none absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md shadow-white/30 group-hover:animate-ping" />
           <span className="pointer-events-none absolute -bottom-1.5 -left-2 w-2 h-2 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75 shadow-sm group-hover:animate-ping" />

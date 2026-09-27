@@ -3,7 +3,7 @@ export interface FAQItem {
   answer: string;
 }
 
-export const faqs: FAQItem[] = [
+export const faqsIt: FAQItem[] = [
   {
     question: "Come funziona Semplycode?",
     answer:
@@ -45,3 +45,49 @@ export const faqs: FAQItem[] = [
       "Sì, l'analisi AI richiede connessione. Puoi scrivere codice nell'editor offline e analizzare quando sei online.",
   },
 ];
+
+export const faqsEn: FAQItem[] = [
+  {
+    question: "How does Semplycode work?",
+    answer:
+      "Open Chat AI, paste code or upload files. The AI produces a report with errors, explanations, suggestions and fixed code. You can also chat about the code, export the report or share a link.",
+  },
+  {
+    question: "Do I need to sign up right away?",
+    answer:
+      "No. You can try Chat AI as a guest with 3 analyses per day. With a free account you get 30 credits per month (≈30k tokens, ~6 analyses), chat history and dashboard. 1 credit = 1,000 tokens ≈ 4,000 characters.",
+  },
+  {
+    question: "Which languages are supported?",
+    answer:
+      "JavaScript, TypeScript, Python, Java, C/C++, Go, Rust, PHP, SQL, CSS, HTML, JSON and more. The language is detected automatically.",
+  },
+  {
+    question: "How is my data handled?",
+    answer:
+      "Code is sent to the AI engine for analysis. If you're registered, chats can be saved to your account. We don't sell your code. Read the privacy policy for details.",
+  },
+  {
+    question: "Can I upload multiple files or a ZIP?",
+    answer:
+      "Yes, up to 5 files (100KB each) or a ZIP archive in Chat AI. You can also import a single file from GitHub by pasting the URL.",
+  },
+  {
+    question: "What's the difference between plans?",
+    answer:
+      "Free: 30 credits/month ≈ ~6 analyses. Starter: 1,500 credits/month ≈ ~300 analyses and in-depth reviews. Pro: 3,000 credits/month ≈ ~600 analyses, ZIP and advanced models. Team: waitlist with centralized billing, up to 20 files.",
+  },
+  {
+    question: "Is the Chrome extension available?",
+    answer:
+      "Coming soon: the Chrome Web Store listing is being prepared (src/lib/extension.ts). It analyzes code on any page from the side panel once published; analyzed code is not saved by default.",
+  },
+  {
+    question: "Do I need an internet connection?",
+    answer:
+      "Yes, AI analysis requires a connection. You can write code in the editor offline and analyze when you're online.",
+  },
+];
+
+// Alias IT per SEO JSON-LD (StructuredData.tsx importa `faqs`).
+export const faqs: FAQItem[] = faqsIt;

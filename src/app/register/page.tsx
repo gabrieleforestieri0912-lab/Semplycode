@@ -6,8 +6,9 @@ import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, AlertCircle, Eye, EyeOff,
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import CodeFloatBackground from "@/app/components/CodeFloatBackground";
+import { useLanguage } from '../../context/LanguageContext';
 
-function getPasswordStrength(password: string): { label: string; color: string; width: string } {
+function getPasswordStrength(password: string, language: 'it' | 'en'): { label: string; color: string; width: string } {
   if (!password) return { label: '', color: '', width: '0%' };
   let score = 0;
   if (password.length >= 6) score++;
@@ -15,17 +16,69 @@ function getPasswordStrength(password: string): { label: string; color: string; 
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  const map = [
-    { label: 'Debole', color: 'bg-red-500', width: '20%' },
-    { label: 'Media', color: 'bg-orange-500', width: '40%' },
-    { label: 'Buona', color: 'bg-yellow-500', width: '60%' },
-    { label: 'Forte', color: 'bg-emerald-500', width: '80%' },
-    { label: 'Molto forte', color: 'bg-emerald-400', width: '100%' },
-  ];
-  return map[Math.min(score, 4)];
+  const labels = language === 'en'
+    ? ['Weak', 'Average', 'Good', 'Strong', 'Very strong']
+    : ['Debole', 'Media', 'Buona', 'Forte', 'Molto forte'];
+  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-emerald-400'];
+  const widths = ['20%', '40%', '60%', '80%', '100%'];
+  const idx = Math.min(score, 4);
+  return { label: labels[idx], color: colors[idx], width: widths[idx] };
 }
 
 export default function RegisterPage() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      registerFailed: 'Registrazione fallita',
+      title: 'Inizia oggi',
+      hasAccount: "Hai già un account?",
+      loginHere: 'Accedi qui',
+      doneTitle: 'Registrazione completata!',
+      doneBodyA: "Ti abbiamo inviato un'email di conferma a",
+      doneBodyB: "Clicca il link nell'email per attivare il tuo account.",
+      noMail: 'Non hai ricevuto nulla? Controlla la cartella spam.',
+      firstName: 'Nome',
+      lastName: 'Cognome',
+      workEmail: 'Email di Lavoro',
+      password: 'Password',
+      minChars: 'Min. 8 caratteri',
+      hidePassword: 'Nascondi password',
+      showPassword: 'Mostra password',
+      termsA: 'Creando un account, accetti i nostri',
+      termsB: 'Termini di Servizio',
+      termsC: 'e',
+      termsD: 'Privacy Policy',
+      createAccount: 'Crea Account',
+      orContinue: 'oppure continua con',
+      continueGoogle: 'Continua con Google',
+      continueGithub: 'Continua con GitHub',
+    },
+    en: {
+      registerFailed: 'Registration failed',
+      title: 'Get started today',
+      hasAccount: 'Already have an account?',
+      loginHere: 'Log in here',
+      doneTitle: 'Registration complete!',
+      doneBodyA: 'We sent a confirmation email to',
+      doneBodyB: 'Click the link in the email to activate your account.',
+      noMail: "Didn't receive anything? Check your spam folder.",
+      firstName: 'First name',
+      lastName: 'Last name',
+      workEmail: 'Work Email',
+      password: 'Password',
+      minChars: 'Min. 8 characters',
+      hidePassword: 'Hide password',
+      showPassword: 'Show password',
+      termsA: 'By creating an account, you accept our',
+      termsB: 'Terms of Service',
+      termsC: 'and',
+      termsD: 'Privacy Policy',
+      createAccount: 'Create Account',
+      orContinue: 'or continue with',
+      continueGoogle: 'Continue with Google',
+      continueGithub: 'Continue with GitHub',
+    },
+  }[language];
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -57,7 +110,7 @@ export default function RegisterPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Registrazione fallita');
+          throw new Error(data.error || t.registerFailed);
         }
 
         if (data.needsEmailConfirmation) {
@@ -91,11 +144,11 @@ export default function RegisterPage() {
         Home
       </Link>
       <div className="relative z-10 w-full max-w-md space-y-4 text-center">
-        <h2 className="text-2xl font-extrabold text-[#0f172a]">Inizia oggi</h2>
+        <h2 className="text-2xl font-extrabold text-[#0f172a]">{t.title}</h2>
         <p className="text-sm text-[#475569]">
-          Hai già un account?{' '}
+          {t.hasAccount}{' '}
           <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
-            Accedi qui
+            {t.loginHere}
           </Link>
         </p>
 
@@ -111,13 +164,13 @@ export default function RegisterPage() {
             <div className="flex items-start gap-3">
               <CheckCircle className="w-6 h-6 text-emerald-500 shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-bold text-emerald-700 mb-1">Registrazione completata!</h3>
+                <h3 className="font-bold text-emerald-700 mb-1">{t.doneTitle}</h3>
                 <p className="text-sm text-emerald-600 leading-relaxed">
-                  Ti abbiamo inviato un&apos;email di conferma a <strong className="text-emerald-700">{formData.email}</strong>.
-                  Clicca il link nell&apos;email per attivare il tuo account.
+                  {t.doneBodyA} <strong className="text-emerald-700">{formData.email}</strong>.
+                  {t.doneBodyB}
                 </p>
                 <p className="text-xs text-emerald-500 mt-2">
-                  Non hai ricevuto nulla? Controlla la cartella spam.
+                  {t.noMail}
                 </p>
               </div>
             </div>
@@ -128,7 +181,7 @@ export default function RegisterPage() {
         <form className="mt-2 space-y-4 text-left" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1">Nome</label>
+              <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1">{t.firstName}</label>
               <input
                 name="firstName"
                 type="text"
@@ -139,7 +192,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1">Cognome</label>
+              <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1">{t.lastName}</label>
               <input
                 name="lastName"
                 type="text"
@@ -152,7 +205,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1 block">Email di Lavoro</label>
+            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1 block">{t.workEmail}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
               <input
@@ -167,7 +220,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1 block">Password</label>
+            <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider ml-1 block">{t.password}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
               <input
@@ -176,13 +229,13 @@ export default function RegisterPage() {
                 required
                 onChange={handleChange}
                 className="w-full bg-white border border-[#e2e8f0] rounded-2xl py-3 pl-12 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-[#0f172a] placeholder:text-[#64748b]"
-                placeholder="Min. 8 caratteri"
+                placeholder={t.minChars}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#94a3b8] transition-colors"
-                aria-label={showPassword ? 'Nascondi password' : 'Mostra password'}
+                aria-label={showPassword ? t.hidePassword : t.showPassword}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -191,12 +244,12 @@ export default function RegisterPage() {
               <div className="mt-2">
                 <div className="h-1.5 bg-[#e2e8f0] rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${getPasswordStrength(formData.password).color}`}
-                    style={{ width: getPasswordStrength(formData.password).width }}
+                    className={`h-full rounded-full transition-all ${getPasswordStrength(formData.password, language).color}`}
+                    style={{ width: getPasswordStrength(formData.password, language).width }}
                   />
                 </div>
-                <p className={`text-xs mt-1 font-medium ${getPasswordStrength(formData.password).color.replace('bg-', 'text-')}`}>
-                  {getPasswordStrength(formData.password).label}
+                <p className={`text-xs mt-1 font-medium ${getPasswordStrength(formData.password, language).color.replace('bg-', 'text-')}`}>
+                  {getPasswordStrength(formData.password, language).label}
                 </p>
               </div>
             )}
@@ -205,7 +258,7 @@ export default function RegisterPage() {
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 items-start mt-2">
             <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
             <p className="text-xs text-emerald-700 leading-relaxed">
-              Creando un account, accetti i nostri <strong>Termini di Servizio</strong> e <strong>Privacy Policy</strong>.
+              {t.termsA} <strong>{t.termsB}</strong> {t.termsC} <strong>{t.termsD}</strong>.
             </p>
           </div>
 
@@ -215,7 +268,7 @@ export default function RegisterPage() {
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
               <span className="flex items-center gap-2">
-                Crea Account <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {t.createAccount} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </span>
             )}
           </button>
@@ -225,7 +278,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-[#e2e8f0]"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-white px-3 text-xs text-[#64748b]">oppure continua con</span>
+              <span className="bg-white px-3 text-xs text-[#64748b]">{t.orContinue}</span>
             </div>
           </div>
 
@@ -243,7 +296,7 @@ export default function RegisterPage() {
               <path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.77-4.58l-7.98-6.19A23.99 23.99 0 000 24c0 5.13 1.62 9.87 4.38 13.69l6.15-5.1z"/>
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
-            Continua con Google
+            {t.continueGoogle}
           </button>
 
           <button
@@ -257,7 +310,7 @@ export default function RegisterPage() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            Continua con GitHub
+            {t.continueGithub}
           </button>
         </form>
         )}

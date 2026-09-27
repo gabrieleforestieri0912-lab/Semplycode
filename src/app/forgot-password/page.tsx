@@ -3,8 +3,30 @@
 import React, { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowRight, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ForgotPasswordPage() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      sendError: "Errore durante l'invio",
+      title: 'Password Dimenticata?',
+      subtitle: 'Inserisci la tua email e ti invieremo le istruzioni per reimpostare la password.',
+      emailLabel: 'Indirizzo Email',
+      send: 'Invia Link di Reset',
+      remember: 'Ricordi la password?',
+      login: 'Accedi',
+    },
+    en: {
+      sendError: 'Error sending the email',
+      title: 'Forgot Password?',
+      subtitle: 'Enter your email and we will send you instructions to reset your password.',
+      emailLabel: 'Email Address',
+      send: 'Send Reset Link',
+      remember: 'Remember your password?',
+      login: 'Log in',
+    },
+  }[language];
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -26,7 +48,7 @@ export default function ForgotPasswordPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Errore durante l\'invio');
+        throw new Error(data.error || t.sendError);
       }
 
       setSuccess(data.message);
@@ -46,9 +68,9 @@ export default function ForgotPasswordPage() {
       </Link>
       <div className="max-w-md w-full space-y-4 text-center">
 
-        <h2 className="text-2xl font-extrabold text-[#0f172a]">Password Dimenticata?</h2>
+        <h2 className="text-2xl font-extrabold text-[#0f172a]">{t.title}</h2>
         <p className="text-sm text-[#475569] text-center">
-          Inserisci la tua email e ti invieremo le istruzioni per reimpostare la password.
+          {t.subtitle}
         </p>
 
         {error && (
@@ -68,7 +90,7 @@ export default function ForgotPasswordPage() {
         <form className="mt-2 space-y-4 text-left" onSubmit={handleSubmit}>
           <div className="relative">
             <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
-              Indirizzo Email
+              {t.emailLabel}
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
@@ -93,7 +115,7 @@ export default function ForgotPasswordPage() {
               <Loader2 className="animate-spin w-5 h-5" />
             ) : (
               <>
-                Invia Link di Reset
+                {t.send}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -101,9 +123,9 @@ export default function ForgotPasswordPage() {
         </form>
 
         <div className="text-center text-sm text-[#475569]">
-          Ricordi la password?{' '}
+          {t.remember}{' '}
           <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
-            Accedi
+            {t.login}
           </Link>
         </div>
       </div>

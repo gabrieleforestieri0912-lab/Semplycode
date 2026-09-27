@@ -96,6 +96,11 @@ const Navbar = () => {
     profile: "Profilo",
     logout: "Esci",
     editor: "Editor",
+    drawer: "Il mio Cassetto",
+    startShort: "Inizia",
+    userFallback: "Utente",
+    quotaNote: "10 analisi/giorno",
+    menuLabel: "Apri/chiudi menu",
   } as const;
   const enDict: Record<keyof typeof itDict, string> = {
     features: "Features",
@@ -110,6 +115,11 @@ const Navbar = () => {
     profile: "Profile",
     logout: "Log out",
     editor: "Editor",
+    drawer: "My Drawer",
+    startShort: "Start",
+    userFallback: "User",
+    quotaNote: "10 analyses/day",
+    menuLabel: "Toggle menu",
   };
   const translations: Record<string, typeof itDict> = {
     it: itDict,
@@ -149,7 +159,7 @@ const Navbar = () => {
 
   // Menu minimalista: solo essenziali (il resto è già in navbar)
   const profileItems = [
-    { icon: Bookmark, label: "Il mio Cassetto", href: "/notes" },
+    { icon: Bookmark, label: t.drawer, href: "/notes" },
     { icon: Settings, label: t.settings, href: "/settings" },
   ];
 
@@ -281,7 +291,7 @@ const Navbar = () => {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold text-[#0f172a] truncate flex items-center gap-1.5">
-                              {sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || "Utente"}
+                              {sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || t.userFallback}
                               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/30" />
                             </p>
                             <p className="text-xs text-[#64748b] truncate">
@@ -327,7 +337,7 @@ const Navbar = () => {
                       </div>
                       <div className="px-4 py-2.5 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center justify-between">
                         <span className="text-[11px] text-[#94a3b8]">Semplycode AI</span>
-                        <span className="text-[11px] font-medium text-emerald-600">10 analisi/giorno</span>
+                        <span className="text-[11px] font-medium text-emerald-600">{t.quotaNote}</span>
                       </div>
                     </motion.div>
                   </>
@@ -352,7 +362,7 @@ const Navbar = () => {
               >
                 <Rocket size={15} />
                 <span className="hidden sm:inline">{t.getStarted}</span>
-                <span className="sm:hidden">Inizia</span>
+                <span className="sm:hidden">{t.startShort}</span>
               </Link>
             </>
           )}
@@ -361,7 +371,7 @@ const Navbar = () => {
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="xl:hidden flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl hover:bg-black/[0.04] transition-colors text-[#475569] hover:text-[#0f172a]"
-            aria-label="Toggle menu"
+            aria-label={t.menuLabel}
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -416,7 +426,7 @@ const Navbar = () => {
                       className={mobileNavLinkClass}
                     >
                       <BarChart3 className="w-4 h-4 text-emerald-500" />
-                      Dashboard
+                      {t.dashboard}
                     </Link>
                     <Link
                       href="/chat"
@@ -432,7 +442,7 @@ const Navbar = () => {
                       className={mobileNavLinkClass}
                     >
                       <Bookmark className="w-4 h-4 text-emerald-500" />
-                      Il mio Cassetto
+                      {t.drawer}
                     </Link>
                     <Link
                       href="/settings"
@@ -440,7 +450,7 @@ const Navbar = () => {
                       className={mobileNavLinkClass}
                     >
                       <Settings className="w-4 h-4 text-emerald-500" />
-                      Impostazioni
+                      {t.settings}
                     </Link>
                     <button
                       type="button"
@@ -448,7 +458,7 @@ const Navbar = () => {
                       className="flex items-center gap-3 px-5 py-3 rounded-xl text-base font-semibold text-red-600 hover:bg-red-500/10 transition-colors text-left"
                     >
                       <LogOut className="w-4 h-4" />
-                      Esci
+                      {t.logout}
                     </button>
                   </div>
                 ) : (

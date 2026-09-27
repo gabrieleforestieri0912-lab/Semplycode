@@ -147,7 +147,7 @@ export function buildAnalysisSystemPrompt({
   const structureRaw = STRUCTURE_BY_TYPE[normalized] || BASE_CORRECTION;
   const structure = structureRaw.replace(/\{\{LANG\}\}/g, lang);
 
-  return `Sei un esperto Code Reviewer e Tutor italiano. Rispondi SEMPRE in italiano.
+  return `Sei un esperto Code Reviewer e Tutor. Rispondi SEMPRE nella stessa lingua del messaggio dell'utente (italiano o inglese): se scrive in italiano rispondi in italiano, se scrive in inglese rispondi in inglese.
 ${focus}
 ${normalized === 'creation' ? 'Se il codice fornito è vuoto o parziale, proponi tu il progetto base coerente con la richiesta.' : 'La PRIORITÀ è il codice fornito dall\'utente.'}${errorRule}${lineRule}
 ${QUALITY_RULES}
@@ -192,3 +192,30 @@ export const ANALYSIS_TYPE_DESCRIPTIONS: Record<string, string> = {
   revision: 'Ripulisce e ottimizza',
   creation: 'Guida passo-passo al progetto',
 };
+
+const ANALYSIS_TYPE_LABELS_EN: Record<string, string> = {
+  correction: 'Fix',
+  revision: 'Review',
+  creation: 'Build',
+  full: 'Review (legacy)',
+  security: 'Security',
+  performance: 'Performance',
+  style: 'Style',
+  debug: 'Debug',
+};
+
+const ANALYSIS_TYPE_DESCRIPTIONS_EN: Record<string, string> = {
+  correction: 'Fixes errors only',
+  revision: 'Cleans up and optimizes',
+  creation: 'Step-by-step project guide',
+};
+
+/** Etichette dei tipi di analisi nella lingua UI (it/en). */
+export function getAnalysisTypeLabels(uiLang?: string): Record<string, string> {
+  return uiLang === 'en' ? ANALYSIS_TYPE_LABELS_EN : ANALYSIS_TYPE_LABELS;
+}
+
+/** Descrizioni dei tipi di analisi nella lingua UI (it/en). */
+export function getAnalysisTypeDescriptions(uiLang?: string): Record<string, string> {
+  return uiLang === 'en' ? ANALYSIS_TYPE_DESCRIPTIONS_EN : ANALYSIS_TYPE_DESCRIPTIONS;
+}

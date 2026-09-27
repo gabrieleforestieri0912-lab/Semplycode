@@ -1,8 +1,45 @@
+"use client";
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLanguage } from "@/context/LanguageContext";
 
 const Footer = () => {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      tagline: "Il tuo compagno AI per analizzare, debuggare e ottimizzare il codice con intelligenza e semplicità.",
+      product: "Prodotto",
+      howItWorks: "Come Funziona",
+      features: "Funzionalità",
+      liveDemo: "Demo Live",
+      pricing: "Prezzi",
+      chromeExtension: "Estensione Chrome",
+      support: "Supporto",
+      sendFeedback: "Invia Feedback",
+      legal: "Legale",
+      privacy: "Privacy",
+      terms: "Termini di Servizio",
+      rights: "Tutti i diritti riservati.",
+    },
+    en: {
+      tagline: "Your AI companion to analyze, debug and optimize code with intelligence and simplicity.",
+      product: "Product",
+      howItWorks: "How it Works",
+      features: "Features",
+      liveDemo: "Live Demo",
+      pricing: "Pricing",
+      chromeExtension: "Chrome Extension",
+      support: "Support",
+      sendFeedback: "Send Feedback",
+      legal: "Legal",
+      privacy: "Privacy",
+      terms: "Terms of Service",
+      rights: "All rights reserved.",
+    },
+  }[language];
+
   return (
     <footer className="py-12 sm:py-16 md:py-20 3xl:py-28 bg-[#080d14] border-t border-white/10">
       <div className="container mx-auto max-w-7xl 2xl:max-w-screen-2xl 3xl:max-w-[1720px] 4xl:max-w-[1920px]">
@@ -25,8 +62,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed max-w-[280px]">
-              Il tuo compagno AI per analizzare, debuggare e ottimizzare il codice con
-              intelligenza e semplicità.
+              {t.tagline}
             </p>
           </div>
 
@@ -35,33 +71,33 @@ const Footer = () => {
             {/* Prodotto */}
             <div>
               <h4 className="font-semibold mb-4 text-xs uppercase tracking-[1.5px] text-emerald-400 flex items-center gap-2">
-                Prodotto
+                {t.product}
                 <span className="h-px w-4 bg-emerald-400/60" />
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="/#come-funziona" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Come Funziona
+                    {t.howItWorks}
                   </Link>
                 </li>
                 <li>
                   <Link href="/#funzionalita" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Funzionalità
+                    {t.features}
                   </Link>
                 </li>
                 <li>
                   <Link href="/#demo" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Demo Live
+                    {t.liveDemo}
                   </Link>
                 </li>
                 <li>
                   <Link href="/#prezzi" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Prezzi
+                    {t.pricing}
                   </Link>
                 </li>
                 <li>
                   <Link href="/#estensione" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Estensione Chrome
+                    {t.chromeExtension}
                   </Link>
                 </li>
               </ul>
@@ -70,13 +106,13 @@ const Footer = () => {
             {/* Supporto */}
             <div>
               <h4 className="font-semibold mb-4 text-xs uppercase tracking-[1.5px] text-emerald-400 flex items-center gap-2">
-                Supporto
+                {t.support}
                 <span className="h-px w-4 bg-emerald-400/60" />
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="/feedback" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Invia Feedback
+                    {t.sendFeedback}
                   </Link>
                 </li>
               </ul>
@@ -85,18 +121,18 @@ const Footer = () => {
             {/* Legale */}
             <div>
               <h4 className="font-semibold mb-4 text-xs uppercase tracking-[1.5px] text-emerald-400 flex items-center gap-2">
-                Legale
+                {t.legal}
                 <span className="h-px w-4 bg-emerald-400/60" />
               </h4>
               <ul className="space-y-3 text-sm">
                 <li>
                   <Link href="/privacy" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Privacy
+                    {t.privacy}
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="text-slate-400 hover:text-emerald-400 hover:underline transition-all duration-200 hover:translate-x-0.5 inline-block">
-                    Termini di Servizio
+                    {t.terms}
                   </Link>
                 </li>
               </ul>
@@ -107,7 +143,7 @@ const Footer = () => {
         {/* Bottom bar — icone social senza destinazione reale rimosse; GitHub personale rimosso (non canale prodotto) */}
         <div className="border-t border-white/10 pt-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm">
           <p className="text-slate-400 text-xs sm:text-sm text-center sm:text-left">
-            © {new Date().getFullYear()} Semplycode. Tutti i diritti riservati.
+            © {new Date().getFullYear()} Semplycode. {t.rights}
           </p>
         </div>
       </div>

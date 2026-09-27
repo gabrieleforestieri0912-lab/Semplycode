@@ -14,7 +14,7 @@ import EditorWrapper from "./EditorWrapper";
 import Onboarding, { ONBOARDING_KEY } from "./Onboarding";
 import QuotaBadge from "./QuotaBadge";
 import CodeApplyModal from "./playground/CodeApplyModal";
-import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS, REVIEWER_DEPTH_RULES } from "@/lib/analysisPrompts";
+import { buildAnalysisSystemPrompt, REVIEWER_DEPTH_RULES, getAnalysisTypeLabels, getAnalysisTypeDescriptions } from "@/lib/analysisPrompts";
 import { postChat, postChatStream, formatApiError } from "@/lib/playgroundApi";
 import {
   MessageSquare,
@@ -66,6 +66,7 @@ import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   ChatProject,
   loadProjectsFromStorage,
@@ -311,6 +312,11 @@ const FormattedAIResponse = ({
   enableTyping = false,
   highlightedLine = null,
 }: FormattedAIResponseProps) => {
+  const { language: uiLang } = useLanguage();
+  const tResp = {
+    it: { apply: "Applica", code: "codice", line: "riga" },
+    en: { apply: "Apply", code: "code", line: "line" },
+  }[uiLang];
   const [displayedContent, setDisplayedContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
@@ -483,7 +489,7 @@ const FormattedAIResponse = ({
           );
         }
         const match = /language-(\w+)/.exec(className || "");
-        const lang = match?.[1] || "codice";
+        const lang = match?.[1] || tResp.code;
         const raw = Array.isArray(children)
           ? children.join("")
           : String(children ?? "").replace(/\n$/, "");
@@ -505,7 +511,7 @@ const FormattedAIResponse = ({
                   );
                 }}
               >
-                Applica
+                {tResp.apply}
               </button>
             </div>
             <pre className="p-4 overflow-x-auto m-0 max-h-80 custom-scrollbar">
@@ -538,7 +544,7 @@ const FormattedAIResponse = ({
             onClick={() => onLineClick?.(lineNum)}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-            riga {lineNum}
+            {tResp.line} {lineNum}
           </button>
         ))}
       </>
@@ -570,6 +576,31 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave, highlightedLine, userAvatar, userName }: ChatMessageProps) => {
+  const { language: uiLang } = useLanguage();
+  const tMsg = {
+    it: {
+      copyReply: "Copia risposta",
+      copied: "Copiato",
+      copy: "Copia",
+      useful: "Utile",
+      notUseful: "Non utile",
+      saveToNotes: "Salva nel cassetto",
+      save: "Salva",
+      regenerate: "Rielabora",
+      you: "Tu",
+    },
+    en: {
+      copyReply: "Copy reply",
+      copied: "Copied",
+      copy: "Copy",
+      useful: "Helpful",
+      notUseful: "Not helpful",
+      saveToNotes: "Save to drawer",
+      save: "Save",
+      regenerate: "Regenerate",
+      you: "You",
+    },
+  }[uiLang];
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"liked" | "disliked" | null>(null);
@@ -630,17 +661,17 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                   type="button"
                   onClick={handleCopy}
                   className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-primary rounded-md hover:bg-emerald-900/15 transition-all"
-                  title="Copia risposta"
+                  title={tMsg.copyReply}
                 >
                   {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? "Copiato" : "Copia"}
+                  {copied ? tMsg.copied : tMsg.copy}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFeedback(feedback === "liked" ? null : "liked")}
                   className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${feedback === "liked" ? "text-emerald-400 bg-emerald-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
                     }`}
-                  title="Utile"
+                  title={tMsg.useful}
                 >
                   <ThumbsUp size={12} />
                 </button>
@@ -649,7 +680,7 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                   onClick={() => setFeedback(feedback === "disliked" ? null : "disliked")}
                   className={`flex items-center gap-1 px-2 py-1 text-[10px] rounded-md transition-all ${feedback === "disliked" ? "text-red-400 bg-red-500/15" : "text-gray-500 hover:text-primary hover:bg-emerald-900/15"
                     }`}
-                  title="Non utile"
+                  title={tMsg.notUseful}
                 >
                   <ThumbsDown size={12} />
                 </button>
@@ -658,10 +689,10 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                     type="button"
                     onClick={onSave}
                     className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-emerald-400 rounded-md hover:bg-emerald-900/15 transition-all"
-                    title="Salva nel cassetto"
+                    title={tMsg.saveToNotes}
                   >
                     <Bookmark size={12} />
-                    Salva
+                    {tMsg.save}
                   </button>
                 )}
                 {onRegenerate && (
@@ -669,10 +700,10 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
                     type="button"
                     onClick={onRegenerate}
                     className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-emerald-400 rounded-md hover:bg-emerald-900/15 transition-all ml-auto"
-                    title="Rielabora"
+                    title={tMsg.regenerate}
                   >
                     <RefreshCw size={12} />
-                    Rielabora
+                    {tMsg.regenerate}
                   </button>
                 )}
               </div>
@@ -683,12 +714,12 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
       {isUser && (
         <div
           className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-primary/20 border border-primary/30 flex items-center justify-center mt-1"
-          title={userName || "Tu"}
+          title={userName || tMsg.you}
         >
           {userAvatar ? (
             <img
               src={userAvatar}
-              alt={userName || "Tu"}
+              alt={userName || tMsg.you}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
             />
@@ -738,7 +769,13 @@ function stripThinking(content: string): string {
   return out.trimStart();
 }
 
-function getProcessingLabel(elapsedSec: number): string {
+function getProcessingLabel(elapsedSec: number, lang: "it" | "en" = "it"): string {
+  if (lang === "en") {
+    if (elapsedSec < 5) return "Analyzing code…";
+    if (elapsedSec < 12) return "Reasoning about the fix…";
+    if (elapsedSec < 25) return "Writing the answer…";
+    return "Final touches…";
+  }
   if (elapsedSec < 5) return "Analisi del codice in corso…";
   if (elapsedSec < 12) return "Ragionamento sul fix…";
   if (elapsedSec < 25) return "Scrittura della risposta…";
@@ -828,6 +865,241 @@ export default function Chat() {
   const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const { language: uiLang } = useLanguage();
+  const typeLabels = getAnalysisTypeLabels(uiLang);
+  const typeDescs = getAnalysisTypeDescriptions(uiLang);
+  const t = {
+    it: {
+      newChat: "Nuova Chat",
+      newChatA11y: "Nuova chat",
+      searchChats: "Cerca chat",
+      searchChatsPlaceholder: "Cerca chat...",
+      projects: "Progetti",
+      recentChats: "Chat recenti",
+      withoutProject: "Senza Progetto",
+      withoutProjectLower: "Senza progetto",
+      pinSidebarOpen: "Fissa sidebar aperta",
+      unpinSidebarHover: "Sblocca sidebar (chiudi su hover-out)",
+      pinSidebar: "Fissa sidebar",
+      unpinSidebar: "Sblocca sidebar",
+      newProject: "Nuovo progetto",
+      createNewProject: "Crea nuovo progetto",
+      projectNamePlaceholder: "Nome progetto...",
+      color: "Colore:",
+      create: "Crea",
+      cancel: "Annulla",
+      renameProject: "Rinomina progetto",
+      deleteProject: "Elimina progetto",
+      deleteProjectConfirm: "Eliminare questo progetto? Le chat associate torneranno in 'Senza progetto'.",
+      noChatsInProject: "Nessuna chat in questo progetto",
+      moveChatToAnotherProject: "Sposta chat in un altro progetto",
+      moveToProject: "Sposta in progetto",
+      moveToAProject: "Sposta in un progetto",
+      exportChatOrCode: "Esporta chat o codice",
+      exportChat: "Esporta chat",
+      renameChat: "Rinomina chat",
+      deleteChat: "Elimina chat",
+      saveName: "Salva nome",
+      allChatsInProjects: "Tutte le chat sono organizzate nei progetti",
+      noSavedChats: "Nessuna chat salvata",
+      loginToSaveHistory: "Accedi per salvare la cronologia e ottenere 10 analisi al giorno.",
+      login: "Accedi",
+      registerFree: "Registrati gratis",
+      dashboard: "Dashboard",
+      settings: "Impostazioni",
+      switchToLight: "Passa al tema chiaro",
+      switchToDark: "Passa al tema scuro",
+      changeTheme: "Cambia tema",
+      openFiles: "File aperti",
+      close: "Chiudi",
+      guestBanner: "Ospite: 3 analisi gratuite al giorno.",
+      registerPerDay: "Registrati (10/giorno)",
+      editorPlaceholder: "Scrivi o incolla il codice qui...",
+      editorHintTitle: "Incolla il codice al centro",
+      editorHintSub: "Appena invii, l'editor si compatta e la chat scorre in fondo con animazione",
+      fullAnalysis: "Analisi Completa",
+      uploadFilesTab: "Carica File",
+      exportChatOrCodeOnly: "Esporta chat o solo codice",
+      shareAnalysis: "Condividi analisi",
+      saveToNotes: "Salva nel cassetto",
+      emptyStateMain: "Incolla il codice nell'editor e l'analisi partirà automaticamente",
+      emptyStateSub: "oppure chiedi qui sotto — l'input parte dal centro",
+      composerPlaceholder: "Chiedi all'AI qualsiasi cosa sul codice...",
+      sendMessage: "Invia messaggio",
+      folderUploadTitle: "Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror",
+      folder: "Cartella",
+      import: "Importa",
+      suggestions: ["Trova bug", "Ottimizza", "Spiega codice", "Suggerisci fix"],
+      composerHint: "Invio con Enter · Shift+Enter per andare a capo · L'AI ha sempre il contesto del codice corrente",
+      dropzoneTitle: "Trascina file, cartelle o interi progetti qui",
+      dropzoneSub: "L'AI li leggerà e avvierà l'analisi automaticamente — ogni file si apre come tab in CodeMirror",
+      chooseFiles: "Scegli file dal computer",
+      chooseFolderTitle: "Carica una cartella o un intero progetto",
+      chooseFolder: "Scegli cartella / progetto",
+      uploadLimits: "file · 100KB ciascuno · cartelle e progetti supportati (node_modules, .git esclusi) · JS, TS, Python, Java, Go, Rust…",
+      extractingZip: "Estrazione ZIP…",
+      uploadZip: "Carica archivio ZIP",
+      importFromGitHub: "Importa da GitHub",
+      errorContextLabel: "Messaggio di errore / stack trace",
+      errorContextPlaceholder: "Incolla l'errore del terminale o lo stack trace…",
+      debugHint: 'Seleziona tipo "Debug errore" e carica il codice per un\u2019analisi mirata.',
+      uploadedFiles: "File caricati",
+      removeAll: "Rimuovi tutti",
+      remove: "Rimuovi",
+      analyzingFiles: "Analisi AI in corso sui file caricati…",
+      limitReached: "Limite raggiunto",
+      limitGuest: "Hai esaurito le 3 analisi gratuite da ospite di oggi. Crea un account gratuito per avere 10 analisi al giorno.",
+      limitPlan: "Hai raggiunto il limite del tuo piano. Fai l\u2019upgrade a Starter o Pro per continuare ad analizzare senza interruzioni.",
+      limitGeneric: "Hai raggiunto il limite di utilizzo. Fai l\u2019upgrade per continuare.",
+      createFreeAccount: "Crea account gratuito",
+      upgrade: "Fai l\u2019upgrade",
+      linkCopied: "Link copiato:",
+      moveToProjectTitle: "Sposta in Progetto",
+      moveChooseProject: "Scegli il progetto in cui organizzare questa chat AI:",
+      noProjectOption: "Nessun progetto (Senza progetto)",
+      createNewProjectBtn: "Crea Nuovo Progetto",
+      exportTitle: "Esporta Chat o Codice",
+      exportFormatFor: "Seleziona il formato di esportazione per",
+      exportFull: "Esporta l\u2019intera chat (.md)",
+      exportFullDesc: "Scarica tutta la conversazione con domande, spiegazioni e blocchi di codice in formato Markdown formattato.",
+      exportCodeOnly: "Esporta solo il file con il codice",
+      exportCodeDescA: "Riconosce automaticamente il linguaggio (es. ",
+      exportCodeDescB: ") e scarica il file con l\u2019estensione esatta.",
+      configureExport: "Configura cartella / prefisso nelle impostazioni",
+      deleteChatTitle: "Elimina chat",
+      deleteChatConfirm: "Sei sicuro di voler eliminare questa chat? L\u2019operazione non può essere annullata.",
+      delete: "Elimina",
+      exportedChat: "Esportata chat:",
+      fileDownloaded: "File scaricato:",
+      exportError: "Errore durante l\u2019esportazione. Riprova.",
+      currentConversation: "Conversazione Corrente",
+      conversation: "Conversazione",
+      conversationSemplycode: "Conversazione Semplycode",
+      codeAnalysis: "Analisi Codice",
+      truncatedCode: "[codice troncato]",
+      fileWordOne: "file",
+      fileWordMany: "file",
+      you: "Tu",
+    },
+    en: {
+      newChat: "New Chat",
+      newChatA11y: "New chat",
+      searchChats: "Search chats",
+      searchChatsPlaceholder: "Search chats...",
+      projects: "Projects",
+      recentChats: "Recent chats",
+      withoutProject: "No Project",
+      withoutProjectLower: "No project",
+      pinSidebarOpen: "Pin sidebar open",
+      unpinSidebarHover: "Unpin sidebar (close on hover-out)",
+      pinSidebar: "Pin sidebar",
+      unpinSidebar: "Unpin sidebar",
+      newProject: "New project",
+      createNewProject: "Create new project",
+      projectNamePlaceholder: "Project name...",
+      color: "Color:",
+      create: "Create",
+      cancel: "Cancel",
+      renameProject: "Rename project",
+      deleteProject: "Delete project",
+      deleteProjectConfirm: "Delete this project? Associated chats will return to 'No project'.",
+      noChatsInProject: "No chats in this project",
+      moveChatToAnotherProject: "Move chat to another project",
+      moveToProject: "Move to project",
+      moveToAProject: "Move to a project",
+      exportChatOrCode: "Export chat or code",
+      exportChat: "Export chat",
+      renameChat: "Rename chat",
+      deleteChat: "Delete chat",
+      saveName: "Save name",
+      allChatsInProjects: "All chats are organized into projects",
+      noSavedChats: "No saved chats",
+      loginToSaveHistory: "Log in to save history and get 10 analyses per day.",
+      login: "Log in",
+      registerFree: "Sign up free",
+      dashboard: "Dashboard",
+      settings: "Settings",
+      switchToLight: "Switch to light theme",
+      switchToDark: "Switch to dark theme",
+      changeTheme: "Change theme",
+      openFiles: "Open files",
+      close: "Close",
+      guestBanner: "Guest: 3 free analyses per day.",
+      registerPerDay: "Sign up (10/day)",
+      editorPlaceholder: "Write or paste code here...",
+      editorHintTitle: "Paste your code in the center",
+      editorHintSub: "Once you send, the editor compacts and the chat scrolls to the bottom with animation",
+      fullAnalysis: "Full Analysis",
+      uploadFilesTab: "Upload Files",
+      exportChatOrCodeOnly: "Export chat or code only",
+      shareAnalysis: "Share analysis",
+      saveToNotes: "Save to drawer",
+      emptyStateMain: "Paste code in the editor and analysis will start automatically",
+      emptyStateSub: "or ask below — the input starts from the center",
+      composerPlaceholder: "Ask the AI anything about the code...",
+      sendMessage: "Send message",
+      folderUploadTitle: "Upload a folder or an entire project: files open as tabs in CodeMirror",
+      folder: "Folder",
+      import: "Import",
+      suggestions: ["Find bugs", "Optimize", "Explain code", "Suggest fixes"],
+      composerHint: "Send with Enter · Shift+Enter for a new line · The AI always has the current code context",
+      dropzoneTitle: "Drag files, folders or entire projects here",
+      dropzoneSub: "The AI will read them and start analysis automatically — each file opens as a tab in CodeMirror",
+      chooseFiles: "Choose files from your computer",
+      chooseFolderTitle: "Upload a folder or an entire project",
+      chooseFolder: "Choose folder / project",
+      uploadLimits: "files · 100KB each · folders and projects supported (node_modules, .git excluded) · JS, TS, Python, Java, Go, Rust…",
+      extractingZip: "Extracting ZIP…",
+      uploadZip: "Upload ZIP archive",
+      importFromGitHub: "Import from GitHub",
+      errorContextLabel: "Error message / stack trace",
+      errorContextPlaceholder: "Paste the terminal error or stack trace…",
+      debugHint: 'Select the "Debug error" type and upload code for a targeted analysis.',
+      uploadedFiles: "Uploaded files",
+      removeAll: "Remove all",
+      remove: "Remove",
+      analyzingFiles: "AI analysis running on uploaded files…",
+      limitReached: "Limit reached",
+      limitGuest: "You\u2019ve used up today\u2019s 3 free guest analyses. Create a free account to get 10 analyses per day.",
+      limitPlan: "You\u2019ve reached your plan limit. Upgrade to Starter or Pro to keep analyzing without interruption.",
+      limitGeneric: "You\u2019ve reached your usage limit. Upgrade to continue.",
+      createFreeAccount: "Create free account",
+      upgrade: "Upgrade",
+      linkCopied: "Link copied:",
+      moveToProjectTitle: "Move to Project",
+      moveChooseProject: "Choose the project to organize this AI chat in:",
+      noProjectOption: "No project (Unassigned)",
+      createNewProjectBtn: "Create New Project",
+      exportTitle: "Export Chat or Code",
+      exportFormatFor: "Select the export format for",
+      exportFull: "Export the entire chat (.md)",
+      exportFullDesc: "Download the whole conversation with questions, explanations and code blocks in formatted Markdown.",
+      exportCodeOnly: "Export only the code file",
+      exportCodeDescA: "Automatically detects the language (e.g. ",
+      exportCodeDescB: ") and downloads the file with the exact extension.",
+      configureExport: "Configure folder / prefix in settings",
+      deleteChatTitle: "Delete chat",
+      deleteChatConfirm: "Are you sure you want to delete this chat? This cannot be undone.",
+      delete: "Delete",
+      exportedChat: "Exported chat:",
+      fileDownloaded: "Downloaded file:",
+      exportError: "Export failed. Please retry.",
+      currentConversation: "Current Conversation",
+      conversation: "Conversation",
+      conversationSemplycode: "Semplycode Conversation",
+      codeAnalysis: "Code Analysis",
+      truncatedCode: "[truncated code]",
+      fileWordOne: "file",
+      fileWordMany: "files",
+      you: "You",
+    },
+  }[uiLang];
+  const getLimitText = (code?: string, serverMessage?: string): string => {
+    if (code === "GUEST_LIMIT") return t.limitGuest;
+    if (code === "PLAN_LIMIT") return t.limitPlan;
+    if (uiLang === "en") return t.limitGeneric;
+    return serverMessage || t.limitGeneric;
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<{ scrollToLine: (line: number) => void; getLineCount: () => number }>(null);
 
@@ -870,7 +1142,7 @@ export default function Chat() {
 
   const handleDeleteProject = (e: ReactMouseEvent, projectId: string) => {
     e.stopPropagation();
-    if (!confirm("Eliminare questo progetto? Le chat associate torneranno in 'Senza progetto'.")) return;
+    if (!confirm(t.deleteProjectConfirm)) return;
     deleteProject(projectId);
     setProjects(loadProjectsFromStorage());
     setChatProjectMap(loadChatProjectMap());
@@ -900,11 +1172,11 @@ export default function Chat() {
         chat._id === currentChatId && messages.length > 0
           ? messages
           : chat.messages || [];
-      const chatTitle = chat.title || "Conversazione Semplycode";
+      const chatTitle = chat.title || t.conversationSemplycode;
 
       if (mode === "full") {
         await exportChatAsMarkdown(chatTitle, chatMessages);
-        setExportNotice(`Esportata chat: ${chatTitle}.md`);
+        setExportNotice(`${t.exportedChat} ${chatTitle}.md`);
       } else {
         const activeCode =
           chat._id === currentChatId ? activeFile?.content ?? code : undefined;
@@ -914,12 +1186,12 @@ export default function Chat() {
           activeCode,
           chat.language || detectedLang
         );
-        setExportNotice(`File scaricato: ${res.filename} (${res.language})`);
+        setExportNotice(`${t.fileDownloaded} ${res.filename} (${res.language})`);
       }
       setTimeout(() => setExportNotice(null), 3500);
     } catch (err) {
       console.error("Export error:", err);
-      setExportNotice("Errore durante l'esportazione. Riprova.");
+      setExportNotice(t.exportError);
       setTimeout(() => setExportNotice(null), 3500);
     } finally {
       setExportMenuChatId(null);
@@ -1467,7 +1739,7 @@ export default function Chat() {
     if (!last?.content) {
       return;
     }
-    const md = `# Report Semplycode\n\n**Linguaggio:** ${getLanguageLabel(detectedLang)}\n**Tipo:** ${ANALYSIS_TYPE_LABELS[analysisType as keyof typeof ANALYSIS_TYPE_LABELS] || analysisType}\n**Data:** ${new Date().toLocaleString("it-IT")}\n\n---\n\n${last.content}`;
+    const md = `# Report Semplycode\n\n**${uiLang === "en" ? "Language" : "Linguaggio"}:** ${getLanguageLabel(detectedLang)}\n**${uiLang === "en" ? "Type" : "Tipo"}:** ${typeLabels[analysisType] || analysisType}\n**${uiLang === "en" ? "Date" : "Data"}:** ${new Date().toLocaleString(uiLang === "en" ? "en-US" : "it-IT")}\n\n---\n\n${last.content}`;
     const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1571,13 +1843,18 @@ export default function Chat() {
     const lang = langOverride || detectedLang;
     const lineCount = currentCode.split("\n").length;
     const needsLineRefs = lineCount > 50;
+    const en = uiLang === "en";
     const filesNote =
       sourceFiles.length > 0
-        ? `\n\nOrigine: ${sourceFiles.length} file caricato/i (${sourceFiles.map((f) => f.name).join(", ")}). Analizza ogni file e, se pertinenti, le relazioni tra di essi.`
+        ? en
+          ? `\n\nSource: ${sourceFiles.length} uploaded file(s) (${sourceFiles.map((f) => f.name).join(", ")}). Analyze each file and, where relevant, the relationships between them.`
+          : `\n\nOrigine: ${sourceFiles.length} file caricato/i (${sourceFiles.map((f) => f.name).join(", ")}). Analizza ogni file e, se pertinenti, le relazioni tra di essi.`
         : "";
     const errorNote =
       errorContext.trim() && (analysisType === "debug" || errorContext.trim())
-        ? `\n\nMessaggio / stack trace dell'utente:\n\`\`\`\n${errorContext.trim()}\n\`\`\``
+        ? en
+          ? `\n\nUser error message / stack trace:\n\`\`\`\n${errorContext.trim()}\n\`\`\``
+          : `\n\nMessaggio / stack trace dell'utente:\n\`\`\`\n${errorContext.trim()}\n\`\`\``
         : "";
 
     const systemPrompt =
@@ -1597,7 +1874,9 @@ export default function Chat() {
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analizza questo codice ${lang} (${lineCount} righe):${filesNote}${errorNote}\n\n\`\`\`${lang}\n${currentCode}\n\`\`\``,
+            content: uiLang === "en"
+              ? `Analyze this ${lang} code (${lineCount} lines):${filesNote}${errorNote}\n\n\`\`\`${lang}\n${currentCode}\n\`\`\``
+              : `Analizza questo codice ${lang} (${lineCount} righe):${filesNote}${errorNote}\n\n\`\`\`${lang}\n${currentCode}\n\`\`\``,
           },
         ],
         (chunk) => {
@@ -1630,7 +1909,7 @@ export default function Chat() {
           if (user?.email && code.trim()) {
             const title =
               code.slice(0, 40) + (code.length > 40 ? "..." : "") ||
-              "Analisi Codice";
+              t.codeAnalysis;
             fetch("/api/chat/history", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1642,7 +1921,7 @@ export default function Chat() {
                     role: "user",
                     content:
                       code.slice(0, 500) +
-                      (code.length > 500 ? "...[codice troncato]" : ""),
+                      (code.length > 500 ? `...${t.truncatedCode}` : ""),
                   },
                   { role: "assistant", content: cleaned },
                 ],
@@ -1657,17 +1936,18 @@ export default function Chat() {
           setIsLoading(false);
           setLoadingStartedAt(null);
           const errMsg = error;
-          if (code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error)) {
-            setLimitModal({ message: errMsg, code });
+          const isLimit = code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error);
+          if (isLimit) {
+            setLimitModal({ message: getLimitText(code, errMsg), code });
           }
-          setMessages([{ role: "assistant", content: `**${errMsg}**` }]);
+          setMessages([{ role: "assistant", content: `**${isLimit ? getLimitText(code, errMsg) : errMsg}**` }]);
         },
       );
     } catch (error) {
       const err = error as { status?: number; code?: string; message?: string };
       if (err?.status === 429) {
         setLimitModal({
-          message: formatApiError(err as Error),
+          message: getLimitText(err.code, formatApiError(err as Error)),
           code: err.code,
         });
       }
@@ -1701,7 +1981,7 @@ export default function Chat() {
 
     try {
       const currentCode = activeFile?.content ?? code;
-      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
+      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi sempre nella stessa lingua del messaggio dell'utente (italiano o inglese), in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
 
       postChatStream(
         [
@@ -1756,14 +2036,15 @@ export default function Chat() {
         },
         (error, code) => {
           const errMsg = error;
-          if (code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error)) {
-            setLimitModal({ message: errMsg, code });
+          const isLimit = code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error);
+          if (isLimit) {
+            setLimitModal({ message: getLimitText(code, errMsg), code });
           }
           setMessages((prev) => {
             const withError = [...prev];
             const last = withError[withError.length - 1];
             if (last?.role === "assistant" && !last.content) {
-              withError[withError.length - 1] = { role: "assistant", content: `**${errMsg}**` };
+              withError[withError.length - 1] = { role: "assistant", content: `**${isLimit ? getLimitText(code, errMsg) : errMsg}**` };
             }
             return withError;
           });
@@ -1774,7 +2055,7 @@ export default function Chat() {
     } catch (err) {
       const error = err as { status?: number; code?: string; message?: string };
       if (error?.status === 429) {
-        setLimitModal({ message: formatApiError(error as Error), code: error.code });
+        setLimitModal({ message: getLimitText(error.code, formatApiError(error as Error)), code: error.code });
       }
       setMessages([...updatedMessages, { role: "assistant", content: `**${formatApiError(error as Error)}**` }]);
       setIsLoading(false);
@@ -2022,8 +2303,8 @@ export default function Chat() {
                 <button
                   type="button"
                   onClick={toggleSidebarPin}
-                  title={isSidebarPinned ? "Sblocca sidebar (chiudi su hover-out)" : "Fissa sidebar aperta"}
-                  aria-label={isSidebarPinned ? "Sblocca sidebar" : "Fissa sidebar"}
+                  title={isSidebarPinned ? t.unpinSidebarHover : t.pinSidebarOpen}
+                  aria-label={isSidebarPinned ? t.unpinSidebar : t.pinSidebar}
                   aria-pressed={isSidebarPinned}
                   className={`ml-auto mr-1 shrink-0 w-9 h-9 rounded-xl flex items-center justify-center border transition-all ${isSidebarPinned ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "bg-[#061014] border-emerald-900/20 text-gray-500 hover:text-white hover:border-emerald-500/40"}`}
                 >
@@ -2035,16 +2316,16 @@ export default function Chat() {
             <nav className="flex-1 py-5 px-4 min-h-0 overflow-y-auto overflow-x-hidden">
               {!showSidebarLabels ? (
                 <div className="flex flex-col items-center gap-3.5 py-2">
-                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" data-tour="history" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
+                  <button type="button" onClick={startNewChat} title={t.newChatA11y} aria-label={t.newChatA11y} data-tour="history" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
                     <Plus size={20} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Cerca chat" aria-label="Cerca chat" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.searchChats} aria-label={t.searchChats} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
                     <Search size={18} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Progetti" aria-label="Progetti" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.projects} aria-label={t.projects} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
                     <FolderKanban size={18} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Chat recenti" aria-label="Chat recenti" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.recentChats} aria-label={t.recentChats} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
                     <FileCode size={18} />
                   </button>
                 </div>
@@ -2059,7 +2340,7 @@ export default function Chat() {
                       >
                         <Plus size={20} className="shrink-0" />
                         <span className="text-[15px] font-semibold whitespace-nowrap">
-                          Nuova Chat
+                          {t.newChat}
                         </span>
                       </button>
 
@@ -2071,7 +2352,7 @@ export default function Chat() {
                             type="text"
                             value={historySearch}
                             onChange={(e) => setHistorySearch(e.target.value)}
-                            placeholder="Cerca chat..."
+                            placeholder={t.searchChatsPlaceholder}
                             className="w-full bg-[#061014] border border-emerald-900/20 rounded-xl pl-9 pr-3 py-2 text-[13px] text-gray-300 placeholder-gray-600 focus:outline-none focus:border-emerald-500/40"
                           />
                         </div>
@@ -2082,7 +2363,7 @@ export default function Chat() {
                         <div className="flex items-center justify-between px-1">
                           <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                             <FolderKanban size={15} className="text-emerald-400" />
-                            <span>Progetti</span>
+                            <span>{t.projects}</span>
                             {projects.length > 0 && (
                               <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-500/20">
                                 {projects.length}
@@ -2093,8 +2374,8 @@ export default function Chat() {
                             type="button"
                             onClick={() => setIsCreatingProject(!isCreatingProject)}
                             className="p-1.5 text-gray-400 hover:text-emerald-400 rounded-lg hover:bg-emerald-950/40 transition-colors"
-                            title="Nuovo progetto"
-                            aria-label="Crea nuovo progetto"
+                            title={t.newProject}
+                            aria-label={t.createNewProject}
                           >
                             <FolderPlus size={16} />
                           </button>
@@ -2111,13 +2392,13 @@ export default function Chat() {
                               type="text"
                               value={newProjectName}
                               onChange={(e) => setNewProjectName(e.target.value)}
-                              placeholder="Nome progetto..."
+                              placeholder={t.projectNamePlaceholder}
                               className="w-full bg-[#010409] border border-emerald-900/40 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500/60"
                             />
 
                             {/* Color dots */}
                             <div className="flex items-center gap-1.5 pt-0.5">
-                              <span className="text-[10px] text-gray-500 mr-1">Colore:</span>
+                              <span className="text-[10px] text-gray-500 mr-1">{t.color}</span>
                               {PROJECT_COLORS.map((col) => (
                                 <button
                                   key={col.id}
@@ -2135,7 +2416,7 @@ export default function Chat() {
                                 type="submit"
                                 className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold rounded-md transition-colors"
                               >
-                                Crea
+                                {t.create}
                               </button>
                               <button
                                 type="button"
@@ -2145,7 +2426,7 @@ export default function Chat() {
                                 }}
                                 className="px-2.5 py-1 text-[11px] text-gray-400 hover:text-white rounded-md border border-emerald-900/30"
                               >
-                                Annulla
+                                {t.cancel}
                               </button>
                             </div>
                           </form>
@@ -2216,7 +2497,7 @@ export default function Chat() {
                                             setRenameProjectTitle(proj.name);
                                           }}
                                           className="p-1 text-gray-500 hover:text-emerald-400 rounded"
-                                          title="Rinomina progetto"
+                                          title={t.renameProject}
                                         >
                                           <PenLine size={11} />
                                         </button>
@@ -2224,7 +2505,7 @@ export default function Chat() {
                                           type="button"
                                           onClick={(e) => handleDeleteProject(e, proj.id)}
                                           className="p-1 text-gray-500 hover:text-red-400 rounded"
-                                          title="Elimina progetto"
+                                          title={t.deleteProject}
                                         >
                                           <Trash2 size={11} />
                                         </button>
@@ -2237,7 +2518,7 @@ export default function Chat() {
                                     <div className="pl-3 pr-1 pb-1 pt-0.5 space-y-0.5 border-l-2 border-emerald-500/20 ml-2.5 my-1">
                                       {filteredProjChats.length === 0 ? (
                                         <p className="py-1 px-2 text-[11px] text-gray-600 italic">
-                                          Nessuna chat in questo progetto
+                                          {t.noChatsInProject}
                                         </p>
                                       ) : (
                                         filteredProjChats.map((chat) => (
@@ -2283,7 +2564,7 @@ export default function Chat() {
                                                 <button
                                                   type="submit"
                                                   className="p-0.5 text-emerald-400 hover:text-emerald-300 shrink-0"
-                                                  aria-label="Salva nome"
+                                                  aria-label={t.saveName}
                                                 >
                                                   <Check size={11} />
                                                 </button>
@@ -2301,8 +2582,8 @@ export default function Chat() {
                                                       setMoveChatTarget({ chatId: chat._id, currentProjId: proj.id });
                                                     }}
                                                     className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                                    title="Sposta chat in un altro progetto"
-                                                    aria-label="Sposta in progetto"
+                                                    title={t.moveChatToAnotherProject}
+                                                    aria-label={t.moveToProject}
                                                   >
                                                     <FolderInput size={11} />
                                                   </button>
@@ -2313,8 +2594,8 @@ export default function Chat() {
                                                       setExportMenuChatId(chat._id);
                                                     }}
                                                     className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                                    title="Esporta chat o codice"
-                                                    aria-label="Esporta chat"
+                                                    title={t.exportChatOrCode}
+                                                    aria-label={t.exportChat}
                                                   >
                                                     <Download size={11} />
                                                   </button>
@@ -2325,8 +2606,8 @@ export default function Chat() {
                                                       setRenameChat({ chatId: chat._id, title: chat.title || "" });
                                                     }}
                                                     className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                                    title="Rinomina chat"
-                                                    aria-label="Rinomina chat"
+                                                    title={t.renameChat}
+                                                    aria-label={t.renameChat}
                                                   >
                                                     <PenLine size={11} />
                                                   </button>
@@ -2334,8 +2615,8 @@ export default function Chat() {
                                                     type="button"
                                                     onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
                                                     className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
-                                                    title="Elimina chat"
-                                                    aria-label="Elimina chat"
+                                                    title={t.deleteChat}
+                                                    aria-label={t.deleteChat}
                                                   >
                                                     <Trash2 size={11} />
                                                   </button>
@@ -2358,7 +2639,7 @@ export default function Chat() {
                       <div className="space-y-1.5 pt-1.5">
                         <div className="flex items-center justify-between px-1 mb-1.5">
                           <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                            {projects.length > 0 ? "Senza Progetto" : "Chat Recenti"}
+                            {projects.length > 0 ? t.withoutProject : t.recentChats}
                           </span>
                           <span className="text-[11px] text-gray-600">
                             {chatHistory.filter((c) => !chatProjectMap[c._id]).length}
@@ -2377,7 +2658,7 @@ export default function Chat() {
                           ))
                         ) : chatHistory.filter((c) => !chatProjectMap[c._id]).length === 0 ? (
                           <p className="px-2 py-2 text-xs text-gray-600">
-                            {projects.length > 0 ? "Tutte le chat sono organizzate nei progetti" : "Nessuna chat salvata"}
+                            {projects.length > 0 ? t.allChatsInProjects : t.noSavedChats}
                           </p>
                         ) : (
                           chatHistory
@@ -2428,7 +2709,7 @@ export default function Chat() {
                                     <button
                                       type="submit"
                                       className="p-1 text-emerald-400 hover:text-emerald-300 shrink-0"
-                                      aria-label="Salva nome"
+                                      aria-label={t.saveName}
                                     >
                                       <Check size={12} />
                                     </button>
@@ -2446,8 +2727,8 @@ export default function Chat() {
                                           setMoveChatTarget({ chatId: chat._id });
                                         }}
                                         className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                        title="Sposta in un progetto"
-                                        aria-label="Sposta in progetto"
+                                        title={t.moveToAProject}
+                                        aria-label={t.moveToProject}
                                       >
                                         <FolderInput size={12} />
                                       </button>
@@ -2458,8 +2739,8 @@ export default function Chat() {
                                           setExportMenuChatId(chat._id);
                                         }}
                                         className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                        title="Esporta chat o codice"
-                                        aria-label="Esporta chat"
+                                        title={t.exportChatOrCode}
+                                        aria-label={t.exportChat}
                                       >
                                         <Download size={12} />
                                       </button>
@@ -2470,8 +2751,8 @@ export default function Chat() {
                                           setRenameChat({ chatId: chat._id, title: chat.title || "" });
                                         }}
                                         className="p-1 text-gray-500 hover:text-emerald-400 rounded hover:bg-emerald-950/40"
-                                        title="Rinomina chat"
-                                        aria-label="Rinomina chat"
+                                        title={t.renameChat}
+                                        aria-label={t.renameChat}
                                       >
                                         <PenLine size={12} />
                                       </button>
@@ -2479,8 +2760,8 @@ export default function Chat() {
                                         type="button"
                                         onClick={(e: ReactMouseEvent) => deleteChat(e, chat._id)}
                                         className="p-1 text-gray-500 hover:text-red-400 rounded hover:bg-red-950/40"
-                                        title="Elimina chat"
-                                        aria-label="Elimina chat"
+                                        title={t.deleteChat}
+                                        aria-label={t.deleteChat}
                                       >
                                         <Trash2 size={12} />
                                       </button>
@@ -2495,19 +2776,19 @@ export default function Chat() {
                   ) : (
                     <div className="p-3 rounded-xl border border-emerald-900/25 bg-[#061014]/60 space-y-2">
                       <p className="text-xs text-gray-500 leading-relaxed">
-                        Accedi per salvare la cronologia e ottenere 10 analisi al giorno.
+                        {t.loginToSaveHistory}
                       </p>
                       <Link
                         href="/login"
                         className="block text-center text-xs font-semibold py-2 rounded-lg border border-emerald-900/40 text-gray-300 hover:text-primary"
                       >
-                        Accedi
+                        {t.login}
                       </Link>
                       <Link
                         href="/register"
                         className="block text-center text-xs font-semibold py-2 rounded-lg bg-primary text-white"
                       >
-                        Registrati gratis
+                        {t.registerFree}
                       </Link>
                     </div>
                   )}
@@ -2583,7 +2864,7 @@ export default function Chat() {
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
                           >
                             <BarChart3 size={16} />
-                            Dashboard
+                            {t.dashboard}
                           </button>
                           <button
                             onClick={() => {
@@ -2593,7 +2874,7 @@ export default function Chat() {
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
                           >
                             <Settings size={16} />
-                            Impostazioni
+                            {t.settings}
                           </button>
                         </motion.div>
                       </>
@@ -2609,7 +2890,7 @@ export default function Chat() {
                   <span
                     className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
                   >
-                    Accedi
+                    {t.login}
                   </span>
                 </Link>
               )}
@@ -2669,8 +2950,8 @@ export default function Chat() {
               <button
                 type="button"
                 onClick={toggleTheme}
-                title={theme === "dark" ? "Passa al tema chiaro" : "Passa al tema scuro"}
-                aria-label="Cambia tema"
+                title={theme === "dark" ? t.switchToLight : t.switchToDark}
+                aria-label={t.changeTheme}
                 className="flex items-center justify-center w-8 h-8 rounded-xl border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-colors"
               >
                 {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
@@ -2700,13 +2981,13 @@ export default function Chat() {
               />
               {uploadedFiles.length > 0 && (
                 <span className="text-[10px] text-primary font-mono">
-                  {uploadedFiles.length} file
+                  {uploadedFiles.length} {uploadedFiles.length === 1 ? t.fileWordOne : t.fileWordMany}
                 </span>
               )}
             </div>
           </div>
           {uploadedFiles.length > 0 && (
-            <div className="flex items-center border-b border-emerald-900/20 bg-[#0d1117]/60 overflow-x-auto custom-scrollbar shrink-0" role="tablist" aria-label="File aperti">
+            <div className="flex items-center border-b border-emerald-900/20 bg-[#0d1117]/60 overflow-x-auto custom-scrollbar shrink-0" role="tablist" aria-label={t.openFiles}>
               {uploadedFiles.map((file, i) => (
                 <div
                   key={`${file.path ?? file.name}-${i}`}
@@ -2723,7 +3004,7 @@ export default function Chat() {
                   <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                   <button
                     type="button"
-                    aria-label={`Chiudi ${file.path ?? file.name}`}
+                    aria-label={`${t.close} ${file.path ?? file.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeUploadedFile(i);
@@ -2739,13 +3020,13 @@ export default function Chat() {
           {!sessionUser && (
             <div className="px-4 py-2 bg-primary/10 border-b border-primary/20 flex items-center justify-between gap-2 text-xs shrink-0">
               <span className="text-gray-400">
-                Ospite: 3 analisi gratuite al giorno.
+                {t.guestBanner}
               </span>
               <Link
                 href="/register"
                 className="shrink-0 font-semibold text-primary hover:underline"
               >
-                Registrati (10/giorno)
+                {t.registerPerDay}
               </Link>
             </div>
           )}
@@ -2759,7 +3040,7 @@ export default function Chat() {
                 value={activeFile?.content ?? code}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => handleCodeChange(e.target.value)}
                 className="w-full h-full p-4 bg-[#010409] text-sm font-mono text-gray-100 outline-none"
-                placeholder="Scrivi o incolla il codice qui..."
+                placeholder={t.editorPlaceholder}
               />
             ) : (
               <EditorWrapper
@@ -2780,8 +3061,8 @@ export default function Chat() {
                   className="absolute inset-0 flex items-center justify-center pointer-events-none p-6"
                 >
                   <div className="pointer-events-auto text-center max-w-sm bg-[#0d1117]/90 border border-emerald-900/30 rounded-2xl px-6 py-5 shadow-2xl">
-                    <p className="text-sm font-semibold text-white mb-1">Incolla il codice al centro</p>
-                    <p className="text-xs text-gray-500">Appena invii, l&apos;editor si compatta e la chat scorre in fondo con animazione</p>
+                    <p className="text-sm font-semibold text-white mb-1">{t.editorHintTitle}</p>
+                    <p className="text-xs text-gray-500">{t.editorHintSub}</p>
                   </div>
                 </motion.div>
               )}
@@ -2803,7 +3084,7 @@ export default function Chat() {
                   }`}
               >
                 <Brain size={14} />
-                Analisi Completa
+                {t.fullAnalysis}
               </button>
               <button
                 onClick={() => setInsightsTab("files")}
@@ -2813,7 +3094,7 @@ export default function Chat() {
                   }`}
               >
                 <Upload size={14} />
-                Carica File
+                {t.uploadFilesTab}
                 {uploadedFiles.length > 0 && (
                   <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/20 text-primary text-[9px]">
                     {uploadedFiles.length}
@@ -2827,7 +3108,7 @@ export default function Chat() {
                   type="button"
                   onClick={() => setExportMenuChatId(currentChatId || "current")}
                   className="p-2 text-gray-500 hover:text-primary rounded-lg"
-                  title="Esporta chat o solo codice"
+                  title={t.exportChatOrCodeOnly}
                 >
                   <Download size={16} />
                 </button>
@@ -2835,7 +3116,7 @@ export default function Chat() {
                   type="button"
                   onClick={shareAnalysis}
                   className="p-2 text-gray-500 hover:text-primary rounded-lg"
-                  title="Condividi analisi"
+                  title={t.shareAnalysis}
                 >
                   <Share2 size={16} />
                 </button>
@@ -2843,7 +3124,7 @@ export default function Chat() {
                   type="button"
                   onClick={() => saveToNotes()}
                   className="p-2 text-gray-500 hover:text-emerald-400 rounded-lg"
-                  title="Salva nel cassetto"
+                  title={t.saveToNotes}
                 >
                   <Bookmark size={16} />
                 </button>
@@ -2890,10 +3171,10 @@ export default function Chat() {
                   >
                     <Sparkles size={36} className="mb-3 text-primary" />
                     <p className="text-sm text-gray-400 mb-2">
-                      Incolla il codice nell&apos;editor e l&apos;analisi partirà automaticamente
+                      {t.emptyStateMain}
                     </p>
                     <p className="text-xs text-gray-600 mb-5">
-                      oppure chiedi qui sotto — l&apos;input parte dal centro
+                      {t.emptyStateSub}
                     </p>
                     <motion.div
                       layoutId="chat-composer"
@@ -2901,11 +3182,11 @@ export default function Chat() {
                       className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
                       data-tour="composer-center"
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label="Modalità AI" data-tour="modes">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label={uiLang === "en" ? "AI modes" : "Modalità AI"} data-tour="modes">
                         {(['correction','revision','creation'] as const).map((mode) => {
                           const active = analysisType === mode;
-                          const label = ANALYSIS_TYPE_LABELS[mode];
-                          const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
+                          const label = typeLabels[mode];
+                          const desc = typeDescs[mode];
                           return (
                             <button
                               key={mode}
@@ -2924,12 +3205,12 @@ export default function Chat() {
                           value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
                           onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
                           className="bg-[#010409] border border-emerald-900/30 rounded-full px-3 py-1.5 text-[11px] font-bold text-gray-400 focus:outline-none focus:border-primary"
-                          title="Altre analisi"
-                          aria-label="Altre modalità di analisi"
+                          title={uiLang === "en" ? "More analyses" : "Altre analisi"}
+                          aria-label={uiLang === "en" ? "More analysis modes" : "Altre modalità di analisi"}
                         >
-                          <option value="">Altro…</option>
+                          <option value="">{uiLang === "en" ? "More…" : "Altro…"}</option>
                           {(['full','security','performance','style','debug'] as const).map((k) => (
-                            <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                            <option key={k} value={k}>{typeLabels[k]}</option>
                           ))}
                         </select>
                       </div>
@@ -2944,7 +3225,7 @@ export default function Chat() {
                             }
                           }}
                           rows={2}
-                          placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
+                          placeholder={t.composerPlaceholder}
                           className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none custom-scrollbar"
                           disabled={isLoading}
                         />
@@ -2952,7 +3233,7 @@ export default function Chat() {
                           type="button"
                           onClick={() => sendChatMessage(chatInput)}
                           disabled={!chatInput.trim() || isLoading}
-                          aria-label="Invia messaggio"
+                           aria-label={t.sendMessage}
                           className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
                         >
                           {isLoading ? (
@@ -2974,11 +3255,11 @@ export default function Chat() {
                         <button
                           type="button"
                           onClick={() => folderInputRef.current?.click()}
-                          title="Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror"
+                          title={t.folderUploadTitle}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all"
                         >
                           <FolderPlus size={13} />
-                          Cartella
+                          {t.folder}
                         </button>
                         <button
                           type="button"
@@ -3000,7 +3281,7 @@ export default function Chat() {
                         </button>
                         {uploadedFiles.length > 0 && (
                           <span className="text-[10px] text-primary font-mono ml-1">
-                            {uploadedFiles.length}/{MAX_UPLOAD_FILES} file
+                            {uploadedFiles.length}/{MAX_UPLOAD_FILES} {uploadedFiles.length === 1 ? t.fileWordOne : t.fileWordMany}
                           </span>
                         )}
                       </div>
@@ -3025,7 +3306,7 @@ export default function Chat() {
                             onClick={importFromGitHub}
                             className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
                           >
-                            {isGithubLoading ? "…" : "Importa"}
+                            {isGithubLoading ? "…" : t.import}
                           </button>
                         </div>
                       )}
@@ -3041,7 +3322,7 @@ export default function Chat() {
                               <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                               <button
                                 type="button"
-                                aria-label={`Rimuovi ${file.path ?? file.name}`}
+                                aria-label={`${t.remove} ${file.path ?? file.name}`}
                                 onClick={() => removeUploadedFile(index)}
                                 className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
                               >
@@ -3053,7 +3334,7 @@ export default function Chat() {
                       )}
                     </motion.div>
                     <div className="flex flex-wrap justify-center gap-2 max-w-xs mt-5">
-                      {["Trova bug", "Ottimizza", "Spiega codice", "Suggerisci fix"].map((suggestion) => (
+                      {t.suggestions.map((suggestion) => (
                         <button
                           key={suggestion}
                           type="button"
@@ -3094,11 +3375,11 @@ export default function Chat() {
                         }
                         highlightedLine={highlightedLine}
                         userAvatar={user?.image || null}
-                        userName={
-                          [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-                          user?.email?.split("@")[0] ||
-                          "Tu"
-                        }
+                          userName={
+                            [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+                            user?.email?.split("@")[0] ||
+                            t.you
+                          }
                       />
                     ))}
                     {(() => {
@@ -3116,7 +3397,7 @@ export default function Chat() {
                           <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-[#061014]/90 border border-emerald-900/25">
                             <Loader2 size={15} className="animate-spin text-primary shrink-0" />
                             <span className="text-xs text-gray-300">
-                              {getProcessingLabel(elapsedSec)}
+                              {getProcessingLabel(elapsedSec, uiLang)}
                             </span>
                             <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 tabular-nums">
                               {elapsedSec}s
@@ -3152,10 +3433,10 @@ export default function Chat() {
                     className="mx-auto mb-3 text-primary opacity-80"
                   />
                   <p className="text-sm font-semibold text-white mb-1">
-                    Trascina file, cartelle o interi progetti qui
+                    {t.dropzoneTitle}
                   </p>
                   <p className="text-xs text-gray-500 mb-4">
-                    L&apos;AI li leggerà e avvierà l&apos;analisi automaticamente — ogni file si apre come tab in CodeMirror
+                    {t.dropzoneSub}
                   </p>
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <button
@@ -3164,21 +3445,20 @@ export default function Chat() {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-[#061014] border border-emerald-900/30 rounded-xl text-xs font-medium text-gray-300 hover:text-primary hover:border-primary/40 transition-colors"
                     >
                       <FileText size={14} />
-                      Scegli file dal computer
+                      {t.chooseFiles}
                     </button>
                     <button
                       type="button"
                       onClick={() => folderInputRef.current?.click()}
-                      title="Carica una cartella o un intero progetto"
+                      title={t.chooseFolderTitle}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-[#061014] border border-emerald-900/30 rounded-xl text-xs font-medium text-gray-300 hover:text-primary hover:border-primary/40 transition-colors"
                     >
                       <FolderPlus size={14} />
-                      Scegli cartella / progetto
+                      {t.chooseFolder}
                     </button>
                   </div>
                   <p className="text-[10px] text-gray-600 mt-3">
-                    Max {MAX_UPLOAD_FILES} file &middot; 100KB ciascuno &middot; cartelle e progetti supportati (node_modules, .git esclusi) &middot; JS, TS, Python,
-                    Java, Go, Rust&hellip;
+                    Max {MAX_UPLOAD_FILES} {t.uploadLimits}
                   </p>
                   <input
                     ref={zipInputRef}
@@ -3198,14 +3478,14 @@ export default function Chat() {
                     className="mt-3 inline-flex items-center gap-2 px-4 py-2 border border-emerald-900/30 rounded-xl text-xs text-gray-400 hover:text-primary disabled:opacity-50"
                   >
                     <Archive size={14} />
-                    {isZipLoading ? "Estrazione ZIP&hellip;" : "Carica archivio ZIP"}
+                    {isZipLoading ? t.extractingZip : t.uploadZip}
                   </button>
                 </div>
 
                 <div className="p-4 bg-[#0a0c10]/80 border border-emerald-900/20 rounded-xl space-y-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
                     <Github size={14} className="text-primary" />
-                    Importa da GitHub
+                    {t.importFromGitHub}
                   </div>
                   <div className="flex gap-2">
                     <input
@@ -3221,7 +3501,7 @@ export default function Chat() {
                       onClick={importFromGitHub}
                       className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
                     >
-                      {isGithubLoading ? "&hellip;" : "Importa"}
+                      {isGithubLoading ? "&hellip;" : t.import}
                     </button>
                   </div>
                 </div>
@@ -3229,17 +3509,17 @@ export default function Chat() {
                 <div className="p-4 bg-[#0a0c10]/80 border border-emerald-900/20 rounded-xl space-y-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
                     <AlertCircle size={14} className="text-amber-400" />
-                    Messaggio di errore / stack trace
+                    {t.errorContextLabel}
                   </div>
                   <textarea
                     value={errorContext}
                     onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setErrorContext(e.target.value)}
                     rows={4}
-                    placeholder="Incolla l'errore del terminale o lo stack trace&hellip;"
+                    placeholder={t.errorContextPlaceholder}
                     className="w-full bg-[#010409] border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-primary font-mono"
                   />
                   <p className="text-[10px] text-gray-600">
-                    Seleziona tipo &quot;Debug errore&quot; e carica il codice per un&apos;analisi mirata.
+                    {t.debugHint}
                   </p>
                 </div>
 
@@ -3247,14 +3527,14 @@ export default function Chat() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-gray-400">
-                        File caricati ({uploadedFiles.length}/{MAX_UPLOAD_FILES})
+                        {t.uploadedFiles} ({uploadedFiles.length}/{MAX_UPLOAD_FILES})
                       </span>
                       <button
                         type="button"
                         onClick={clearUploadedFiles}
                         className="text-[10px] text-red-400 hover:text-red-300"
                       >
-                        Rimuovi tutti
+                        {t.removeAll}
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -3283,14 +3563,14 @@ export default function Chat() {
                             onClick={() => removeUploadedFile(index)}
                             className="text-[10px] text-gray-500 hover:text-red-400 shrink-0"
                           >
-                            Rimuovi
+                            {t.remove}
                           </button>
                         </div>
                       ))}
                     </div>
                     {isLoading && (
                       <p className="text-xs text-primary animate-pulse text-center">
-                        Analisi AI in corso sui file caricati&hellip;
+                        {t.analyzingFiles}
                       </p>
                     )}
                   </div>
@@ -3301,11 +3581,11 @@ export default function Chat() {
 
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
-            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI" data-tour="modes">
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label={uiLang === "en" ? "AI modes" : "Modalità AI"} data-tour="modes">
               {(['correction','revision','creation'] as const).map((mode) => {
                 const active = analysisType === mode;
-                const label = ANALYSIS_TYPE_LABELS[mode];
-                const desc = ANALYSIS_TYPE_DESCRIPTIONS[mode];
+                const label = typeLabels[mode];
+                const desc = typeDescs[mode];
                 return (
                   <button
                     key={mode}
@@ -3324,12 +3604,12 @@ export default function Chat() {
                 value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
                 onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
                 className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
-                title="Altre analisi"
-                aria-label="Altre modalità di analisi"
+                title={uiLang === "en" ? "More analyses" : "Altre analisi"}
+                aria-label={uiLang === "en" ? "More analysis modes" : "Altre modalità di analisi"}
               >
-                <option value="">Altro…</option>
+                <option value="">{uiLang === "en" ? "More…" : "Altro…"}</option>
                 {(['full','security','performance','style','debug'] as const).map((k) => (
-                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                  <option key={k} value={k}>{typeLabels[k]}</option>
                 ))}
               </select>
             </div>
@@ -3349,7 +3629,7 @@ export default function Chat() {
                   el.style.height = "auto";
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
-                placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
+                placeholder={t.composerPlaceholder}
                 className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading}
               />
@@ -3357,7 +3637,7 @@ export default function Chat() {
                 type="button"
                 onClick={() => sendChatMessage(chatInput)}
                 disabled={!chatInput.trim() || isLoading}
-                aria-label="Invia messaggio"
+                aria-label={t.sendMessage}
                 className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all disabled:scale-95"
               >
                 {isLoading ? (
@@ -3379,11 +3659,11 @@ export default function Chat() {
               <button
                 type="button"
                 onClick={() => folderInputRef.current?.click()}
-                title="Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror"
+                title={t.folderUploadTitle}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
               >
                 <FolderPlus size={12} />
-                Cartella
+                {t.folder}
               </button>
               <button
                 type="button"
@@ -3405,7 +3685,7 @@ export default function Chat() {
               </button>
               {uploadedFiles.length > 0 && (
                 <span className="text-[10px] text-primary font-mono ml-1">
-                  {uploadedFiles.length}/{MAX_UPLOAD_FILES} file
+                  {uploadedFiles.length}/{MAX_UPLOAD_FILES} {uploadedFiles.length === 1 ? t.fileWordOne : t.fileWordMany}
                 </span>
               )}
             </div>
@@ -3430,7 +3710,7 @@ export default function Chat() {
                   onClick={importFromGitHub}
                   className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
                 >
-                  {isGithubLoading ? "…" : "Importa"}
+                  {isGithubLoading ? "…" : t.import}
                 </button>
               </div>
             )}
@@ -3446,7 +3726,7 @@ export default function Chat() {
                     <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                     <button
                       type="button"
-                      aria-label={`Rimuovi ${file.path ?? file.name}`}
+                      aria-label={`${t.remove} ${file.path ?? file.name}`}
                       onClick={() => removeUploadedFile(index)}
                       className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
                     >
@@ -3457,7 +3737,7 @@ export default function Chat() {
               </div>
             )}
             <p className="text-[10px] text-gray-600 mt-1.5 text-center">
-              Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
+              {t.composerHint}
             </p>
           </motion.div>
           )}
@@ -3505,8 +3785,8 @@ export default function Chat() {
       {limitModal && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 p-4">
           <div className="max-w-md w-full bg-[#0d1117] border border-emerald-900/40 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Limite raggiunto</h3>
-            <p className="text-sm text-gray-400 mb-6">{limitModal.message}</p>
+            <h3 className="text-lg font-bold text-white mb-2">{t.limitReached}</h3>
+            <p className="text-sm text-gray-400 mb-6">{getLimitText(limitModal.code, limitModal.message)}</p>
             <div className="flex flex-col sm:flex-row gap-2">
               {limitModal.code === "GUEST_LIMIT" ? (
                 <Link
@@ -3514,7 +3794,7 @@ export default function Chat() {
                   className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm"
                   onClick={() => setLimitModal(null)}
                 >
-                  Crea account gratuito
+                  {t.createFreeAccount}
                 </Link>
               ) : (
                 <Link
@@ -3522,7 +3802,7 @@ export default function Chat() {
                   className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm"
                   onClick={() => setLimitModal(null)}
                 >
-                  Fai l&apos;upgrade
+                  {t.upgrade}
                 </Link>
               )}
               <button
@@ -3530,7 +3810,7 @@ export default function Chat() {
                 onClick={() => setLimitModal(null)}
                 className="flex-1 py-2.5 rounded-xl border border-emerald-900/30 text-gray-400 text-sm"
               >
-                Chiudi
+                {t.close}
               </button>
             </div>
           </div>
@@ -3539,7 +3819,7 @@ export default function Chat() {
 
       {shareUrl && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-[#0d1117] border border-primary/40 rounded-xl text-xs text-gray-300 shadow-xl max-w-md truncate">
-          Link copiato: {shareUrl}
+          {t.linkCopied} {shareUrl}
           <button
             type="button"
             className="ml-2 text-primary"
@@ -3554,9 +3834,9 @@ export default function Chat() {
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
           <div className="max-w-md w-full bg-[#0d1117] border border-emerald-900/40 rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FolderInput size={18} className="text-emerald-400" /> Sposta in Progetto
-              </h3>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <FolderInput size={18} className="text-emerald-400" /> {t.moveToProjectTitle}
+                </h3>
               <button
                 type="button"
                 onClick={() => setMoveChatTarget(null)}
@@ -3566,7 +3846,7 @@ export default function Chat() {
               </button>
             </div>
             <p className="text-xs text-gray-400">
-              Scegli il progetto in cui organizzare questa chat AI:
+              {t.moveChooseProject}
             </p>
 
             <div className="space-y-1.5 max-h-60 overflow-y-auto custom-scrollbar">
@@ -3579,7 +3859,7 @@ export default function Chat() {
                   }`}
               >
                 <span className="flex items-center gap-2">
-                  <FolderX size={16} className="text-gray-500" /> Nessun progetto (Senza progetto)
+                  <FolderX size={16} className="text-gray-500" /> {t.noProjectOption}
                 </span>
                 {!moveChatTarget.currentProjId && <Check size={14} className="text-emerald-400" />}
               </button>
@@ -3617,14 +3897,14 @@ export default function Chat() {
                 }}
                 className="flex-1 py-2 text-xs font-semibold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl hover:bg-emerald-900/40 transition-colors flex items-center justify-center gap-1.5"
               >
-                <Plus size={14} /> Crea Nuovo Progetto
+                <Plus size={14} /> {t.createNewProjectBtn}
               </button>
               <button
                 type="button"
                 onClick={() => setMoveChatTarget(null)}
                 className="px-4 py-2 text-xs text-gray-400 border border-emerald-900/30 rounded-xl hover:text-white"
               >
-                Annulla
+                {t.cancel}
               </button>
             </div>
           </div>
@@ -3636,13 +3916,13 @@ export default function Chat() {
           exportMenuChatId === "current"
             ? {
               _id: currentChatId || "current",
-              title: "Conversazione Corrente",
+              title: t.currentConversation,
               messages: messages,
               language: detectedLang,
             }
             : chatHistory.find((c) => c._id === exportMenuChatId) || {
               _id: exportMenuChatId,
-              title: "Conversazione",
+              title: t.conversation,
               messages: messages,
               language: detectedLang,
             };
@@ -3652,7 +3932,7 @@ export default function Chat() {
             <div className="max-w-md w-full bg-[#0d1117] border border-emerald-900/40 rounded-2xl p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Download size={18} className="text-emerald-400" /> Esporta Chat o Codice
+                  <Download size={18} className="text-emerald-400" /> {t.exportTitle}
                 </h3>
                 <button
                   type="button"
@@ -3664,7 +3944,7 @@ export default function Chat() {
               </div>
 
               <p className="text-xs text-gray-400">
-                Seleziona il formato di esportazione per <span className="text-white font-medium">&quot;{targetChat.title}&quot;</span>:
+                {t.exportFormatFor} <span className="text-white font-medium">&quot;{targetChat.title}&quot;</span>:
               </p>
 
               <div className="space-y-3">
@@ -3677,9 +3957,9 @@ export default function Chat() {
                     <FileText size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-white block">Esporta l&apos;intera chat (.md)</span>
+                    <span className="text-sm font-semibold text-white block">{t.exportFull}</span>
                     <span className="text-xs text-gray-400 leading-relaxed block mt-0.5">
-                      Scarica tutta la conversazione con domande, spiegazioni e blocchi di codice in formato Markdown formattato.
+                      {t.exportFullDesc}
                     </span>
                   </div>
                 </button>
@@ -3693,9 +3973,9 @@ export default function Chat() {
                     <FileCode size={20} />
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-white block">Esporta solo il file con il codice</span>
+                    <span className="text-sm font-semibold text-white block">{t.exportCodeOnly}</span>
                     <span className="text-xs text-gray-400 leading-relaxed block mt-0.5">
-                      Riconosce automaticamente il linguaggio (es. <code className="text-emerald-400">.py</code>, <code className="text-emerald-400">.ts</code>, <code className="text-emerald-400">.html</code>) e scarica il file con l&apos;estensione esatta.
+                      {t.exportCodeDescA}<code className="text-emerald-400">.py</code>, <code className="text-emerald-400">.ts</code>, <code className="text-emerald-400">.html</code>{t.exportCodeDescB}
                     </span>
                   </div>
                 </button>
@@ -3707,14 +3987,14 @@ export default function Chat() {
                   className="hover:text-emerald-400 underline underline-offset-2 flex items-center gap-1"
                   onClick={() => setExportMenuChatId(null)}
                 >
-                  <Settings size={12} /> Configura cartella / prefisso nelle impostazioni
+                  <Settings size={12} /> {t.configureExport}
                 </Link>
                 <button
                   type="button"
                   onClick={() => setExportMenuChatId(null)}
                   className="px-3 py-1 text-gray-400 hover:text-white rounded-lg"
                 >
-                  Chiudi
+                  {t.close}
                 </button>
               </div>
             </div>
@@ -3732,9 +4012,9 @@ export default function Chat() {
       {confirmDeleteChatId && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 p-4">
           <div className="max-w-sm w-full bg-[#0d1117] border border-emerald-900/40 rounded-2xl p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Elimina chat</h3>
+            <h3 className="text-lg font-bold text-white mb-2">{t.deleteChatTitle}</h3>
             <p className="text-sm text-gray-400 mb-6">
-              Sei sicuro di voler eliminare questa chat? L&apos;operazione non può essere annullata.
+              {t.deleteChatConfirm}
             </p>
             <div className="flex gap-2">
               <button
@@ -3742,14 +4022,14 @@ export default function Chat() {
                 onClick={confirmDeleteChat}
                 className="flex-1 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-500 transition-colors"
               >
-                Elimina
+                {t.delete}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDeleteChatId(null)}
                 className="flex-1 py-2.5 rounded-xl border border-emerald-900/30 text-gray-400 text-sm hover:text-white transition-colors"
               >
-                Annulla
+                {t.cancel}
               </button>
             </div>
           </div>

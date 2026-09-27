@@ -3,31 +3,78 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Sparkles } from 'lucide-react';
-
-const reasons = [
-  {
-    title: 'Capisci il "perché"',
-    desc: "Non ti diamo solo codice funzionante. Ti spieghiamo ogni riga, così impari davvero come funziona.",
-    accent: "#10b981",
-  },
-  {
-    title: "Impari dal tuo codice",
-    desc: "Usi il tuo codice come base per capire concetti nuovi. È come avere un tutor personale 24/7.",
-    accent: "#60a5fa",
-  },
-  {
-    title: "Codice che funziona davvero",
-    desc: "Non affidarti a AI che generano codice casuale. Noi analizziamo il TUO codice e lo miglioriamo.",
-    accent: "#a78bfa",
-  },
-  {
-    title: "Sicuro e Privato",
-    desc: "Il tuo codice non viene memorizzato. L'analisi è istantanea e il codice resta solo tuo.",
-    accent: "#fb7185",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const WhyChoose = () => {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      badge: "Perché Semplycode",
+      title: "La differenza che conta",
+      subtitle: "In un mondo pieno di AI che scrivono codice da sole, noi facciamo qualcosa di diverso.",
+      reasons: [
+        {
+          title: 'Capisci il "perché"',
+          desc: "Non ti diamo solo codice funzionante. Ti spieghiamo ogni riga, così impari davvero come funziona.",
+          accent: "#10b981",
+        },
+        {
+          title: "Impari dal tuo codice",
+          desc: "Usi il tuo codice come base per capire concetti nuovi. È come avere un tutor personale 24/7.",
+          accent: "#60a5fa",
+        },
+        {
+          title: "Codice che funziona davvero",
+          desc: "Non affidarti a AI che generano codice casuale. Noi analizziamo il TUO codice e lo miglioriamo.",
+          accent: "#a78bfa",
+        },
+        {
+          title: "Sicuro e Privato",
+          desc: "Il tuo codice non viene memorizzato. L'analisi è istantanea e il codice resta solo tuo.",
+          accent: "#fb7185",
+        },
+      ],
+      calloutA: "scrivono codice al posto tuo.",
+      calloutB: "ti insegna a farlo.",
+      calloutC: "La differenza tra un developer che usa AI e uno che la",
+      calloutHighlight: "capisce",
+      calloutD: "Semplycode.",
+    },
+    en: {
+      badge: "Why Semplycode",
+      title: "The difference that matters",
+      subtitle: "In a world full of AIs that write code on their own, we do something different.",
+      reasons: [
+        {
+          title: 'Understand the "why"',
+          desc: "We don't just give you working code. We explain every line, so you truly learn how it works.",
+          accent: "#10b981",
+        },
+        {
+          title: "Learn from your code",
+          desc: "You use your own code as a basis to grasp new concepts. It's like having a personal tutor 24/7.",
+          accent: "#60a5fa",
+        },
+        {
+          title: "Code that really works",
+          desc: "Don't rely on AIs that generate random code. We analyze YOUR code and improve it.",
+          accent: "#a78bfa",
+        },
+        {
+          title: "Secure and Private",
+          desc: "Your code is not stored. Analysis is instant and the code stays yours alone.",
+          accent: "#fb7185",
+        },
+      ],
+      calloutA: "write code for you.",
+      calloutB: "teaches you to do it.",
+      calloutC: "The difference between a developer who uses AI and one who",
+      calloutHighlight: "understands",
+      calloutD: "Semplycode.",
+    },
+  }[language];
+  const reasons = t.reasons;
+
   return (
     <section
       className="relative py-24 md:py-32 overflow-hidden"
@@ -58,15 +105,15 @@ const WhyChoose = () => {
               }}
             >
               <Sparkles size={11} />
-              Perché Semplycode
+              {t.badge}
             </div>
             <h2
               className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-black tracking-tight mb-4 text-[#0f172a]"
             >
-              La differenza che conta
+              {t.title}
             </h2>
             <p className="text-sm xs:text-base sm:text-lg 3xl:text-xl max-w-xl 3xl:max-w-2xl mx-auto px-2 sm:px-0" style={{ color: "#475569" }}>
-              In un mondo pieno di AI che scrivono codice da sole, noi facciamo qualcosa di diverso.
+              {t.subtitle}
             </p>
           </motion.div>
 
@@ -120,7 +167,7 @@ const WhyChoose = () => {
           >
             <p className="text-base sm:text-lg 3xl:text-xl font-medium mb-2" style={{ color: "#475569" }}>
               <span style={{ color: "#0f172a", fontWeight: 600 }}>Copilot, ChatGPT, Claude</span>{" "}
-              <span style={{ color: "#475569" }}>scrivono codice al posto tuo.</span>
+              <span style={{ color: "#475569" }}>{t.calloutA}</span>
             </p>
             <p className="text-lg xs:text-xl sm:text-2xl 3xl:text-3xl font-bold" style={{ color: "#0f172a" }}>
               <span
@@ -132,12 +179,12 @@ const WhyChoose = () => {
               >
                 Semplycode
               </span>{" "}
-              ti insegna a farlo.
+              {t.calloutB}
             </p>
             <p className="mt-4 text-xs xs:text-sm 3xl:text-base" style={{ color: "#475569" }}>
-              La differenza tra un developer che usa AI e uno che la{" "}
-              <span style={{ color: "#059669", fontWeight: 600 }}>capisce</span>?{" "}
-              <span style={{ color: "#0f172a", fontWeight: 700 }}>Semplycode.</span>
+              {t.calloutC}{" "}
+              <span style={{ color: "#059669", fontWeight: 600 }}>{t.calloutHighlight}</span>?{" "}
+              <span style={{ color: "#0f172a", fontWeight: 700 }}>{t.calloutD}</span>
             </p>
           </motion.div>
         </div>

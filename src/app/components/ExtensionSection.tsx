@@ -3,32 +3,85 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MousePointerClick, PanelRight, Languages, ShieldCheck, Clock } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import ChromeLogo from "./ChromeLogo";
 
-const perks = [
-  {
-    icon: MousePointerClick,
-    title: "Seleziona e analizza",
-    desc: "Evidenzia codice su qualsiasi pagina web e analizzalo senza copiare e incollare.",
-  },
-  {
-    icon: PanelRight,
-    title: "Pannello laterale AI",
-    desc: "Spiegazioni, bug e codice corretto in un pannello sempre a portata di mano.",
-  },
-  {
-    icon: Languages,
-    title: "In italiano",
-    desc: "Analisi e suggerimenti in italiano, pensati per capire davvero il codice.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Privacy chiara",
-    desc: "Il codice analizzato dall’estensione non viene salvato di default; solo il report che decidi di condividere dalla Chat AI genera un link temporaneo (7 giorni).",
-  },
-];
-
 export default function ExtensionSection() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      badge: "In arrivo — Estensione Chrome",
+      titleA: "Il tuo co-pilot AI,",
+      titleB: "ovunque scrivi codice",
+      subtitle:
+        "Seleziona il codice su qualsiasi sito — GitHub, documentazione, Stack Overflow — e lascialo analizzare in un pannello laterale. La pubblicazione sul Chrome Web Store è in preparazione.",
+      perks: [
+        {
+          icon: MousePointerClick,
+          title: "Seleziona e analizza",
+          desc: "Evidenzia codice su qualsiasi pagina web e analizzalo senza copiare e incollare.",
+        },
+        {
+          icon: PanelRight,
+          title: "Pannello laterale AI",
+          desc: "Spiegazioni, bug e codice corretto in un pannello sempre a portata di mano.",
+        },
+        {
+          icon: Languages,
+          title: "In italiano",
+          desc: "Analisi e suggerimenti in italiano, pensati per capire davvero il codice.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Privacy chiara",
+          desc: "Il codice analizzato dall’estensione non viene salvato di default; solo il report che decidi di condividere dalla Chat AI genera un link temporaneo (7 giorni).",
+        },
+      ],
+      ctaTitle: "Estensione non ancora pubblicata — nessun ID valido nello Store (src/lib/extension.ts)",
+      cta: "In arrivo sul Chrome Web Store",
+      noteA: "Nessun link attivo finché la listing non sarà pubblicata",
+      noteB: "Gratuita quando disponibile · Si attiva solo quando la apri tu",
+      noteC: "Condividere un link al report è diverso: lo crei esplicitamente dalla Chat AI e scade in 7 giorni (",
+      noteD: ") — non è salvataggio automatico.",
+    },
+    en: {
+      badge: "Coming soon — Chrome Extension",
+      titleA: "Your AI co-pilot,",
+      titleB: "wherever you write code",
+      subtitle:
+        "Select code on any site — GitHub, docs, Stack Overflow — and have it analyzed in a side panel. Publishing to the Chrome Web Store is in preparation.",
+      perks: [
+        {
+          icon: MousePointerClick,
+          title: "Select and analyze",
+          desc: "Highlight code on any web page and analyze it without copy-pasting.",
+        },
+        {
+          icon: PanelRight,
+          title: "AI side panel",
+          desc: "Explanations, bugs and fixed code in a panel always at hand.",
+        },
+        {
+          icon: Languages,
+          title: "In English",
+          desc: "Analyses and suggestions in English, designed to truly understand code.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Clear privacy",
+          desc: "Code analyzed by the extension is not saved by default; only the report you choose to share from Chat AI generates a temporary link (7 days).",
+        },
+      ],
+      ctaTitle: "Extension not yet published — no valid ID in the Store (src/lib/extension.ts)",
+      cta: "Coming soon to the Chrome Web Store",
+      noteA: "No active link until the listing is published",
+      noteB: "Free when available · It only activates when you open it",
+      noteC: "Sharing a report link is different: you explicitly create it from Chat AI and it expires in 7 days (",
+      noteD: ") — not automatic saving.",
+    },
+  }[language];
+  const perks = t.perks;
+
   return (
     <section id="estensione" className="w-full py-16 md:py-24 3xl:py-32">
       <div className="container mx-auto max-w-6xl 2xl:max-w-7xl 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
@@ -64,11 +117,11 @@ export default function ExtensionSection() {
               }}
             >
               <Clock size={12} />
-              In arrivo — Estensione Chrome
+              {t.badge}
             </div>
 
             <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl 3xl:text-6xl font-black tracking-tight text-white mb-4 sm:mb-5">
-              Il tuo co-pilot AI,{" "}
+              {t.titleA}{" "}
               <span
                 style={{
                   background: "linear-gradient(135deg, #34d399, #6ee7b7)",
@@ -76,13 +129,12 @@ export default function ExtensionSection() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                ovunque scrivi codice
+                {t.titleB}
               </span>
             </h2>
 
             <p className="text-sm xs:text-base md:text-lg 3xl:text-xl text-[#94a3b8] max-w-2xl 3xl:max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10">
-              Seleziona il codice su qualsiasi sito — GitHub, documentazione, Stack Overflow —
-              e lascialo analizzare in un pannello laterale. La pubblicazione sul Chrome Web Store è in preparazione.
+              {t.subtitle}
             </p>
 
             {/* Perks */}
@@ -113,19 +165,19 @@ export default function ExtensionSection() {
                   border: "1px solid rgba(255,255,255,0.12)",
                   boxShadow: "none",
                 }}
-                title="Estensione non ancora pubblicata — nessun ID valido nello Store (src/lib/extension.ts)"
+                title={t.ctaTitle}
               >
                 <ChromeLogo className="w-5 h-5 opacity-60" />
-                In arrivo sul Chrome Web Store
+                {t.cta}
               </span>
             </div>
 
             <p className="mt-5 text-xs 3xl:text-sm text-[#64748b] leading-relaxed max-w-2xl mx-auto">
-              <span className="text-[#94a3b8]">Nessun link attivo finché la listing non sarà pubblicata</span>
+              <span className="text-[#94a3b8]">{t.noteA}</span>
               {" · "}
-              Gratuita quando disponibile · Si attiva solo quando la apri tu
+              {t.noteB}
               <br />
-              <span className="text-[#475569] text-[11px]">Condividere un link al report è diverso: lo crei esplicitamente dalla Chat AI e scade in 7 giorni (<span className="font-mono">src/app/api/share/route.ts:7</span>) — non è salvataggio automatico.</span>
+              <span className="text-[#475569] text-[11px]">{t.noteC}<span className="font-mono">src/app/api/share/route.ts:7</span>{t.noteD}</span>
             </p>
           </div>
         </motion.div>

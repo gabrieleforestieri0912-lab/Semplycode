@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useLanguage } from "@/context/LanguageContext";
 
 /** Flag una-tantum: il tour parte solo al primo accesso all'editor. */
 export const ONBOARDING_KEY = 'semplycode:onboard:chat:v1';
@@ -17,7 +18,7 @@ interface TourStep {
   desc: string;
 }
 
-const STEPS: TourStep[] = [
+const STEPS_IT: TourStep[] = [
   {
     target: '[data-tour="editor"]',
     title: 'Incolla il codice qui',
@@ -50,6 +51,39 @@ const STEPS: TourStep[] = [
   },
 ];
 
+const STEPS_EN: TourStep[] = [
+  {
+    target: '[data-tour="editor"]',
+    title: 'Paste your code here',
+    desc: 'Editor with automatic language detection. Paste and the analysis starts on its own, or press Ctrl+Enter.',
+  },
+  {
+    target: '[data-tour="composer-center"],[data-tour="composer-bottom"]',
+    title: 'Ask the AI',
+    desc: 'Type questions about the code here: the input starts centered and moves to the bottom on first send. Enter to send, Shift+Enter for a new line.',
+  },
+  {
+    target: '[data-tour="modes"]',
+    title: 'Analysis modes',
+    desc: 'Correction (minimal fixes only), Revision (quality & best practices), Creation (step-by-step guide) + more analyses in the More menu.',
+  },
+  {
+    target: '[data-tour="upload"]',
+    title: 'Files, folders, ZIP, GitHub',
+    desc: 'Upload up to 50 files: they open as tabs and the AI analyzes them together, relations included.',
+  },
+  {
+    target: '[data-tour="report"]',
+    title: 'Report with clickable lines',
+    desc: 'Errors with the line highlighted in the editor, code blocks with Copy, Apply to the active file and Save to the Drawer.',
+  },
+  {
+    target: '[data-tour="history"]',
+    title: 'History and projects',
+    desc: 'Chats save themselves: search, rename or organize them into projects from the sidebar.',
+  },
+];
+
 interface Box {
   top: number;
   left: number;
@@ -73,6 +107,30 @@ function findVisibleTarget(selector: string): Element | null {
 }
 
 export default function Onboarding({ onClose }: OnboardingProps) {
+  const { language } = useLanguage();
+  const STEPS = language === "en" ? STEPS_EN : STEPS_IT;
+  const t = {
+    it: {
+      dialogLabel: "Tour guidato",
+      closeTour: "Chiudi tour",
+      goToStep: "Vai a step",
+      skip: "Salta",
+      back: "Indietro",
+      next: "Avanti",
+      start: "Inizia",
+      step: "Step",
+    },
+    en: {
+      dialogLabel: "Guided tour",
+      closeTour: "Close tour",
+      goToStep: "Go to step",
+      skip: "Skip",
+      back: "Back",
+      next: "Next",
+      start: "Start",
+      step: "Step",
+    },
+  }[language];
   const [step, setStep] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const [place, setPlace] = useState<'below' | 'above' | 'center'>('below');
@@ -176,7 +234,7 @@ export default function Onboarding({ onClose }: OnboardingProps) {
     : Math.max(12, (vw - tipWidth) / 2);
 
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Tour guidato">
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={t.dialogLabel}>
       {box && place !== 'center' ? (
         <div
           className="absolute rounded-xl border-2 border-emerald-400 transition-all duration-300 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]"
@@ -188,7 +246,7 @@ export default function Onboarding({ onClose }: OnboardingProps) {
 
       <button
         onClick={finish}
-        aria-label="Chiudi tour"
+        aria-label={t.closeTour}
         className="absolute right-4 top-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
       >
         <X size={16} />
@@ -213,7 +271,7 @@ export default function Onboarding({ onClose }: OnboardingProps) {
           </div>
           <div className="p-5">
             <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-400">
-              Step {step + 1} / {total}
+              {t.step} {step + 1} / {total}
             </span>
             <h3 className="text-base font-bold text-white mt-1 mb-1.5">{cur.title}</h3>
             <p className="text-sm text-gray-300 leading-relaxed mb-4">{cur.desc}</p>
@@ -224,7 +282,7 @@ export default function Onboarding({ onClose }: OnboardingProps) {
                   key={i}
                   onClick={() => { setBox(null); setStep(i); }}
                   className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-emerald-500' : 'w-1.5 bg-white/15 hover:bg-white/25'}`}
-                  aria-label={`Vai a step ${i + 1}`}
+                  aria-label={`${t.goToStep} ${i + 1}`}
                 />
               ))}
             </div>
@@ -234,7 +292,7 @@ export default function Onboarding({ onClose }: OnboardingProps) {
                 onClick={finish}
                 className="text-xs font-semibold text-gray-400 hover:text-white px-3 py-2 rounded-full hover:bg-white/5 transition-colors"
               >
-                Salta
+                {t.skip}
               </button>
               <div className="flex items-center gap-2">
                 {step > 0 && (
@@ -242,14 +300,14 @@ export default function Onboarding({ onClose }: OnboardingProps) {
                     onClick={goPrev}
                     className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-emerald-900/30 text-gray-300 hover:text-white hover:bg-white/5 text-sm font-semibold transition-colors"
                   >
-                    <ArrowLeft size={14} /> Indietro
+                    <ArrowLeft size={14} /> {t.back}
                   </button>
                 )}
                 <button
                   onClick={goNext}
                   className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-md hover:brightness-110 transition-all"
                 >
-                  {step < total - 1 ? <>Avanti <ArrowRight size={14} /></> : 'Inizia'}
+                  {step < total - 1 ? <>{t.next} <ArrowRight size={14} /></> : t.start}
                 </button>
               </div>
             </div>

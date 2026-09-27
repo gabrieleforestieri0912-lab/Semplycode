@@ -3,11 +3,61 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
+import { useLanguage } from "@/context/LanguageContext";
 import { ArrowRight, AlertTriangle } from "lucide-react";
 import CodeFloatBackground from "./CodeFloatBackground";
 
 const Hero = () => {
   const { status } = useSupabaseSession();
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      titleA: "Smetti di combattere con il codice.",
+      titleB: "Inizia a capirlo.",
+      subtitle:
+        "Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
+      ctaPrimary: "Prova Gratis",
+      ctaSecondary: "Vedi come funziona",
+      proofA: "In italiano",
+      proofB: "20+ linguaggi",
+      proofC: "piano gratuito con 10 analisi al giorno",
+      bugTitle: "Perché è un bug",
+      bugTextA: "La condizione",
+      bugTextB: "fa accedere a",
+      bugTextC: "che è",
+      bugTextD: ". Alla riga 4",
+      bugTextE: "lancia",
+      bugTextF: "e il totale diventa",
+      fixTitle: "Fix proposto",
+      fixNoteA: "Basta sostituire",
+      fixNoteB: "con",
+      fixNoteC: ": l'indice resta nell'intervallo valido 0 … length-1.",
+      caption: "Esempio reale · rilevato da Semplycode in italiano con spiegazione e diff correttivo",
+    },
+    en: {
+      titleA: "Stop fighting your code.",
+      titleB: "Start understanding it.",
+      subtitle:
+        "Semplycode breaks down complex logic, finds bugs instantly and teaches you to write better code with real-time AI explanations.",
+      ctaPrimary: "Try Free",
+      ctaSecondary: "See how it works",
+      proofA: "In English",
+      proofB: "20+ languages",
+      proofC: "free plan with 10 analyses per day",
+      bugTitle: "Why it's a bug",
+      bugTextA: "The",
+      bugTextB: "condition accesses",
+      bugTextC: "which is",
+      bugTextD: ". At line 4,",
+      bugTextE: "throws",
+      bugTextF: "and the total becomes",
+      fixTitle: "Proposed fix",
+      fixNoteA: "Just replace",
+      fixNoteB: "with",
+      fixNoteC: ": the index stays in the valid range 0 … length-1.",
+      caption: "Real example · detected by Semplycode in English with explanation and corrective diff",
+    },
+  }[language];
 
   const handleMainButtonClick = () => {
     window.location.href = status === "authenticated" ? "/chat" : "/login";
@@ -52,7 +102,7 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-[clamp(1.9rem,5vw,5.5rem)] 3xl:text-[6rem] 4xl:text-[7rem] font-black tracking-tight mb-5 sm:mb-6 md:mb-8 leading-[1.1] relative text-[#0f172a]"
           >
-            <span className="relative z-[1]">Smetti di combattere con il codice.</span>
+            <span className="relative z-[1]">{t.titleA}</span>
             <br />
             <motion.span
               initial={{ opacity: 0 }}
@@ -68,7 +118,7 @@ const Hero = () => {
                 display: "inline-block",
               }}
             >
-              Inizia a capirlo.
+              {t.titleB}
             </motion.span>
           </motion.h1>
 
@@ -79,8 +129,7 @@ const Hero = () => {
             transition={{ duration: 0.5, delay: 0.25 }}
             className="text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 md:mb-12 max-w-2xl 3xl:max-w-3xl mx-auto leading-relaxed text-[#64748b]"
           >
-            Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con
-            spiegazioni AI in tempo reale.
+            {t.subtitle}
           </motion.p>
 
           {/* CTA: una primaria + un link secondario (H1: Aggiungi a Chrome rimosso; H2: Prova Chat AI rimosso) */}
@@ -101,7 +150,7 @@ const Hero = () => {
                 boxShadow: "0 0 40px rgba(16,185,129,0.35), 0 4px 20px rgba(0,0,0,0.3)",
               }}
             >
-              Prova Gratis
+              {t.ctaPrimary}
               <ArrowRight size={16} />
             </motion.button>
 
@@ -111,7 +160,7 @@ const Hero = () => {
               onClick={() => document.getElementById('come-funziona')?.scrollIntoView({ behavior: 'smooth' })}
               className="w-full xs:w-auto min-w-[200px] sm:min-w-[200px] inline-flex items-center justify-center gap-1.5 px-6 sm:px-8 py-3.5 sm:py-4 rounded-full text-sm sm:text-[15px] font-semibold border border-[#e2e8f0] bg-white text-[#0f172a] hover:bg-[#f8fafc] hover:border-emerald-200 hover:text-emerald-700 shadow-sm transition-all"
             >
-              Vedi come funziona
+              {t.ctaSecondary}
               <ArrowRight size={14} className="opacity-60" />
             </motion.button>
           </motion.div>
@@ -124,11 +173,11 @@ const Hero = () => {
             className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs sm:text-sm 3xl:text-base"
             style={{ color: "#475569" }}
           >
-            <span>In italiano</span>
+            <span>{t.proofA}</span>
             <span className="text-[#94a3b8]">·</span>
-            <span>20+ linguaggi</span>
+            <span>{t.proofB}</span>
             <span className="text-[#94a3b8]">·</span>
-            <span>piano gratuito con 10 analisi al giorno</span>
+            <span>{t.proofC}</span>
           </motion.div>
         </div>
 
@@ -193,18 +242,20 @@ const Hero = () => {
             {/* Spiegazione in italiano */}
             <div className="px-4 sm:px-5 py-4 bg-amber-50/70 border-y border-amber-200/60">
               <p className="text-xs font-bold tracking-widest uppercase text-amber-700 mb-1.5 flex items-center gap-1.5">
-                <AlertTriangle size={13} /> Perché è un bug
+                <AlertTriangle size={13} /> {t.bugTitle}
               </p>
               <p className="text-sm leading-relaxed text-[#334155]">
-                La condizione <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">&lt;=</code> fa
-                accedere a <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">carrello[carrello.length]</code> che è <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">undefined</code>. Alla
-                riga 4 <code className="font-mono text-xs">undefined.prezzo</code> lancia <span className="font-semibold">TypeError</span> e il totale diventa <code className="font-mono text-xs">NaN</code>.
+                {t.bugTextA} <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">&lt;=</code> {t.bugTextB}{" "}
+                <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">carrello[carrello.length]</code> {t.bugTextC}{" "}
+                <code className="px-1.5 py-0.5 rounded bg-white border border-amber-200 text-amber-800 font-mono text-xs">undefined</code>{t.bugTextD}{" "}
+                <code className="font-mono text-xs">undefined.prezzo</code> {t.bugTextE} <span className="font-semibold">TypeError</span> {t.bugTextF}{" "}
+                <code className="font-mono text-xs">NaN</code>.
               </p>
             </div>
 
             {/* Fix in diff */}
             <div className="px-4 sm:px-5 py-4 bg-[#f8fafc]">
-              <p className="text-xs font-bold tracking-widest uppercase text-emerald-700 mb-2">Fix proposto</p>
+              <p className="text-xs font-bold tracking-widest uppercase text-emerald-700 mb-2">{t.fixTitle}</p>
               <pre className="text-[12px] sm:text-[13px] leading-[1.7] font-mono rounded-xl overflow-hidden border border-[#e2e8f0] bg-white">
                 <code>
                   <span className="block px-3 sm:px-4 py-1 bg-red-50 text-red-700 border-l-[3px] border-red-400">
@@ -215,10 +266,10 @@ const Hero = () => {
                   </span>
                 </code>
               </pre>
-              <p className="mt-2.5 text-xs text-[#64748b]">Basta sostituire <span className="font-mono">&lt;=</span> con <span className="font-mono">&lt;</span>: l&apos;indice resta nell&apos;intervallo valido 0 … length-1.</p>
+              <p className="mt-2.5 text-xs text-[#64748b]">{t.fixNoteA} <span className="font-mono">&lt;=</span> {t.fixNoteB} <span className="font-mono">&lt;</span>{t.fixNoteC}</p>
             </div>
           </div>
-          <p className="mt-3 text-center text-xs text-[#94a3b8]">Esempio reale · rilevato da Semplycode in italiano con spiegazione e diff correttivo</p>
+          <p className="mt-3 text-center text-xs text-[#94a3b8]">{t.caption}</p>
         </motion.div>
       </div>
     </section>

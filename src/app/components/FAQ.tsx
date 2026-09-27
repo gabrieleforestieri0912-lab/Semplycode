@@ -3,10 +3,27 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Sparkles } from "lucide-react";
-import { faqs } from "@/lib/faq";
+import { faqsIt, faqsEn } from "@/lib/faq";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      badge: "Domande frequenti",
+      titleA: "Tutto quello che",
+      titleB: "devi sapere",
+      subtitle: "Risposte chiare su Chat AI, limiti, piani e privacy.",
+    },
+    en: {
+      badge: "Frequently asked questions",
+      titleA: "Everything you",
+      titleB: "need to know",
+      subtitle: "Clear answers about Chat AI, limits, plans and privacy.",
+    },
+  }[language];
+  const faqs = language === "en" ? faqsEn : faqsIt;
 
   const toggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -25,7 +42,7 @@ export default function FAQ() {
             <span className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-15" />
             <span className="absolute inset-px rounded-full bg-white" />
             <Sparkles size={11} className="relative text-emerald-500" />
-            <span className="relative text-emerald-600">Domande frequenti</span>
+            <span className="relative text-emerald-600">{t.badge}</span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 12 }}
@@ -34,9 +51,9 @@ export default function FAQ() {
             transition={{ delay: 0.05 }}
             className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 3xl:text-7xl font-black tracking-tight text-[#0f172a] mb-4 sm:mb-5"
           >
-            Tutto quello che{" "}
+            {t.titleA}{" "}
             <span className="text-gradient">
-              devi sapere
+              {t.titleB}
             </span>
           </motion.h2>
           <motion.p
@@ -46,7 +63,7 @@ export default function FAQ() {
             transition={{ delay: 0.1 }}
             className="text-sm xs:text-base sm:text-lg md:text-xl 3xl:text-2xl text-[#475569] max-w-[400px] mx-auto px-2 sm:px-0"
           >
-            Risposte chiare su Chat AI, limiti, piani e privacy.
+            {t.subtitle}
           </motion.p>
         </div>
 

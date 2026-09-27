@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Navbar from '@/app/components/Navbar';
 import Footer from '@/app/components/Footer';
 import CodeFloatBackground from '@/app/components/CodeFloatBackground';
+import { useLanguage } from '../../context/LanguageContext';
 
 function HeroBackground() {
   return (
@@ -52,6 +53,45 @@ interface Category {
 }
 
 export default function FeedbackPage() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      thanks: 'Grazie per il tuo feedback!',
+      thanksBody: "Il tuo messaggio è stato preparato nel client email. Inviacelo per completare l'invio.",
+      backHome: 'Torna alla home',
+      goBack: 'Torna indietro',
+      title: 'Invia un Feedback',
+      subtitle: 'Il tuo parere è importante per noi. Compila il form e inviaci le tue impressioni, suggerimenti o segnalazioni.',
+      name: 'Nome',
+      namePh: 'Il tuo nome',
+      emailPh: 'tua@email.com',
+      category: 'Categoria',
+      message: 'Il tuo messaggio',
+      messagePh: 'Descrivi il tuo feedback, suggerimento o problema...',
+      sending: 'Preparazione invio...',
+      send: 'Invia Feedback',
+      footnote: 'Cliccando "Invia" si aprirà il tuo client email con il messaggio già precompilato.',
+      categories: ['Feedback generale', 'Segnalazione bug', 'Richiesta funzionalità', 'Richiesta supporto', 'Altro'] as string[],
+    },
+    en: {
+      thanks: 'Thanks for your feedback!',
+      thanksBody: 'Your message has been prepared in your email client. Send it to complete the submission.',
+      backHome: 'Back to home',
+      goBack: 'Go back',
+      title: 'Send Feedback',
+      subtitle: 'Your opinion matters to us. Fill in the form and send us your thoughts, suggestions or reports.',
+      name: 'Name',
+      namePh: 'Your name',
+      emailPh: 'you@email.com',
+      category: 'Category',
+      message: 'Your message',
+      messagePh: 'Describe your feedback, suggestion or issue...',
+      sending: 'Preparing...',
+      send: 'Send Feedback',
+      footnote: 'Clicking "Send" will open your email client with the message already pre-filled.',
+      categories: ['General feedback', 'Bug report', 'Feature request', 'Support request', 'Other'] as string[],
+    },
+  }[language];
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -62,11 +102,11 @@ export default function FeedbackPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories: Category[] = [
-    { value: 'general', label: 'Feedback generale' },
-    { value: 'bug', label: 'Segnalazione bug' },
-    { value: 'feature', label: 'Richiesta funzionalità' },
-    { value: 'support', label: 'Richiesta supporto' },
-    { value: 'other', label: 'Altro' },
+    { value: 'general', label: t.categories[0] },
+    { value: 'bug', label: t.categories[1] },
+    { value: 'feature', label: t.categories[2] },
+    { value: 'support', label: t.categories[3] },
+    { value: 'other', label: t.categories[4] },
   ];
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -108,16 +148,16 @@ export default function FeedbackPage() {
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-[#0f172a] mb-3">Grazie per il tuo feedback!</h1>
+          <h1 className="text-3xl font-bold text-[#0f172a] mb-3">{t.thanks}</h1>
           <p className="text-[#64748b] mb-8">
-            Il tuo messaggio è stato preparato nel client email. Inviacelo per completare l&apos;invio.
+            {t.thanksBody}
           </p>
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-primary hover:underline"
           >
             <ArrowLeft className="w-4 h-4" />
-            Torna alla home
+            {t.backHome}
           </Link>
           </motion.div>
         </div>
@@ -137,20 +177,20 @@ export default function FeedbackPage() {
           className="inline-flex items-center gap-2 text-[#64748b] hover:text-primary mb-8 transition-colors text-sm font-medium min-h-[44px]"
         >
           <ArrowLeft className="w-4 h-4" />
-          Torna indietro
+          {t.goBack}
         </Link>
 
         <div className="mb-8 sm:mb-10">
-          <h1 className="text-3xl sm:text-4xl 3xl:text-5xl font-bold text-[#0f172a] mb-3">Invia un Feedback</h1>
+          <h1 className="text-3xl sm:text-4xl 3xl:text-5xl font-bold text-[#0f172a] mb-3">{t.title}</h1>
           <p className="text-[#475569] text-base sm:text-lg 3xl:text-xl">
-            Il tuo parere è importante per noi. Compila il form e inviaci le tue impressioni, suggerimenti o segnalazioni.
+            {t.subtitle}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white border border-[#e2e8f0] rounded-2xl p-5 sm:p-8 space-y-6 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-[#475569] mb-2">Nome</label>
+              <label className="block text-sm font-medium text-[#475569] mb-2">{t.name}</label>
               <input
                 type="text"
                 name="name"
@@ -158,7 +198,7 @@ export default function FeedbackPage() {
                 onChange={handleChange}
                 required
                 className="w-full bg-white border border-[#e2e8f0] rounded-xl px-4 py-3 text-[#0f172a] placeholder:text-[#64748b] focus:outline-none focus:border-primary"
-                placeholder="Il tuo nome"
+                placeholder={t.namePh}
               />
             </div>
 
@@ -171,13 +211,13 @@ export default function FeedbackPage() {
                 onChange={handleChange}
                 required
                 className="w-full bg-white border border-[#e2e8f0] rounded-xl px-4 py-3 text-[#0f172a] placeholder:text-[#64748b] focus:outline-none focus:border-primary"
-                placeholder="tua@email.com"
+                placeholder={t.emailPh}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#475569] mb-2">Categoria</label>
+            <label className="block text-sm font-medium text-[#475569] mb-2">{t.category}</label>
             <select
               name="category"
               value={formData.category}
@@ -193,7 +233,7 @@ export default function FeedbackPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#475569] mb-2">Il tuo messaggio</label>
+            <label className="block text-sm font-medium text-[#475569] mb-2">{t.message}</label>
             <textarea
               name="message"
               value={formData.message}
@@ -201,7 +241,7 @@ export default function FeedbackPage() {
               required
               rows={6}
               className="w-full bg-white border border-[#e2e8f0] rounded-xl px-4 py-3 text-[#0f172a] placeholder:text-[#64748b] focus:outline-none focus:border-primary resize-y"
-              placeholder="Descrivi il tuo feedback, suggerimento o problema..."
+              placeholder={t.messagePh}
             />
           </div>
 
@@ -211,17 +251,17 @@ export default function FeedbackPage() {
             className="w-full flex items-center justify-center gap-3 bg-primary hover:bg-emerald-600 disabled:opacity-70 transition-colors text-white font-semibold py-4 rounded-xl text-base"
           >
             {isSubmitting ? (
-              'Preparazione invio...'
+              t.sending
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                Invia Feedback
+                {t.send}
               </>
             )}
           </button>
 
           <p className="text-xs text-center text-[#64748b]">
-            Cliccando &quot;Invia&quot; si aprirà il tuo client email con il messaggio già precompilato.
+            {t.footnote}
           </p>
         </form>
         </div>

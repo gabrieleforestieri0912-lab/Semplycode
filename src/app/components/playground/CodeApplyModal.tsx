@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { X } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DiffRow {
   type: "same" | "change" | "remove" | "add";
@@ -41,6 +42,25 @@ function buildDiffLines(oldText: string, newText: string): DiffRow[] {
 }
 
 export default function CodeApplyModal({ oldCode, newCode, filePath, onApply, onClose }: CodeApplyModalProps) {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      title: "Anteprima modifiche",
+      diffSuffix: "righe diverse rispetto all'editor",
+      fileSuffix: "verrà aggiornato solo:",
+      close: "Chiudi",
+      cancel: "Annulla",
+      apply: "Applica tutto",
+    },
+    en: {
+      title: "Preview changes",
+      diffSuffix: "lines differ from the editor",
+      fileSuffix: "only this file will be updated:",
+      close: "Close",
+      cancel: "Cancel",
+      apply: "Apply all",
+    },
+  }[language];
   const diff = useMemo(() => buildDiffLines(oldCode, newCode), [oldCode, newCode]);
   const changedCount = diff.filter((r) => r.type !== "same").length;
 
@@ -49,11 +69,11 @@ export default function CodeApplyModal({ oldCode, newCode, filePath, onApply, on
       <div className="w-full max-w-3xl max-h-[85vh] flex flex-col bg-[#0d1117] border border-emerald-900/40 rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-emerald-900/30">
           <div>
-            <h3 className="text-sm font-bold text-white">Anteprima modifiche</h3>
+            <h3 className="text-sm font-bold text-white">{t.title}</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              {changedCount} righe diverse rispetto all&apos;editor
+              {changedCount} {t.diffSuffix}
               {filePath ? (
-                <span className="text-emerald-400/90"> · verrà aggiornato solo: {filePath}</span>
+                <span className="text-emerald-400/90"> · {t.fileSuffix} {filePath}</span>
               ) : null}
             </p>
           </div>
@@ -61,7 +81,7 @@ export default function CodeApplyModal({ oldCode, newCode, filePath, onApply, on
             type="button"
             onClick={onClose}
             className="p-2 text-gray-500 hover:text-white rounded-lg"
-            aria-label="Chiudi"
+            aria-label={t.close}
           >
             <X size={18} />
           </button>
@@ -109,14 +129,14 @@ export default function CodeApplyModal({ oldCode, newCode, filePath, onApply, on
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white rounded-xl border border-emerald-900/30"
           >
-            Annulla
+            {t.cancel}
           </button>
           <button
             type="button"
             onClick={() => onApply(newCode)}
             className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-xl hover:bg-primary/90"
           >
-            Applica tutto
+            {t.apply}
           </button>
         </div>
       </div>

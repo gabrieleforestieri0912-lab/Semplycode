@@ -15,8 +15,50 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import CodeFloatBackground from "@/app/components/CodeFloatBackground";
 import { SkeletonAuthForm } from "@/app/components/Skeleton";
+import { useLanguage } from "../../context/LanguageContext";
 
 function LoginForm() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      registeredSuccess: "Registrazione avvenuta con successo! Effettua il login.",
+      invalidCredentials: "Email o password non validi",
+      welcome: "Bentornato",
+      noAccount: "Non hai un account?",
+      createFree: "Creane uno gratis",
+      loginFailed: "Accesso non riuscito",
+      recoverPassword: "Recupera password",
+      retry: "Riprova",
+      emailLabel: "Indirizzo Email",
+      passwordLabel: "Password",
+      hidePassword: "Nascondi password",
+      showPassword: "Mostra password",
+      forgotPassword: "Password dimenticata?",
+      login: "Accedi",
+      orContinue: "oppure continua con",
+      continueGoogle: "Continua con Google",
+      continueGithub: "Continua con GitHub",
+    },
+    en: {
+      registeredSuccess: "Registration successful! Please log in.",
+      invalidCredentials: "Invalid email or password",
+      welcome: "Welcome back",
+      noAccount: "Don't have an account?",
+      createFree: "Create one for free",
+      loginFailed: "Login failed",
+      recoverPassword: "Recover password",
+      retry: "Retry",
+      emailLabel: "Email Address",
+      passwordLabel: "Password",
+      hidePassword: "Hide password",
+      showPassword: "Show password",
+      forgotPassword: "Forgot password?",
+      login: "Log in",
+      orContinue: "or continue with",
+      continueGoogle: "Continue with Google",
+      continueGithub: "Continue with GitHub",
+    },
+  }[language];
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -30,9 +72,9 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams.get("registered")) {
-      setSuccess("Registrazione avvenuta con successo! Effettua il login.");
+      setSuccess(t.registeredSuccess);
     }
-  }, [searchParams]);
+  }, [searchParams, t.registeredSuccess]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,7 +94,7 @@ function LoginForm() {
       });
 
       if (error) {
-        throw new Error("Email o password non validi");
+        throw new Error(t.invalidCredentials);
       }
 
       const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -98,14 +140,14 @@ function LoginForm() {
         Home
       </Link>
       <div className="relative z-10 w-full max-w-md space-y-4 text-center">
-        <h2 className="text-2xl font-extrabold text-[#0f172a]">Bentornato</h2>
+        <h2 className="text-2xl font-extrabold text-[#0f172a]">{t.welcome}</h2>
         <p className="text-sm text-[#475569] text-center">
-          Non hai un account?{" "}
+          {t.noAccount}{" "}
           <Link
             href="/register"
             className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
           >
-            Creane uno gratis
+            {t.createFree}
           </Link>
         </p>
 
@@ -120,7 +162,7 @@ function LoginForm() {
                 <AlertCircle className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-red-700">Accesso non riuscito</div>
+                <div className="font-semibold text-red-700">{t.loginFailed}</div>
                 <div className="text-red-600 mt-1">{error}</div>
               </div>
             </div>
@@ -129,7 +171,7 @@ function LoginForm() {
                 href="/forgot-password"
                 className="text-sm font-semibold text-red-500 hover:text-red-600 transition-colors"
               >
-                Recupera password
+                {t.recoverPassword}
               </Link>
               <button
                 type="button"
@@ -141,7 +183,7 @@ function LoginForm() {
                 }}
                 className="text-sm px-3 py-1 rounded-full bg-red-100 border border-red-200 text-red-500 hover:bg-red-200 transition-colors"
               >
-                Riprova
+                {t.retry}
               </button>
             </div>
           </div>
@@ -174,7 +216,7 @@ function LoginForm() {
               <div className="space-y-4">
                 <div className="relative">
                   <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
-                    Indirizzo Email
+                    {t.emailLabel}
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
@@ -192,7 +234,7 @@ function LoginForm() {
 
                 <div className="relative">
                   <label className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-1 block ml-1">
-                    Password
+                    {t.passwordLabel}
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748b] w-5 h-5" />
@@ -209,7 +251,7 @@ function LoginForm() {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-[#94a3b8] transition-colors"
-                      aria-label={showPassword ? "Nascondi password" : "Mostra password"}
+                      aria-label={showPassword ? t.hidePassword : t.showPassword}
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5" />
@@ -226,7 +268,7 @@ function LoginForm() {
                   href="/forgot-password"
                   className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
-                  Password dimenticata?
+                  {t.forgotPassword}
                 </Link>
               </div>
 
@@ -235,7 +277,7 @@ function LoginForm() {
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-2xl text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 focus:outline-none transition-all shadow-xl shadow-emerald-500/25 disabled:opacity-70 cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  Accedi
+                  {t.login}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </span>
               </button>
@@ -248,7 +290,7 @@ function LoginForm() {
             </div>
             <div className="relative flex justify-center">
               <span className="bg-white px-3 text-xs text-[#64748b]">
-                oppure continua con
+                {t.orContinue}
               </span>
             </div>
           </div>
@@ -270,7 +312,7 @@ function LoginForm() {
               <path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.77-4.58l-7.98-6.19A23.99 23.99 0 000 24c0 5.13 1.62 9.87 4.38 13.69l6.15-5.1z"/>
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
-            Continua con Google
+            {t.continueGoogle}
           </button>
 
           <button
@@ -287,7 +329,7 @@ function LoginForm() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            Continua con GitHub
+            {t.continueGithub}
           </button>
         </form>
       </div>

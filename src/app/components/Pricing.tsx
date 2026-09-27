@@ -65,6 +65,10 @@ interface SectionTranslation {
   popular: string;
   secure: string;
   waitlistCta: string;
+  waitlistPrice: string;
+  waitlistSub: string;
+  creditsTitle: string;
+  checkoutError: string;
   creditsFootnote: string;
   plans: Plan[];
 }
@@ -120,6 +124,10 @@ const Pricing = () => {
       waitlistCta: "Join waitlist",
       popular: "Most Popular",
       secure: "Secure payments via Stripe · Cancel anytime",
+      waitlistPrice: "On request",
+      waitlistSub: "Waitlist — no charge now",
+      creditsTitle: "What are credits?",
+      checkoutError: "Checkout failed. Try again.",
       creditsFootnote: "1 credit = 1,000 tokens ≈ 4,000 characters (src/lib/tokenBudget.ts). Free 30 credits (≈30k tokens), Starter 1,500, Pro 3,000 — ~5 credits per analysis (code + response); actual count varies with length.",
       plans: [
         {
@@ -220,6 +228,10 @@ const Pricing = () => {
       waitlistCta: "Iscriviti alla lista d’attesa",
       popular: "Più Popolare",
       secure: "Pagamenti sicuri con Stripe · Cancella in qualsiasi momento",
+      waitlistPrice: "Su richiesta",
+      waitlistSub: "Lista d’attesa — nessun addebito ora",
+      creditsTitle: "Cosa sono i crediti?",
+      checkoutError: "Checkout fallito. Riprova.",
       creditsFootnote: "1 credito = 1.000 token ≈ 4.000 caratteri (src/lib/tokenBudget.ts). Gratis 30 crediti (≈30k token), Starter 1.500, Pro 3.000 — ~5 crediti per analisi (codice + risposta); il numero reale varia con la lunghezza.",
       plans: [
         {
@@ -344,7 +356,7 @@ const Pricing = () => {
       }
     } catch (err) {
       console.error("Checkout failed:", err);
-      showToast("Checkout fallito. Riprova.", "error");
+      showToast(current.checkoutError, "error");
     } finally {
       setLoading(null);
     }
@@ -550,11 +562,11 @@ const Pricing = () => {
                           <>
                             <div className="flex items-end gap-2">
                               <span className="text-2xl sm:text-3xl font-black tracking-tight text-[#0f172a] leading-none">
-                                Su richiesta
+                                {current.waitlistPrice}
                               </span>
                             </div>
                             <div className="mt-1.5 text-xs text-[#64748b] min-h-[18px]">
-                              <span>Lista d’attesa — nessun addebito ora</span>
+                              <span>{current.waitlistSub}</span>
                             </div>
                           </>
                         ) : (
@@ -658,7 +670,7 @@ const Pricing = () => {
         >
           <Info size={16} className="shrink-0 mt-0.5 text-amber-600" />
           <p className="text-xs sm:text-sm leading-relaxed text-[#475569]">
-            <span className="font-bold text-[#0f172a]">Cosa sono i crediti?</span> {current.creditsFootnote}
+            <span className="font-bold text-[#0f172a]">{current.creditsTitle}</span> {current.creditsFootnote}
           </p>
         </motion.div>
 

@@ -240,7 +240,7 @@ export default function GuidePage() {
         <Navbar />
         <main className="min-h-screen bg-white pt-28 pb-20">
           <div className="container mx-auto max-w-3xl text-center">
-            <h1 className="text-2xl font-bold text-[#0f172a]">Guida non trovata</h1>
+            <h1 className="text-2xl font-bold text-[#0f172a]">{language === "en" ? "Guide not found" : "Guida non trovata"}</h1>
             <Link href="/#come-funziona" className="mt-4 inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
               <ArrowLeft size={16} /> Torna a Come Funziona
             </Link>
@@ -299,7 +299,7 @@ export default function GuidePage() {
             </div>
 
             <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
-              <h3 className="text-sm font-bold text-amber-800 flex items-center gap-1.5"><Layers size={14} /> Checklist rapida</h3>
+              <h3 className="text-sm font-bold text-amber-800 flex items-center gap-1.5"><Layers size={14} /> {language === "en" ? "Quick checklist" : "Checklist rapida"}</h3>
               <ul className="mt-3 space-y-1.5">
                 {guide.checklist.map((c) => (
                   <li key={c} className="flex gap-2 text-sm text-[#475569]"><span className="mt-1.5 w-1 h-1 rounded-full bg-amber-500 shrink-0" /><span>{c}</span></li>
@@ -308,7 +308,7 @@ export default function GuidePage() {
             </div>
 
             <div className="mt-8 rounded-2xl border border-[#e2e8f0] bg-[#f8fafc] p-5">
-              <h3 className="text-sm font-bold text-[#0f172a] flex items-center gap-1.5"><BookOpen size={14} /> Risorse</h3>
+              <h3 className="text-sm font-bold text-[#0f172a] flex items-center gap-1.5"><BookOpen size={14} /> {language === "en" ? "Resources" : "Risorse"}</h3>
               <ul className="mt-3 space-y-2">
                 {guide.resources.map((r) => (
                   <li key={r.label}>

@@ -4,9 +4,29 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useSupabaseSession } from '@/lib/auth';
+import { useLanguage } from "@/context/LanguageContext";
 
 const CTA = () => {
   const { user: sessionUser, status } = useSupabaseSession();
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      badge: "Unisciti alla community",
+      titleA: "Pronto a scrivere codice",
+      titleB: "con confidenza?",
+      subtitle: "Comincia gratis e costruisci più velocemente e meglio con Semplycode.",
+      cta: "Inizia Gratis",
+      note: "Nessuna carta di credito richiesta · Cancella quando vuoi",
+    },
+    en: {
+      badge: "Join the community",
+      titleA: "Ready to write code",
+      titleB: "with confidence?",
+      subtitle: "Start for free and build faster and better with Semplycode.",
+      cta: "Start Free",
+      note: "No credit card required · Cancel anytime",
+    },
+  }[language];
 
   const handleClick = () => {
     window.location.href = status === "authenticated" ? "/chat" : "/register";
@@ -52,13 +72,13 @@ const CTA = () => {
               }}
             >
               <Sparkles size={11} />
-              Unisciti alla community
+              {t.badge}
             </div>
 
             <h2
               className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-5 text-[#0f172a]"
             >
-              Pronto a scrivere codice
+              {t.titleA}
               <br />
               <span
                 style={{
@@ -67,7 +87,7 @@ const CTA = () => {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                con confidenza?
+                {t.titleB}
               </span>
             </h2>
 
@@ -75,7 +95,7 @@ const CTA = () => {
               className="text-lg sm:text-xl mb-10 md:mb-12 max-w-2xl mx-auto"
               style={{ color: "#475569" }}
             >
-              Comincia gratis e costruisci più velocemente e meglio con Semplycode.
+              {t.subtitle}
             </p>
 
             <motion.button
@@ -89,12 +109,12 @@ const CTA = () => {
                 boxShadow: "0 0 50px rgba(16,185,129,0.4), 0 8px 30px rgba(0,0,0,0.1)",
               }}
             >
-              Inizia Gratis
+              {t.cta}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </motion.button>
 
             <p className="mt-5 text-xs" style={{ color: "#64748b" }}>
-              Nessuna carta di credito richiesta · Cancella quando vuoi
+              {t.note}
             </p>
           </div>
         </motion.div>

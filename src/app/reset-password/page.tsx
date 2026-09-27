@@ -5,8 +5,42 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Lock, ArrowRight, Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useLanguage } from '../../context/LanguageContext';
 
 function ResetPasswordForm() {
+  const { language } = useLanguage();
+  const t = {
+    it: {
+      missingToken: 'Token mancante. Verifica il link ricevuto.',
+      invalidToken: 'Token non valido',
+      mismatch: 'Le password non corrispondono',
+      resetError: 'Errore durante il reset',
+      title: 'Reimposta Password',
+      subtitle: 'Scegli una nuova password sicura per il tuo account.',
+      newPassword: 'Nuova Password',
+      confirmPassword: 'Conferma Password',
+      minChars: 'Almeno 6 caratteri',
+      confirmPlaceholder: 'Conferma la password',
+      submit: 'Reimposta Password',
+      remember: 'Ricordi la password?',
+      login: 'Accedi',
+    },
+    en: {
+      missingToken: 'Missing token. Check the link you received.',
+      invalidToken: 'Invalid token',
+      mismatch: 'Passwords do not match',
+      resetError: 'Error during reset',
+      title: 'Reset Password',
+      subtitle: 'Choose a new secure password for your account.',
+      newPassword: 'New Password',
+      confirmPassword: 'Confirm Password',
+      minChars: 'At least 6 characters',
+      confirmPlaceholder: 'Confirm your password',
+      submit: 'Reset Password',
+      remember: 'Remember your password?',
+      login: 'Log in',
+    },
+  }[language];
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -23,11 +57,11 @@ function ResetPasswordForm() {
   useEffect(() => {
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
-      setError('Token mancante. Verifica il link ricevuto.');
+      setError(t.missingToken);
     } else {
       setToken(tokenParam);
     }
-  }, [searchParams]);
+  }, [searchParams, t.missingToken]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,12 +71,12 @@ function ResetPasswordForm() {
     e.preventDefault();
 
     if (!token) {
-      setError('Token non valido');
+      setError(t.invalidToken);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Le password non corrispondono');
+      setError(t.mismatch);
       return;
     }
 
@@ -64,7 +98,7 @@ function ResetPasswordForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Errore durante il reset');
+        throw new Error(data.error || t.resetError);
       }
 
       setSuccess(data.message);
@@ -88,9 +122,9 @@ function ResetPasswordForm() {
           <span className="text-2xl font-bold tracking-tight text-primary">semplycode</span>
         </Link>
 
-        <h2 className="text-3xl font-extrabold text-gray-900">Reimposta Password</h2>
+        <h2 className="text-3xl font-extrabold text-gray-900">{t.title}</h2>
         <p className="mt-2 text-sm text-gray-600 text-center">
-          Scegli una nuova password sicura per il tuo account.
+          {t.subtitle}
         </p>
 
         {error && (
@@ -111,7 +145,7 @@ function ResetPasswordForm() {
           <div className="space-y-4">
             <div className="relative">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">
-                Nuova Password
+                {t.newPassword}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -123,7 +157,7 @@ function ResetPasswordForm() {
                   required
                   minLength={6}
                   className="w-full pl-12 pr-12 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base bg-white"
-                  placeholder="Almeno 6 caratteri"
+                  placeholder={t.minChars}
                 />
                 <button
                   type="button"
@@ -137,7 +171,7 @@ function ResetPasswordForm() {
 
             <div className="relative">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">
-                Conferma Password
+                {t.confirmPassword}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -149,7 +183,7 @@ function ResetPasswordForm() {
                   required
                   minLength={6}
                   className="w-full pl-12 pr-12 py-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-base bg-white"
-                  placeholder="Conferma la password"
+                  placeholder={t.confirmPlaceholder}
                 />
                 <button
                   type="button"
@@ -171,7 +205,7 @@ function ResetPasswordForm() {
               <Loader2 className="animate-spin w-5 h-5" />
             ) : (
               <>
-                Reimposta Password
+                {t.submit}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -179,9 +213,9 @@ function ResetPasswordForm() {
         </form>
 
         <div className="text-center text-sm text-gray-600">
-          Ricordi la password?{' '}
+          {t.remember}{' '}
           <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-            Accedi
+            {t.login}
           </Link>
         </div>
       </div>
