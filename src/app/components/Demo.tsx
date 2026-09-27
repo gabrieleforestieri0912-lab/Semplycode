@@ -1225,41 +1225,8 @@ const DemoSection = () => {
                 e.target.value = "";
               }}
             />
-            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI">
-              {(['correction', 'revision', 'creation'] as const).map((m) => {
-                const active = analysisType === m;
-                const label = ANALYSIS_TYPE_LABELS[m];
-                const desc = ANALYSIS_TYPE_DESCRIPTIONS[m];
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    title={desc}
-                    onClick={() => setAnalysisType(m)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-500 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-              <select
-                value={['correction', 'revision', 'creation'].includes(analysisType) ? '' : analysisType}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                  if (e.target.value) setAnalysisType(e.target.value);
-                }}
-                className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
-                title="Altre analisi"
-                aria-label="Altre modalità di analisi"
-              >
-                <option value="">Altro…</option>
-                {(['full', 'security', 'performance', 'style', 'debug'] as const).map((k) => (
-                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2 items-end">
+            {/* Box stile AI Mode: rettangolare arrotondato, textarea + toolbar interna */}
+            <div className="rounded-2xl border border-emerald-900/30 bg-[#010409] focus-within:border-emerald-500/60 transition-colors">
               <textarea
                 value={chatInput}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -1269,71 +1236,97 @@ const DemoSection = () => {
                     sendChatMessage(chatInput);
                   }
                 }}
-                rows={1}
+                rows={2}
                 onInput={(e) => {
                   const el = e.currentTarget;
                   el.style.height = "auto";
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
                 placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
-                className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
+                className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading || !code.trim()}
               />
-              <button
-                type="button"
-                onClick={() => sendChatMessage(chatInput)}
-                disabled={!chatInput.trim() || isLoading || !code.trim()}
-                aria-label="Invia messaggio"
-                className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all disabled:scale-95"
-              >
-                {isLoading ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Send size={18} />
+              <div className="flex items-center gap-1 px-2.5 pb-2.5">
+                <select
+                  value={analysisType}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    if (e.target.value) setAnalysisType(e.target.value);
+                  }}
+                  className="bg-[#0a0c10] border border-emerald-900/30 rounded-full pl-3 pr-2 py-1.5 text-[11px] font-bold text-gray-300 focus:outline-none focus:border-primary cursor-pointer max-w-[150px] truncate"
+                  title="Modalità di analisi"
+                  aria-label="Modalità di analisi"
+                >
+                  <optgroup label="Modalità">
+                    {(['correction', 'revision', 'creation'] as const).map((m) => (
+                      <option key={m} value={m} title={ANALYSIS_TYPE_DESCRIPTIONS[m]}>
+                        {ANALYSIS_TYPE_LABELS[m]}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Altro">
+                    {(['full', 'security', 'performance', 'style', 'debug'] as const).map((k) => (
+                      <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Allega file"
+                  aria-label="Allega file"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                >
+                  <FileText size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => folderInputRef.current?.click()}
+                  title="Carica una cartella o un intero progetto"
+                  aria-label="Carica cartella"
+                  className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                >
+                  <FolderPlus size={15} />
+                </button>
+                <button
+                  type="button"
+                  disabled={isZipLoading}
+                  onClick={() => zipInputRef.current?.click()}
+                  title="Carica archivio ZIP"
+                  aria-label="Carica ZIP"
+                  className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0 disabled:opacity-50"
+                >
+                  <Archive size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowGithubComposer((v) => !v)}
+                  aria-expanded={showGithubComposer}
+                  title="Importa da GitHub"
+                  aria-label="Importa da GitHub"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${showGithubComposer ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary hover:bg-emerald-900/20"}`}
+                >
+                  <Github size={15} />
+                </button>
+                {uploadedFiles.length > 0 && (
+                  <span className="text-[10px] text-primary font-mono ml-0.5">
+                    {uploadedFiles.length}/{MAX_DEMO_FILES}
+                  </span>
                 )}
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap mt-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
-              >
-                <FileText size={12} />
-                File
-              </button>
-              <button
-                type="button"
-                onClick={() => folderInputRef.current?.click()}
-                title="Carica una cartella o un intero progetto"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
-              >
-                <FolderPlus size={12} />
-                Cartella
-              </button>
-              <button
-                type="button"
-                disabled={isZipLoading}
-                onClick={() => zipInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
-              >
-                <Archive size={12} />
-                {isZipLoading ? "ZIP…" : "ZIP"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowGithubComposer((v) => !v)}
-                aria-expanded={showGithubComposer}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40"}`}
-              >
-                <Github size={12} />
-                GitHub
-              </button>
-              {uploadedFiles.length > 0 && (
-                <span className="text-[10px] text-primary font-mono ml-1">
-                  {uploadedFiles.length}/{MAX_DEMO_FILES} file
-                </span>
-              )}
+                <div className="flex-1" />
+                <button
+                  type="button"
+                  onClick={() => sendChatMessage(chatInput)}
+                  disabled={!chatInput.trim() || isLoading || !code.trim()}
+                  aria-label="Invia messaggio"
+                  className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
+                >
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                </button>
+              </div>
             </div>
             {showGithubComposer && (
               <div className="flex gap-2 mt-2">
