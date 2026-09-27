@@ -77,13 +77,16 @@ export default function SettingsPage() {
     if (status === "loading") return;
     if (supabaseUser) {
       const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || "";
+      const firstName = fullName.split(" ")[0] || "User";
+      const lastName = fullName.split(" ").slice(1).join(" ") || "";
       setUser({
-        firstName: fullName.split(" ")[0] || "User",
-        lastName:  fullName.split(" ").slice(1).join(" ") || "",
+        firstName,
+        lastName,
         email:     supabaseUser.email || "",
         plan:      "free",
         avatarUrl: supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
       });
+      setSavedName({ firstName, lastName });
       fetch("/api/usage/stats")
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
@@ -103,6 +106,9 @@ export default function SettingsPage() {
 
   const [exportPath, setExportPath] = useState("");
   const [exportAutoPrefix, setExportAutoPrefix] = useState(false);
+  // Snapshot dei valori salvati: il bottone "Salva" si attiva solo se qualcosa cambia.
+  const [savedName, setSavedName] = useState<{ firstName: string; lastName: string } | null>(null);
+  const [savedExport, setSavedExport] = useState<{ path: string; prefix: boolean } | null>(null);
 
   useEffect(() => {
     try {
@@ -110,6 +116,7 @@ export default function SettingsPage() {
       const savedPrefix = localStorage.getItem("semplycode:export_autoprefix") === "true";
       setExportPath(savedPath);
       setExportAutoPrefix(savedPrefix);
+      setSavedExport({ path: savedPath, prefix: savedPrefix });
     } catch {
       // ignore
     }
@@ -135,6 +142,9 @@ export default function SettingsPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Salvataggio non riuscito");
       setUser((cur) => ({ ...cur!, ...data.user }));
+      // Allinea gli snapshot ai valori appena salvati: il bottone torna disattivato.
+      setSavedName({ firstName: user!.firstName, lastName: user!.lastName });
+      setSavedExport({ path: exportPath.trim(), prefix: exportAutoPrefix });
       setFeedback({ type: "success", message: "Modifiche e impostazioni di esportazione salvate con successo." });
     } catch (error) {
       setFeedback({ type: "error", message: (error as Error).message });
@@ -153,6 +163,15 @@ export default function SettingsPage() {
     pro: "3.000 crediti / mese ≈ ~600 analisi",
     enterprise: "Team — lista d’attesa (crediti su richiesta)",
   }[user?.plan ?? "free"] ?? "30 crediti / mese ≈ ~6 analisi";
+
+  const isDirty =
+    !!user &&
+    !!savedName &&
+    !!savedExport &&
+    (user.firstName !== savedName.firstName ||
+      user.lastName !== savedName.lastName ||
+      exportPath.trim() !== savedExport.path ||
+      exportAutoPrefix !== savedExport.prefix);
 
   if (!user || status === "loading") {
     return (
@@ -415,8 +434,9 @@ export default function SettingsPage() {
         >
           <button
             onClick={handleSave}
-            disabled={loading}
-            className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold shadow shadow-emerald-500/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+            disabled={loading || !isDirty}
+            title={!isDirty ? "Nessuna modifica da salvare" : "Salva le modifiche"}
+            className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-semibold shadow shadow-emerald-500/20 hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allow disabled:hover:brightness-100"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {loading ? "Salvataggio..." : "Salva Modifiche"}
