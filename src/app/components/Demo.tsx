@@ -199,7 +199,7 @@ const DemoAIResponse = ({ content }: { content: string }) => {
                     Copia
                   </button>
                 </div>
-                <pre className="p-4 overflow-x-auto m-0 custom-scrollbar">
+                <pre className="p-4 overflow-x-auto m-0 demo-scroll">
                   <code className="text-[13px] font-mono leading-relaxed text-gray-200 whitespace-pre">
                     {children}
                   </code>
@@ -1043,7 +1043,7 @@ const DemoSection = () => {
             ) : null}
           </div>
 
-          <div className="flex-1 min-h-0 max-h-[720px] font-mono text-sm overflow-auto custom-scrollbar">
+          <div className="flex-1 min-h-0 max-h-[720px] font-mono text-sm overflow-auto demo-scroll">
             <CodeMirror
               value={code}
               onChange={(val: string) => {
@@ -1120,7 +1120,7 @@ const DemoSection = () => {
               const el = e.currentTarget;
               setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
             }}
-            className="flex-1 overflow-y-auto p-4 sm:p-5 pb-52 bg-[#0f172a] max-h-[720px] custom-scrollbar"
+            className="flex-1 overflow-y-auto p-4 sm:p-5 pb-52 bg-[#0f172a] max-h-[720px] demo-scroll"
           >
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
@@ -1243,7 +1243,7 @@ const DemoSection = () => {
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
                 placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
-                className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
+                className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] demo-scroll"
                 disabled={isLoading || !code.trim()}
               />
               <div className="flex items-center gap-1 px-2.5 pb-2.5">
@@ -1375,19 +1375,31 @@ const DemoSection = () => {
         </div>
       </motion.div>
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
+        .demo-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #064e3b transparent;
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
+        .demo-scroll::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        .demo-scroll::-webkit-scrollbar-track {
           background: transparent;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
+        .demo-scroll::-webkit-scrollbar-thumb {
           background: #064e3b;
-          border-radius: 10px;
+          border-radius: 8px;
         }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        .demo-scroll::-webkit-scrollbar-thumb:hover {
           background: #065f46;
+        }
+        .demo-scroll .cm-scroller::-webkit-scrollbar {
+          width: 4px;
+          height: 4px;
+        }
+        .demo-scroll .cm-scroller::-webkit-scrollbar-thumb {
+          background: #064e3b;
+          border-radius: 8px;
         }
         .text-shadow-glow {
           text-shadow: 0 0 10px rgba(6, 78, 59, 0.5);
