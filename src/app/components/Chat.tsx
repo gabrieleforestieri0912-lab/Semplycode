@@ -2364,18 +2364,18 @@ export default function Chat() {
 
             <nav className="flex-1 py-5 px-4 min-h-0 overflow-y-auto overflow-x-hidden">
               {!showSidebarLabels ? (
-                <div className="flex flex-col items-center gap-3.5 py-2">
-                  <button type="button" onClick={startNewChat} title={t.newChatA11y} aria-label={t.newChatA11y} data-tour="history" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
-                    <Plus size={20} />
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <button type="button" onClick={startNewChat} title={t.newChatA11y} aria-label={t.newChatA11y} data-tour="history" className="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
+                    <Plus size={18} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.searchChats} aria-label={t.searchChats} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <Search size={18} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.searchChats} aria-label={t.searchChats} className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <Search size={16} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.projects} aria-label={t.projects} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <FolderKanban size={18} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.projects} aria-label={t.projects} className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FolderKanban size={16} />
                   </button>
-                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.recentChats} aria-label={t.recentChats} className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
-                    <FileCode size={18} />
+                  <button type="button" onClick={() => setIsSidebarExpanded(true)} title={t.recentChats} aria-label={t.recentChats} className="w-10 h-10 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
+                    <FileCode size={16} />
                   </button>
                 </div>
               ) : (
@@ -2845,7 +2845,7 @@ export default function Chat() {
               )}
             </nav>
 
-            <div className="p-4 border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60">
+            <div className={`${showSidebarLabels ? "p-3" : "p-2"} border-t border-emerald-900/20 shrink-0 overflow-visible relative z-60`}>
               {user ? (
                 <div className="relative">
                   <button
@@ -2855,9 +2855,9 @@ export default function Chat() {
                       setIsProfileOpen(next);
                       if (next && isDesktop) setIsSidebarExpanded(true);
                     }}
-                    className="w-full flex items-center gap-3.5 p-2.5 rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0"
+                    className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0 ${showSidebarLabels ? "gap-2.5 p-2" : "justify-center p-1.5"}`}
                   >
-                    <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
+                    <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
                       {user.image ? (
                         <img
                           src={user.image}
@@ -2866,21 +2866,21 @@ export default function Chat() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <User size={18} className="text-white" />
+                        <User size={16} className="text-white" />
                       )}
                     </div>
                     <div
                       className={`flex-1 text-left min-w-0 overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
                     >
-                      <p className="text-[15px] font-medium text-white truncate whitespace-nowrap">
+                      <p className="text-[13px] font-medium text-white truncate whitespace-nowrap">
                         {user.firstName || user.email?.split("@")[0]}
                       </p>
-                      <p className="text-[13px] text-gray-500 truncate whitespace-nowrap">
+                      <p className="text-[11px] text-gray-500 truncate whitespace-nowrap">
                         {user.email}
                       </p>
                     </div>
                     <ChevronDown
-                      size={18}
+                      size={14}
                       className={`shrink-0 text-gray-500 overflow-hidden transition-all duration-150 ease-out ${showSidebarLabels ? "opacity-100 w-4 delay-100" : "opacity-0 w-0"} ${isProfileOpen ? "rotate-180" : ""}`}
                     />
                   </button>
@@ -2903,16 +2903,16 @@ export default function Chat() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full left-0 mb-2 w-56 z-100 bg-[#0d1117] border border-emerald-900/30 rounded-xl shadow-2xl overflow-hidden"
+                          className="absolute bottom-full left-0 mb-2 w-52 z-100 bg-[#0d1117] border border-emerald-900/30 rounded-xl shadow-2xl overflow-hidden"
                         >
                           <button
                             onClick={() => {
                               setIsProfileOpen(false);
                               router.push("/dashboard");
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
                           >
-                            <BarChart3 size={16} />
+                            <BarChart3 size={14} />
                             {t.dashboard}
                           </button>
                           <button
@@ -2920,9 +2920,9 @@ export default function Chat() {
                               setIsProfileOpen(false);
                               router.push("/settings");
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
+                            className="w-full flex items-center gap-2.5 px-3.5 py-2 text-[13px] text-gray-400 hover:bg-emerald-900/20 hover:text-primary transition-colors"
                           >
-                            <Settings size={16} />
+                            <Settings size={14} />
                             {t.settings}
                           </button>
                         </motion.div>
@@ -2933,11 +2933,11 @@ export default function Chat() {
               ) : (
                 <Link
                   href="/login"
-                  className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors"
+                  className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors ${showSidebarLabels ? "gap-2.5 p-2" : "justify-center p-1.5"}`}
                 >
-                  <User size={20} className="shrink-0" />
+                  <User size={18} className="shrink-0" />
                   <span
-                    className={`text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
+                    className={`text-[13px] font-medium whitespace-nowrap overflow-hidden transition-all duration-150 ease-out ${labelReveal}`}
                   >
                     {t.login}
                   </span>
