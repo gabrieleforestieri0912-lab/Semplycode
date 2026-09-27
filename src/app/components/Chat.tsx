@@ -952,6 +952,7 @@ export default function Chat() {
       emptyStateSub: "oppure chiedi qui sotto — l'input parte dal centro",
       composerPlaceholder: "Chiedi all'AI qualsiasi cosa sul codice...",
       sendMessage: "Invia messaggio",
+      attachFile: "Allega file",
       folderUploadTitle: "Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror",
       folder: "Cartella",
       import: "Importa",
@@ -1064,6 +1065,7 @@ export default function Chat() {
       emptyStateSub: "or ask below — the input starts from the center",
       composerPlaceholder: "Ask the AI anything about the code...",
       sendMessage: "Send message",
+      attachFile: "Attach file",
       folderUploadTitle: "Upload a folder or an entire project: files open as tabs in CodeMirror",
       folder: "Folder",
       import: "Import",
@@ -2237,12 +2239,12 @@ export default function Chat() {
     }, 3000);
   };
 
-  const SIDEBAR_WIDTH = 320;
-  const SIDEBAR_COLLAPSED = 76;
+  const SIDEBAR_WIDTH = 280;
+  const SIDEBAR_COLLAPSED = 68;
   const showSidebarLabels =
     isSidebarPinned || isSidebarExpanded || (!isDesktop && isMobileSidebarOpen);
   const labelReveal = showSidebarLabels
-    ? "opacity-100 max-w-[200px] delay-100"
+    ? "opacity-100 max-w-[180px] delay-100"
     : "opacity-0 max-w-0 delay-0";
 
   const activeFile = uploadedFiles[activeFileIndex] ?? null;
@@ -2308,13 +2310,13 @@ export default function Chat() {
             className="h-full flex flex-col"
             style={{ width: SIDEBAR_WIDTH }}
           >
-            <div className="flex items-center border-b border-emerald-900/20 h-[72px] shrink-0 w-full min-w-0 px-2">
-              <div className="w-[60px] shrink-0 flex justify-center items-center py-4">
+            <div className="flex items-center border-b border-emerald-900/20 h-14 shrink-0 w-full min-w-0 px-2">
+              <div className="w-[52px] shrink-0 flex justify-center items-center py-2">
                 <Link href="/" className="shrink-0 block">
                   <img
                     src="/semplycode.png"
                     alt="Semplycode"
-                    className="w-11 h-11 rounded-xl"
+                    className="w-9 h-9 rounded-xl"
                   />
                 </Link>
               </div>
@@ -2927,7 +2929,7 @@ export default function Chat() {
 
       <main className="flex-1 flex min-w-0 overflow-hidden relative z-0">
         <div className="md:hidden fixed top-0 left-0 right-0 z-10 bg-[#0d1117] border-b border-emerald-900/30">
-          <div className="flex items-center justify-between px-4 h-14">
+          <div className="flex items-center justify-between px-4 h-12">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
               className="p-2 hover:bg-emerald-900/20 rounded-lg text-gray-400"
@@ -2958,9 +2960,9 @@ export default function Chat() {
         </div>
 
         <section
-          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0a0c10] md:flex ${activeMobilePanel === "editor" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}
+          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0a0c10] md:flex ${activeMobilePanel === "editor" ? "flex" : "hidden md:flex"} md:mt-0 mt-12`}
         >
-          <div className="h-14 sm:h-16 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 gap-2 sm:gap-4">
+          <div className="h-12 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 gap-2 sm:gap-4">
             {code.trim() || activeFile ? (
               <div className="flex items-center gap-2 min-w-0">
                 <Cpu size={14} className="text-primary shrink-0" />
@@ -3076,35 +3078,18 @@ export default function Chat() {
                 detectedLang={detectedLang}
               />
             )}
-            <AnimatePresence>
-              {!code.trim() && uploadedFiles.length === 0 && (
-                <motion.div
-                  key="editor-center-hint"
-                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -24, scale: 0.97 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none p-6"
-                >
-                  <div className="pointer-events-auto text-center max-w-sm bg-[#0d1117]/90 border border-emerald-900/30 rounded-2xl px-6 py-5 shadow-2xl">
-                    <p className="text-sm font-semibold text-white mb-1">{t.editorHintTitle}</p>
-                    <p className="text-xs text-gray-500">{t.editorHintSub}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </section>
 
         <section
           aria-hidden={activeMobilePanel !== "insights"}
-          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-14`}
+          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-12`}
         >
-          <div className="h-14 sm:h-16 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 md:flex shrink-0">
+          <div className="h-12 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 md:flex shrink-0">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setInsightsTab("full")}
-                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "full"
+                className={`flex items-center gap-1.5 py-3 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "full"
                     ? "border-primary text-primary"
                     : "border-transparent text-gray-500 hover:text-gray-400"
                   }`}
@@ -3114,7 +3099,7 @@ export default function Chat() {
               </button>
               <button
                 onClick={() => setInsightsTab("files")}
-                className={`flex items-center gap-1.5 pb-4 pt-4 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "files"
+                className={`flex items-center gap-1.5 py-3 border-b-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${insightsTab === "files"
                     ? "border-primary text-primary"
                     : "border-transparent text-gray-500 hover:text-gray-400"
                   }`}
@@ -3195,31 +3180,25 @@ export default function Chat() {
                     transition={{ duration: 0.35, ease: "easeOut" }}
                     className="h-full flex flex-col items-center justify-center text-center px-4"
                   >
-                    <Sparkles size={36} className="mb-3 text-primary" />
-                    <p className="text-sm text-gray-400 mb-2">
-                      {t.emptyStateMain}
-                    </p>
-                    <p className="text-xs text-gray-600 mb-5">
-                      {t.emptyStateSub}
-                    </p>
+                    <Sparkles size={28} className="mb-4 text-primary" />
                     <motion.div
                       layoutId="chat-composer"
                       transition={{ type: "spring", stiffness: 320, damping: 30 }}
-                      className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
+                      className="w-full max-w-xl"
                       data-tour="composer-center"
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" data-tour="modes">
-                        <ModePicker
-                          value={analysisType}
-                          modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
-                          labels={typeLabels}
-                          descs={typeDescs}
-                          onChange={(m) => setAnalysisType(m)}
-                          ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
-                          closeLabel={t.close}
-                        />
-                      </div>
-                      <div className="flex gap-2 items-end">
+                      <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
+                        <div className="flex items-center gap-1.5 flex-wrap px-2.5 pt-2.5" data-tour="modes">
+                          <ModePicker
+                            value={analysisType}
+                            modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                            labels={typeLabels}
+                            descs={typeDescs}
+                            onChange={(m) => setAnalysisType(m)}
+                            ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                            closeLabel={t.close}
+                          />
+                        </div>
                         <textarea
                           value={chatInput}
                           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -3230,65 +3209,74 @@ export default function Chat() {
                             }
                           }}
                           rows={2}
+                          onInput={(e) => {
+                            const el = e.currentTarget;
+                            el.style.height = "auto";
+                            el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+                          }}
                           placeholder={t.composerPlaceholder}
-                          className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none custom-scrollbar"
+                          className="w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
                           disabled={isLoading}
                         />
-                        <button
-                          type="button"
-                          onClick={() => sendChatMessage(chatInput)}
-                          disabled={!chatInput.trim() || isLoading}
-                           aria-label={t.sendMessage}
-                          className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
-                        >
-                          {isLoading ? (
-                            <Loader2 size={18} className="animate-spin" />
-                          ) : (
-                            <Send size={18} />
+                        <div className="flex items-center gap-1 px-2.5 pb-2.5">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            title={t.attachFile}
+                            aria-label={t.attachFile}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                          >
+                            <FileText size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => folderInputRef.current?.click()}
+                            title={t.folderUploadTitle}
+                            aria-label={t.folder}
+                            className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                          >
+                            <FolderPlus size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isZipLoading}
+                            onClick={() => zipInputRef.current?.click()}
+                            title={t.uploadZip}
+                            aria-label={t.uploadZip}
+                            className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0 disabled:opacity-50"
+                          >
+                            <Archive size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowGithubComposer((v) => !v)}
+                            aria-expanded={showGithubComposer}
+                            title={t.importFromGitHub}
+                            aria-label={t.importFromGitHub}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${showGithubComposer ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary hover:bg-emerald-900/20"}`}
+                          >
+                            <Github size={15} />
+                          </button>
+                          {uploadedFiles.length > 0 && (
+                            <span className="text-[10px] text-primary font-mono ml-0.5">
+                              {uploadedFiles.length}/{MAX_UPLOAD_FILES}
+                            </span>
                           )}
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-1.5 flex-wrap mt-2.5" data-tour="upload">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all"
-                        >
-                          <FileText size={13} />
-                          File
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => folderInputRef.current?.click()}
-                          title={t.folderUploadTitle}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all"
-                        >
-                          <FolderPlus size={13} />
-                          {t.folder}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isZipLoading}
-                          onClick={() => zipInputRef.current?.click()}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
-                        >
-                          <Archive size={13} />
-                          {isZipLoading ? "ZIP…" : "ZIP"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowGithubComposer((v) => !v)}
-                          aria-expanded={showGithubComposer}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40"}`}
-                        >
-                          <Github size={13} />
-                          GitHub
-                        </button>
-                        {uploadedFiles.length > 0 && (
-                          <span className="text-[10px] text-primary font-mono ml-1">
-                            {uploadedFiles.length}/{MAX_UPLOAD_FILES} {uploadedFiles.length === 1 ? t.fileWordOne : t.fileWordMany}
-                          </span>
-                        )}
+                          <div className="flex-1" />
+                          <button
+                            type="button"
+                            onClick={() => sendChatMessage(chatInput)}
+                            disabled={!chatInput.trim() || isLoading}
+                            aria-label={t.sendMessage}
+                            className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
+                          >
+                            {isLoading ? (
+                              <Loader2 size={16} className="animate-spin" />
+                            ) : (
+                              <Send size={16} />
+                            )}
+                          </button>
+                        </div>
                       </div>
                       {showGithubComposer && (
                         <div className="flex gap-2 mt-2.5">
@@ -3586,18 +3574,18 @@ export default function Chat() {
 
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
-            <div className="flex items-center gap-1.5 flex-wrap mb-2" data-tour="modes">
-              <ModePicker
-                value={analysisType}
-                modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
-                labels={typeLabels}
-                descs={typeDescs}
-                onChange={(m) => setAnalysisType(m)}
-                ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
-                closeLabel={t.close}
-              />
-            </div>
-            <div className="flex gap-2 items-end">
+            <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <div className="flex items-center gap-1.5 flex-wrap px-2.5 pt-2.5" data-tour="modes">
+                <ModePicker
+                  value={analysisType}
+                  modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                  labels={typeLabels}
+                  descs={typeDescs}
+                  onChange={(m) => setAnalysisType(m)}
+                  ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                  closeLabel={t.close}
+                />
+              </div>
               <textarea
                 value={chatInput}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -3607,71 +3595,75 @@ export default function Chat() {
                     sendChatMessage(chatInput);
                   }
                 }}
-                rows={1}
+                rows={2}
                 onInput={(e) => {
                   const el = e.currentTarget;
                   el.style.height = "auto";
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
                 placeholder={t.composerPlaceholder}
-                className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
+                className="w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading}
               />
-              <button
-                type="button"
-                onClick={() => sendChatMessage(chatInput)}
-                disabled={!chatInput.trim() || isLoading}
-                aria-label={t.sendMessage}
-                className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all disabled:scale-95"
-              >
-                {isLoading ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Send size={18} />
+              <div className="flex items-center gap-1 px-2.5 pb-2.5" data-tour="upload">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  title={t.attachFile}
+                  aria-label={t.attachFile}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                >
+                  <FileText size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => folderInputRef.current?.click()}
+                  title={t.folderUploadTitle}
+                  aria-label={t.folder}
+                  className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0"
+                >
+                  <FolderPlus size={15} />
+                </button>
+                <button
+                  type="button"
+                  disabled={isZipLoading}
+                  onClick={() => zipInputRef.current?.click()}
+                  title={t.uploadZip}
+                  aria-label={t.uploadZip}
+                  className="w-8 h-8 rounded-full hidden xs:flex items-center justify-center text-gray-500 hover:text-primary hover:bg-emerald-900/20 transition-colors shrink-0 disabled:opacity-50"
+                >
+                  <Archive size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowGithubComposer((v) => !v)}
+                  aria-expanded={showGithubComposer}
+                  title={t.importFromGitHub}
+                  aria-label={t.importFromGitHub}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 ${showGithubComposer ? "text-primary bg-primary/10" : "text-gray-500 hover:text-primary hover:bg-emerald-900/20"}`}
+                >
+                  <Github size={15} />
+                </button>
+                {uploadedFiles.length > 0 && (
+                  <span className="text-[10px] text-primary font-mono ml-0.5">
+                    {uploadedFiles.length}/{MAX_UPLOAD_FILES}
+                  </span>
                 )}
-              </button>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap mt-2" data-tour="upload">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
-              >
-                <FileText size={12} />
-                File
-              </button>
-              <button
-                type="button"
-                onClick={() => folderInputRef.current?.click()}
-                title={t.folderUploadTitle}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
-              >
-                <FolderPlus size={12} />
-                {t.folder}
-              </button>
-              <button
-                type="button"
-                disabled={isZipLoading}
-                onClick={() => zipInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
-              >
-                <Archive size={12} />
-                {isZipLoading ? "ZIP…" : "ZIP"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowGithubComposer((v) => !v)}
-                aria-expanded={showGithubComposer}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40"}`}
-              >
-                <Github size={12} />
-                GitHub
-              </button>
-              {uploadedFiles.length > 0 && (
-                <span className="text-[10px] text-primary font-mono ml-1">
-                  {uploadedFiles.length}/{MAX_UPLOAD_FILES} {uploadedFiles.length === 1 ? t.fileWordOne : t.fileWordMany}
-                </span>
-              )}
+                <div className="flex-1" />
+                <button
+                  type="button"
+                  onClick={() => sendChatMessage(chatInput)}
+                  disabled={!chatInput.trim() || isLoading}
+                  aria-label={t.sendMessage}
+                  className="flex items-center justify-center w-9 h-9 shrink-0 rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all"
+                >
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                </button>
+              </div>
             </div>
             {showGithubComposer && (
               <div className="flex gap-2 mt-2">
