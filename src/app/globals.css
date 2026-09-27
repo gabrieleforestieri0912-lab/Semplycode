@@ -293,7 +293,44 @@ html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { 
 @media (prefers-reduced-motion: reduce) {
   .code-float-line { animation: none; }
   .code-float-item { animation: none; opacity: 1; }
+  .group:hover .spray-dot,
+  .group:active .spray-dot,
+  .group:focus-visible .spray-dot { animation: none; }
   html { scroll-behavior: auto; }
+}
+
+/* ========================================
+   Bottone "Prova Chat AI": spray di pallini
+   Partono dal bordo e diffondono verso l'esterno,
+   in loop su hover / active (touch) / focus.
+   ======================================== */
+@keyframes chat-spray {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.25);
+    opacity: 0;
+  }
+}
+
+.spray-dot {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.group:hover .spray-dot,
+.group:active .spray-dot,
+.group:focus-visible .spray-dot {
+  animation: chat-spray var(--spray-dur, 1.1s) ease-out infinite;
+  animation-delay: var(--spray-delay, 0s);
 }
 
 /* Mobile: solo i blocchi a sinistra */

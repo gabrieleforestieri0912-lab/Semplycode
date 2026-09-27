@@ -433,9 +433,14 @@ function roleLabel(role: User['role']) {
 2. **Validation** — normalize email with \`email.trim().toLowerCase()\` before \`regex.test\`
 3. **Seed** — add sample users before the line 54 loop for a visual test`;
 
-/** Pallini verdi dello spray sul bottone "Prova Chat AI": deterministici, niente random a runtime. */
+/** Pallini verdi dello spray sul bottone "Prova Chat AI": deterministici, niente random a runtime.
+ * Origine sul bordo del bottone (ellisse, % del box) così sono visibili per tutto il volo. */
 interface SprayDot {
   id: number;
+  /** Origine: % del box bottone rispetto al centro (left/top). */
+  ox: number;
+  oy: number;
+  /** Spostamento verso l'esterno in px. */
   dx: number;
   dy: number;
   size: number;
@@ -446,14 +451,16 @@ interface SprayDot {
 const SPRAY_COLORS = ["#6ee7b7", "#34d399", "#10b981", "#a7f3d0", "#ffffff", "#2dd4bf"];
 const TRY_CHAT_SPRAY: SprayDot[] = Array.from({ length: 18 }, (_, i) => {
   const angle = (i / 18) * Math.PI * 2 + (i % 2 === 0 ? 0.12 : -0.09);
-  const dist = 36 + ((i * 37) % 48);
+  const dist = 34 + ((i * 37) % 32);
   return {
     id: i,
+    ox: Math.round(Math.cos(angle) * 48),
+    oy: Math.round(Math.sin(angle) * 48),
     dx: Math.round(Math.cos(angle) * dist),
     dy: Math.round(Math.sin(angle) * dist),
-    size: 3 + ((i * 7) % 5),
+    size: 4 + ((i * 7) % 5),
     color: SPRAY_COLORS[i % SPRAY_COLORS.length],
-    dur: `${(0.9 + (i % 5) * 0.13).toFixed(2)}s`,
+    dur: `${(1.0 + (i % 5) * 0.13).toFixed(2)}s`,
     delay: `${((i % 9) * 0.11).toFixed(2)}s`,
   };
 });
@@ -1657,34 +1664,6 @@ const DemoSection = () => {
         .text-shadow-glow {
           text-shadow: 0 0 10px rgba(6, 78, 59, 0.5);
         }
-        /* Spray "Prova Chat AI": i pallini partono dal centro e diffondono verso l'esterno.
-           Parte solo su hover e resta in loop finché il mouse è sopra. */
-        @keyframes chat-spray {
-          0% {
-            transform: translate(-50%, -50%) scale(0.4);
-            opacity: 0;
-          }
-          18% {
-            opacity: 1;
-          }
-          100% {
-            transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.2);
-            opacity: 0;
-          }
-        }
-        .spray-dot {
-          opacity: 0;
-          will-change: transform, opacity;
-        }
-        .group:hover .spray-dot {
-          animation: chat-spray var(--spray-dur, 1s) ease-out infinite;
-          animation-delay: var(--spray-delay, 0s);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .group:hover .spray-dot {
-            animation: none;
-          }
-        }
       `}</style>
       </section>
       {applyModal && (
@@ -1707,13 +1686,15 @@ const DemoSection = () => {
             {TRY_CHAT_SPRAY.map((dot) => (
               <span
                 key={dot.id}
-                className="spray-dot absolute left-1/2 top-1/2 rounded-full"
+                className="spray-dot absolute rounded-full"
                 style={
                   {
+                    left: `calc(50% + ${dot.ox}%)`,
+                    top: `calc(50% + ${dot.oy}%)`,
                     width: dot.size,
                     height: dot.size,
                     background: dot.color,
-                    boxShadow: `0 0 8px 1px ${dot.color}`,
+                    boxShadow: `0 0 10px 2px ${dot.color}`,
                     "--dx": `${dot.dx}px`,
                     "--dy": `${dot.dy}px`,
                     "--spray-dur": dot.dur,
