@@ -1700,7 +1700,6 @@ const DemoSection = () => {
           href="/chat"
           className="group relative inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:shadow-emerald-500/30 hover:brightness-105 hover:scale-[1.02] active:scale-[0.98] transition-all overflow-visible"
         >
-          <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
           {t.tryChat}
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
           {/* Spray di pallini verdi su hover: diffusione continua finché il mouse resta sopra */}
