@@ -1328,7 +1328,6 @@ const DemoSection = () => {
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     if (e.target.value) setAnalysisType(e.target.value);
                   }}
-                  className="bg-white/[0.04] border border-white/10 rounded-full pl-3 pr-2 py-1.5 text-[11px] font-bold text-gray-300 focus:outline-none cursor-pointer max-w-[150px] truncate"
                   title="Modalità di analisi"
                   aria-label="Modalità di analisi"
                 >
