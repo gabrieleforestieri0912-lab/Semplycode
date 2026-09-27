@@ -11,7 +11,7 @@ import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import dynamic from "next/dynamic";
 import EditorWrapper from "./EditorWrapper";
-import Onboarding from "./Onboarding";
+import Onboarding, { ONBOARDING_KEY } from "./Onboarding";
 import QuotaBadge from "./QuotaBadge";
 import CodeApplyModal from "./playground/CodeApplyModal";
 import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS } from "@/lib/analysisPrompts";
@@ -946,11 +946,12 @@ export default function Chat() {
     }
   }, [user]);
 
+  // Tour guidato solo al primo accesso all'editor (flag una-tantum).
   useEffect(() => {
     try {
-      const shown = localStorage.getItem("semplycode:onboard:v1");
+      const shown = localStorage.getItem(ONBOARDING_KEY);
       if (!shown) setShowOnboarding(true);
-    } catch { }
+    } catch { /* storage non disponibile: non mostrare */ }
   }, []);
 
   // Applica un suggerimento SOLO al file attivo (mai wipe dell'intero editor).
@@ -2034,7 +2035,7 @@ export default function Chat() {
             <nav className="flex-1 py-5 px-4 min-h-0 overflow-y-auto overflow-x-hidden">
               {!showSidebarLabels ? (
                 <div className="flex flex-col items-center gap-3.5 py-2">
-                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
+                  <button type="button" onClick={startNewChat} title="Nuova chat" aria-label="Nuova chat" data-tour="history" className="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-sm transition-colors">
                     <Plus size={20} />
                   </button>
                   <button type="button" onClick={() => setIsSidebarExpanded(true)} title="Cerca chat" aria-label="Cerca chat" className="w-11 h-11 rounded-xl bg-[#061014] border border-emerald-900/20 text-gray-400 hover:text-white hover:border-emerald-500/30 flex items-center justify-center transition-colors">
@@ -2749,6 +2750,7 @@ export default function Chat() {
             </div>
           )}
           <div
+            data-tour="editor"
             className="flex-1 overflow-auto custom-scrollbar font-mono text-sm bg-[#0a0c10] min-h-0 max-h-[720px] relative"
 
           >
@@ -2849,7 +2851,7 @@ export default function Chat() {
             )}
           </div>
 
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar max-h-[720px]">
+          <div ref={messagesContainerRef} data-tour="report" className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar max-h-[720px]">
             {insightsTab === "full" ? (
               <AnimatePresence mode="wait">
                 {messages.length === 0 && isLoading ? (
@@ -2897,8 +2899,9 @@ export default function Chat() {
                       layoutId="chat-composer"
                       transition={{ type: "spring", stiffness: 320, damping: 30 }}
                       className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
+                      data-tour="composer-center"
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label="Modalità AI">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label="Modalità AI" data-tour="modes">
                         {(['correction','revision','creation'] as const).map((mode) => {
                           const active = analysisType === mode;
                           const label = ANALYSIS_TYPE_LABELS[mode];
@@ -2959,7 +2962,7 @@ export default function Chat() {
                           )}
                         </button>
                       </div>
-                      <div className="flex items-center gap-1.5 flex-wrap mt-2.5">
+                      <div className="flex items-center gap-1.5 flex-wrap mt-2.5" data-tour="upload">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
@@ -3297,8 +3300,8 @@ export default function Chat() {
           </div>
 
           {messages.length === 0 && !isLoading ? null : (
-          <motion.div layoutId="chat-composer" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
-            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI">
+          <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI" data-tour="modes">
               {(['correction','revision','creation'] as const).map((mode) => {
                 const active = analysisType === mode;
                 const label = ANALYSIS_TYPE_LABELS[mode];
@@ -3364,7 +3367,7 @@ export default function Chat() {
                 )}
               </button>
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+            <div className="flex items-center gap-1.5 flex-wrap mt-2" data-tour="upload">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}

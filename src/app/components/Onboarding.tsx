@@ -1,119 +1,257 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { Sparkles, Code2, Brain, Bookmark, ArrowRight, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+
+/** Flag una-tantum: il tour parte solo al primo accesso all'editor. */
+export const ONBOARDING_KEY = 'semplycode:onboard:chat:v1';
 
 interface OnboardingProps {
   onClose?: () => void;
 }
 
-const STEPS = [
+interface TourStep {
+  /** Selettore CSS (anche multipli separati da virgola): si usa il primo visibile. */
+  target: string;
+  title: string;
+  desc: string;
+}
+
+const STEPS: TourStep[] = [
   {
-    icon: Sparkles,
-    title: 'Benvenuto su Semplycode',
-    desc: 'Ti guidiamo in 30 secondi: incolla codice, ottieni errori con riga + spiegazione italiana e fix in diff.',
-    detail: null as string | null,
-    code: null as string | null,
+    target: '[data-tour="editor"]',
+    title: 'Incolla il codice qui',
+    desc: 'Editor con rilevamento automatico del linguaggio. Incolla e l\u2019analisi parte da sola, oppure premi Ctrl+Invio.',
   },
   {
-    icon: Code2,
-    title: '1 — Incolla o carica (vero limite: 5 file)',
-    desc: 'Editor CodeMirror con rilevamento linguaggio automatico. Trascina fino a 5 file (100KB cad., 20 su Enterprise) o importa da GitHub — lo stack trace è opzionale.',
-    detail: 'Prova subito con un esempio pre-caricato:',
-    code: `function calcolaTotale(carrello) {\n  let totale = 0;\n  for (let i = 0; i <= carrello.length; i++) {\n    totale += carrello[i].prezzo;\n  }\n  return totale;\n}`,
+    target: '[data-tour="composer-center"],[data-tour="composer-bottom"]',
+    title: 'Chiedi all\u2019AI',
+    desc: 'Scrivi qui domande sul codice: l\u2019input parte al centro e scende in fondo al primo invio. Invio per mandare, Shift+Invio per andare a capo.',
   },
   {
-    icon: Brain,
-    title: '2 — Analisi in italiano',
-    desc: 'Scegli Correzione (solo fix minimi) o Revisione (DRY, naming, sicurezza). Citazione riga se >50 righe e correlazione con stack trace.',
-    detail: 'Esempio di report che vedrai a destra:',
-    code: `### Errori Trovati\n- Riga 3 → i <= length legge undefined\n### Spiegazione\nIndice fuori range, lancia TypeError\n### Codice corretto\n- for (... i <= len ...)\n+ for (... i < len ...)`,
+    target: '[data-tour="modes"]',
+    title: 'Modalit\u00e0 di analisi',
+    desc: 'Correzione (solo fix minimi), Revisione (qualit\u00e0 e best practice), Creazione (guida passo-passo) + altre analisi nel menu Altro.',
   },
   {
-    icon: Bookmark,
-    title: '3 — Applica, salva e continua',
-    desc: 'Copia con un click o applica il diff nell’editor, salva nel Cassetto (Leitner), esporta Markdown o condividi link temporaneo — poi chiedi “perché” in chat.',
-    detail: null,
-    code: null,
+    target: '[data-tour="upload"]',
+    title: 'File, cartelle, ZIP, GitHub',
+    desc: 'Carica fino a 50 file: si aprono come tab e l\u2019AI li analizza insieme, relazioni comprese.',
+  },
+  {
+    target: '[data-tour="report"]',
+    title: 'Report con riga cliccabile',
+    desc: 'Errori con riga evidenziata nell\u2019editor, blocchi codice con Copia, Applica al file attivo e Salva nel Cassetto.',
+  },
+  {
+    target: '[data-tour="history"]',
+    title: 'Cronologia e progetti',
+    desc: 'Le chat si salvano da sole: cercale, rinominale o organizzale in progetti dalla barra laterale.',
   },
 ];
 
+interface Box {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
+
+function findVisibleTarget(selector: string): Element | null {
+  try {
+    const els = Array.from(document.querySelectorAll(selector));
+    for (const el of els) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 48 && r.height > 28 && r.bottom > 0 && r.top < window.innerHeight) {
+        return el;
+      }
+    }
+  } catch {
+    // selettore non valido: nessuno step
+  }
+  return null;
+}
+
 export default function Onboarding({ onClose }: OnboardingProps) {
   const [step, setStep] = useState(0);
+  const [box, setBox] = useState<Box | null>(null);
+  const [place, setPlace] = useState<'below' | 'above' | 'center'>('below');
+  const closedRef = useRef(false);
+  const stepRef = useRef(0);
+  stepRef.current = step;
   const total = STEPS.length;
-  const cur = STEPS[step];
-  const Icon = cur.icon;
+
+  const finish = () => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch { /* storage non disponibile */ }
+    onClose?.();
+  };
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
+
+  // Risolve lo step corrente sull'elemento reale: scroll, misura, posiziona.
+  // Gli step senza target visibile (es. pannello nascosto su mobile) vengono saltati.
+  useEffect(() => {
+    let cancelled = false;
+    let t1: ReturnType<typeof setTimeout> | undefined;
+    let t2: ReturnType<typeof setTimeout> | undefined;
+
+    const el = findVisibleTarget(STEPS[step].target);
+    if (!el) {
+      t1 = setTimeout(() => {
+        if (cancelled) return;
+        if (stepRef.current + 1 < STEPS.length) setStep(stepRef.current + 1);
+        else finishRef.current();
+      }, 60);
+      return () => { cancelled = true; if (t1) clearTimeout(t1); };
+    }
+
+    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { /* ignore */ }
+
+    const measure = () => {
+      if (cancelled) return;
+      const target = findVisibleTarget(STEPS[stepRef.current].target);
+      if (!target) {
+        if (stepRef.current + 1 < STEPS.length) setStep(stepRef.current + 1);
+        else finishRef.current();
+        return;
+      }
+      const r = target.getBoundingClientRect();
+      const pad = 8;
+      const b: Box = {
+        top: Math.max(8, r.top - pad),
+        left: Math.max(8, r.left - pad),
+        width: Math.min(r.width + pad * 2, window.innerWidth - 16),
+        height: r.height + pad * 2,
+      };
+      setBox(b);
+      const tipH = 280;
+      if (window.innerHeight - (b.top + b.height) > tipH + 16) setPlace('below');
+      else if (b.top > tipH + 16) setPlace('above');
+      else setPlace('center');
+    };
+
+    t1 = setTimeout(measure, 450);
+    t2 = setTimeout(measure, 1400); // seconda misura dopo il layout definitivo
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      cancelled = true;
+      if (t1) clearTimeout(t1);
+      if (t2) clearTimeout(t2);
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [step]);
 
   useEffect(() => {
-    try { localStorage.setItem('semplycode:onboard:v2', '1'); } catch {}
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') finishRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  const next = () => setStep((s) => Math.min(s + 1, total - 1));
-  const prev = () => setStep((s) => Math.max(s - 1, 0));
+  const goNext = () => {
+    if (step + 1 < total) {
+      setBox(null);
+      setStep(step + 1);
+    } else {
+      finish();
+    }
+  };
+  const goPrev = () => {
+    if (step > 0) {
+      setBox(null);
+      setStep(step - 1);
+    }
+  };
+
+  const cur = STEPS[step];
+  const tipWidth = 340;
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+  const tipLeft = box
+    ? Math.max(12, Math.min(box.left, vw - tipWidth - 12))
+    : Math.max(12, (vw - tipWidth) / 2);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-xl bg-[#0d1117] rounded-2xl border border-emerald-900/30 shadow-2xl overflow-hidden">
-        {/* Progress bar */}
-        <div className="h-1 bg-white/5">
-          <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300" style={{ width: `${((step + 1) / total) * 100}%` }} />
-        </div>
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Tour guidato">
+      {box && place !== 'center' ? (
+        <div
+          className="absolute rounded-xl border-2 border-emerald-400 transition-all duration-300 shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]"
+          style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-black/65" onClick={finish} />
+      )}
 
-        <button onClick={onClose} aria-label="Chiudi" className="absolute right-3 top-3 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-colors">
-          <X size={14} />
-        </button>
+      <button
+        onClick={finish}
+        aria-label="Chiudi tour"
+        className="absolute right-4 top-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center transition-colors"
+      >
+        <X size={16} />
+      </button>
 
-        <div className="p-6 sm:p-7">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Icon size={18} />
-            </span>
-            <span className="text-xs font-bold tracking-widest uppercase text-emerald-400">Step {step + 1} / {total}</span>
+      <div
+        className="absolute"
+        style={
+          place === 'center' || !box
+            ? { left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: `min(${tipWidth}px, calc(100vw - 24px))` }
+            : place === 'below'
+              ? { left: tipLeft, top: box.top + box.height + 12, width: `min(${tipWidth}px, calc(100vw - 24px))` }
+              : { left: tipLeft, top: Math.max(12, box.top - 12), transform: 'translateY(-100%)', width: `min(${tipWidth}px, calc(100vw - 24px))` }
+        }
+      >
+        <div className="bg-[#0d1117] rounded-2xl border border-emerald-900/40 shadow-2xl overflow-hidden">
+          <div className="h-1 bg-white/5">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
+              style={{ width: `${((step + 1) / total) * 100}%` }}
+            />
           </div>
+          <div className="p-5">
+            <span className="text-[11px] font-bold tracking-widest uppercase text-emerald-400">
+              Step {step + 1} / {total}
+            </span>
+            <h3 className="text-base font-bold text-white mt-1 mb-1.5">{cur.title}</h3>
+            <p className="text-sm text-gray-300 leading-relaxed mb-4">{cur.desc}</p>
 
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{cur.title}</h3>
-          <p className="text-sm text-gray-300 leading-relaxed mb-4">{cur.desc}</p>
-
-          {cur.code && (
-            <div className="mb-4 rounded-xl border border-emerald-900/30 bg-[#010409]/70 overflow-hidden">
-              <div className="px-3 py-2 border-b border-emerald-900/20 flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-widest uppercase text-gray-400">{step === 1 ? 'Esempio codice' : 'Anteprima report'}</span>
+            <div className="flex items-center justify-center gap-1.5 mb-4">
+              {STEPS.map((_, i) => (
                 <button
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('semplycode:applySuggestion', { detail: { code: cur.code } }));
-                    onClose?.();
-                  }}
-                  className="text-xs px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                  key={i}
+                  onClick={() => { setBox(null); setStep(i); }}
+                  className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-emerald-500' : 'w-1.5 bg-white/15 hover:bg-white/25'}`}
+                  aria-label={`Vai a step ${i + 1}`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={finish}
+                className="text-xs font-semibold text-gray-400 hover:text-white px-3 py-2 rounded-full hover:bg-white/5 transition-colors"
+              >
+                Salta
+              </button>
+              <div className="flex items-center gap-2">
+                {step > 0 && (
+                  <button
+                    onClick={goPrev}
+                    className="inline-flex items-center gap-1 px-4 py-2 rounded-full border border-emerald-900/30 text-gray-300 hover:text-white hover:bg-white/5 text-sm font-semibold transition-colors"
+                  >
+                    <ArrowLeft size={14} /> Indietro
+                  </button>
+                )}
+                <button
+                  onClick={goNext}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-md hover:brightness-110 transition-all"
                 >
-                  Inserisci nell’editor
+                  {step < total - 1 ? <>Avanti <ArrowRight size={14} /></> : 'Inizia'}
                 </button>
               </div>
-              <pre className="text-[11px] font-mono text-gray-300 p-3 overflow-auto max-h-40 whitespace-pre-wrap break-words">{cur.code}</pre>
-            </div>
-          )}
-
-          {/* Dots */}
-          <div className="flex items-center justify-center gap-1.5 my-4">
-            {STEPS.map((_, i) => (
-              <button key={i} onClick={() => setStep(i)} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-6 bg-emerald-500' : 'w-1.5 bg-white/15 hover:bg-white/25'}`} aria-label={`Vai a step ${i + 1}`} />
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            <button onClick={onClose} className="text-xs font-semibold text-gray-400 hover:text-white px-3 py-2 rounded-full hover:bg-white/5 transition-colors">Salta</button>
-            <div className="flex items-center gap-2">
-              {step > 0 && (
-                <button onClick={prev} className="px-4 py-2 rounded-full border border-emerald-900/30 text-gray-300 hover:text-white hover:bg-white/5 text-sm font-semibold transition-colors">Indietro</button>
-              )}
-              {step < total - 1 ? (
-                <button onClick={next} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-md hover:brightness-110 transition-all">
-                  Avanti <ArrowRight size={14} />
-                </button>
-              ) : (
-                <button onClick={onClose} className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-white text-[#0f172a] text-sm font-bold hover:bg-gray-100 transition-colors">
-                  Inizia a codificare
-                </button>
-              )}
             </div>
           </div>
         </div>
