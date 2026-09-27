@@ -14,7 +14,7 @@ export default function FAQ() {
 
   return (
     <section id="faq" className="w-full py-16 md:py-24 3xl:py-32 bg-[#f8fafc]">
-      <div className="container mx-auto max-w-md 2xl:max-w-lg 3xl:max-w-lg 4xl:max-w-xl px-4 sm:px-0">
+      <div className="mx-auto w-full max-w-[440px] px-4 sm:px-0">
         <div className="text-center mb-10 sm:mb-12">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -44,7 +44,7 @@ export default function FAQ() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-sm xs:text-base sm:text-lg md:text-xl 3xl:text-2xl text-[#475569] max-w-md 3xl:max-w-lg mx-auto px-2 sm:px-0"
+            className="text-sm xs:text-base sm:text-lg md:text-xl 3xl:text-2xl text-[#475569] max-w-[400px] mx-auto px-2 sm:px-0"
           >
             Risposte chiare su Chat AI, limiti, piani e privacy.
           </motion.p>
