@@ -1120,7 +1120,7 @@ const DemoSection = () => {
               const el = e.currentTarget;
               setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
             }}
-            className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] custom-scrollbar"
+            className="flex-1 overflow-y-auto p-4 sm:p-5 pb-52 bg-[#0f172a] max-h-[720px] custom-scrollbar"
           >
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
@@ -1189,8 +1189,8 @@ const DemoSection = () => {
             )}
           </div>
 
-          {/* Input identico alla chat: modalità + Altro, textarea, allegati File/Cartella/ZIP/GitHub */}
-          <div className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+          {/* Input flottante dentro lo spazio chat: non aumenta l'altezza della demo */}
+          <div className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/95 backdrop-blur rounded-b-2xl sm:rounded-b-3xl">
             <input
               ref={fileInputRef}
               type="file"
