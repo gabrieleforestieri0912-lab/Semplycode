@@ -411,6 +411,13 @@ button:focus {
   outline: none;
 }
 
+/* Input chat della demo: nessun box/ring in focus, resta invisibile. */
+.demo-chat-input:focus,
+.demo-chat-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* ========================================
    Cassetto delle Note â€” markdown
    ======================================== */

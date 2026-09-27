@@ -1504,7 +1504,7 @@ const DemoSection = () => {
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
                 placeholder={t.askPlaceholder}
-                className="w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] demo-scroll"
+                className="demo-chat-input w-full bg-transparent px-4 pt-3 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] demo-scroll"
                 disabled={isLoading || !code.trim()}
               />
               <div className="flex items-center gap-1 px-2.5 pb-2.5">
