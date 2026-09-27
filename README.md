@@ -15,11 +15,13 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 | Linguaggio | TypeScript |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth (email/password, OAuth Google/GitHub, OTP via email) |
-| AI Engine | Google Gemini (default `gemini-2.0-flash`) |
+| AI Engine | xKiro OpenAI-compatible (default `qwen/qwen3-coder-plus:free`) |
 | Pagamenti | Stripe (subscription model) |
-| Email | SMTP (login code OTP), Nodemailer (password reset) |
+| Email | Resend (OTP login code), Nodemailer SMTP (password reset, se configurato) |
 | Rate Limiting | Redis (`ioredis`, fallback in-memory) |
 | Editor | CodeMirror 6 |
+| Markdown | react-markdown + remark-gfm (report AI stile editor) |
+| File/ZIP | jszip (estrazione ZIP, max 5 file da 100KB) |
 | Animazioni | Framer Motion |
 | Icone | Lucide React + FontAwesome (brand icons, es. Chrome) |
 
@@ -34,22 +36,23 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 │   │   ├── layout.tsx              # Root layout (font, metadata, providers, theme anti-FOUC)
 │   │   ├── globals.css             # Tailwind + variabili tema light/dark + override dark
 │   │   ├── page.tsx                # Landing page (Hero, Demo, Come Funziona, Prezzi, Estensione, FAQ)
-│   │   ├── proxy.ts                # Middleware Next.js (auth guard + CORS su /api)
+│   │   ├── proxy.ts                # (in src/proxy.ts) auth guard + CORS su /api — Next 16 usa `proxy` al posto di `middleware`
 │   │   ├── components/
-│   │   │   ├── Navbar.tsx          # Navigazione + toggle tema + lingua
+│   │   │   ├── Navbar.tsx          # Navigazione + lingua (logout diretto, redirect a /login)
 │   │   │   ├── Hero.tsx            # Hero landing (CTA verde + CTA Chrome dark)
 │   │   │   ├── Features.tsx · HowItWorks.tsx · WhyChoose.tsx
 │   │   │   ├── Pricing.tsx         # Piani Free/Starter/Pro/Enterprise
-│   │   │   ├── Demo.tsx            # Demo live landing (CodeMirror)
+│   │   │   ├── Demo.tsx            # Demo live landing (CodeMirror, modalità correzione/revisione/creazione)
 │   │   │   ├── ExtensionSection.tsx · ImportCodeSection.tsx · FAQ.tsx · Footer.tsx
-│   │   │   ├── Chat.tsx            # Playground principale
-│   │   │   ├── EditorWrapper.tsx   # CodeMirror dynamic import
+│   │   │   ├── Chat.tsx            # Playground principale (composer centrale → in fondo, streaming, report, apply al file attivo)
+│   │   │   ├── EditorWrapper.tsx   # CodeMirror dynamic import (scrollbar dopo 30 righe, max-h 720px)
 │   │   │   ├── ChromeLogo.tsx      # Icona Chrome (FontAwesome faChrome)
 │   │   │   ├── ThemeToggle.tsx · Onboarding.tsx · QuotaBadge.tsx
-│   │   │   └── playground/CodeApplyModal.tsx
+│   │   │   └── playground/         # Composer, sidebar editor pinnabile, CodeApplyModal, report AI
+│   │   ├── guide/[slug]/           # Pagine guida (slug EN, alias IT)
 │   │   ├── api/
-│   │   │   ├── chat/route.ts                    # Analisi AI (token budget + rate limit)
-│   │   │   ├── chat/history/route.ts            # CRUD cronologia chat
+│   │   │   ├── chat/route.ts                    # Analisi AI (streaming SSE, token budget + rate limit + limiti piano)
+│   │   │   ├── chat/history/route.ts + chat-history/route.ts # CRUD cronologia chat
 │   │   │   ├── auth/*                           # register, signup, signout, callback, send/verify-login-code, forgot/reset-password, link-code
 │   │   │   ├── notes/*                          # CRUD note, categorize, quiz, review, related, due-reviews
 │   │   │   ├── categories/route.ts · learning-paths/route.ts
@@ -61,18 +64,21 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 │   │   ├── chat/ · dashboard/ · notes/ · settings/ · share/[token]/ · feedback/ · privacy/ · terms/
 │   ├── lib/
 │   │   ├── supabase/              # client.ts (browser) · server.ts · middleware.ts · db.ts · types.ts · service.ts
-│   │   ├── ai-provider.ts         # chatWithAI() — Google Gemini, unico cervello
+│   │   ├── ai-provider.ts         # chatWithAI()/chatWithAIStream() — xKiro OpenAI-compatible, unico cervello
 │   │   ├── api-auth.ts            # getAuthUser(): cookie session O Bearer JWT
 │   │   ├── apiClient.ts           # Client tipizzato (webapp) + apiClient.extension.ts (bundle estensione)
 │   │   ├── auth.tsx               # Context React per Supabase
-│   │   ├── tokenBudget.ts         # Budget token mensili + stima
+│   │   ├── tokenBudget.ts         # Budget token mensili + stima (1 credito = 1.000 token)
+│   │   ├── planLimits.ts          # Limiti funzionali per piano (file, char, ZIP, GitHub, history, note, tipi analisi)
 │   │   ├── usageLimits.ts · rateLimiter.ts · guestSession.ts · ensureEnv.ts
 │   │   ├── notesDb.ts · notesAI.ts · notesPrompts.ts
 │   │   ├── analysisPrompts.ts · playgroundApi.ts · chatTitle.ts
 │   │   ├── linkCode.ts · githubFetch.ts · faq.ts · extension.ts
+│   │   ├── exportUtils.ts · projectStore.ts · codeSnippets.ts · chatTitle.ts · analysisPrompts.ts · playgroundApi.ts
 │   └── context/
 │       └── LanguageContext.tsx    # Toggle lingua IT/EN
 │       └── ThemeContext.tsx       # Tema light/dark
+├── supabase/supabase-schema.sql  # Schema completo Supabase (token + note + RLS)
 ├── chrome-extension/
 │   ├── manifest.json              # MV3, sidepanel + context menu, permessi minimi
 │   ├── background.js              # Service worker (sidepanel, context menu)
@@ -81,8 +87,7 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 │   ├── codemirror-bundle.js       # CodeMirror 6 bundle
 │   ├── api-client.js              # Bundle esbuild di src/lib/apiClient.extension.ts
 │   └── icon.png
-├── supabase-schema.sql            # Schema completo Supabase (token + note + RLS)
-└── .env.example                   # Template variabili d'ambiente
+└── .env                           # Variabili d'ambiente locali (vedi sezione sotto)
 ```
 
 ---
@@ -100,14 +105,14 @@ Semplycode è una webapp per l'analisi e la comprensione del codice tramite AI: 
 - **Link-code delegation**: pagina `/extension-link` genera un codice (2 min) → `POST /api/auth/link-code` → token estensione, senza ridigitare la password.
 - Il token non viene mai esposto al content script (contesto pagina potenzialmente non fidato).
 
-### Protezione route (middleware)
-`src/proxy.ts`: pagine protette (`/dashboard`, `/settings`, `/chat`) → redirect a `/login`; API protette → 401; header CORS su `/api/*`.
+### Protezione route (proxy)
+`src/proxy.ts` (Next 16: `proxy` al posto di `middleware`): pagine protette (`/dashboard`, `/settings`, `/chat`) → redirect a `/login`; API protette → 401; header CORS su `/api/*`.
 
 ---
 
 ## Database Supabase
 
-Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo script include:
+Esegui `supabase/supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo script include:
 1. **Sistema token**: `ALTER TABLE users` → `tokens_used_month`, `tokens_period_start`.
 2. **Tabelle note**: `notes`, `categories`, `note_categories`, `learning_paths`, `learning_path_notes`.
 3. **RLS** su tutte le tabelle (pattern `auth.jwt() ->> 'email' = user_id`).
@@ -168,8 +173,9 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 | Pro | 7.99 €/m (6.39 €/m ann.) | 3M | 3.000 ≈ ~600 analisi | — |
 | Team | Su richiesta (lista d’attesa) | Su volumi concordati | — | Fino a 20 file, pool condiviso |
 
-- Ospiti (senza account): budget giornaliero di 30K crediti gestito lato server via Redis (`GUEST_DAILY_TOKEN_BUDGET`).
-- Il display mostra i crediti con stima analisi (~5k crediti/analisi); i budget reali in `src/lib/tokenBudget.ts`.
+- Ospiti (senza account): budget giornaliero di 30K token (= 30 crediti) gestito lato server via Redis (`GUEST_DAILY_TOKEN_BUDGET`).
+- Il display mostra i crediti con stima analisi (~5k token/analisi); i budget reali in `src/lib/tokenBudget.ts`.
+- **Limiti funzionali per piano** (`src/lib/planLimits.ts`, applicati anche lato server in `/api/chat`): n. file, char per file/totale, ZIP, GitHub, cronologia chat, note, tipi di analisi (guest: solo correzione; free: correzione+revisione; starter/pro: anche GitHub; pro: anche ZIP).
 - **Flusso checkout**: `POST /api/checkout` con `{ priceId, planId, interval }` → sessione Stripe → webhook `checkout.session.completed` aggiorna `subscription_status` e `plan`.
 
 ---
@@ -179,7 +185,8 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 ### Chat / AI
 | Metodo | Route | Descrizione |
 |--------|-------|-------------|
-| POST | `/api/chat` | Analisi AI con controllo token budget + rate limit |
+| POST | `/api/chat` | Analisi AI in streaming SSE (token budget + rate limit + limiti piano) |
+| GET/POST/DELETE | `/api/chat/history` · `/api/chat-history` | CRUD cronologia chat |
 
 ### Auth
 | Metodo | Route | Descrizione |
@@ -221,17 +228,23 @@ Esegui `supabase-schema.sql` nel SQL Editor di Supabase (una sola volta). Lo scr
 
 ---
 
+## Playground / Chat
+
+- **Composer**: parte al centro e si anima in fondo al primo invio; modalità correzione/revisione/creazione + menu "Altro"; upload file, ZIP e import GitHub secondo i limiti del piano.
+- **Editor multi-file**: sidebar pinnabile (persistente), apply solo al file attivo.
+- **Report AI**: streaming con stato di elaborazione + timer, avatar messaggi, strip dei tag `<think>`, render Markdown stile editor (prose dark, code dark, bg oneDark).
+- **UX**: input e bottone "Analizza Codice" fuori dal messaggio AI; scrollbar dopo 30 righe in editor e messaggi (max-h 720px).
+
 ## Tipi di Analisi AI
 
 Il prompt system viene costruito in `analysisPrompts.ts`:
 
 | Tipo | Focus |
 |------|-------|
-| `full` | Analisi completa: errori, struttura, logica, miglioramenti |
-| `debug` | Diagnosi errori e bug |
-| `security` | Vulnerabilità di sicurezza |
-| `performance` | Ottimizzazione performance |
-| `refactor` | Suggerimenti di refactoring |
+| `correction` | Correzione errori e bug |
+| `revision` | Revisione struttura, logica, miglioramenti |
+| `creation` | Generazione nuovo codice |
+| `full` / `debug` / `security` / `performance` / `refactor` | Alias legacy mappati sui tipi sopra |
 
 ---
 
@@ -272,24 +285,27 @@ Il prompt system viene costruito in `analysisPrompts.ts`:
 
 ```env
 # Obbligatorie
-JWT_SECRET=your_jwt_secret
+NEXT_PUBLIC_SITE_URL=https://tuo-dominio.example
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key   # richiesta dalle API note
-
-# SMTP (login code OTP). Se assente i codici sono loggati in console.
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=user
-SMTP_PASS=pass
-SMTP_FROM="Semplycode <no-reply@example.com>"
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key   # richiesta dalle API note/chat
+JWT_SECRET=your_jwt_secret
 
 # Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# AI Provider (OpenAI-compatible / xKiro)
+# Email: Resend per OTP login (se assente i codici sono loggati in console).
+# SMTP opzionale per reset password via Nodemailer.
+RESEND_API_KEY=re_...
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=user
+SMTP_PASS=pass
+SMTP_FROM="Semplycode <no-reply@example.com>"
+
+# AI Provider (xKiro OpenAI-compatible)
 AI_API_KEY=your_ai_api_key
 AI_BASE_URL=https://api.xkiro.com/v1
 AI_MODEL=qwen/qwen3-coder-plus:free
@@ -304,7 +320,7 @@ REDIS_URL=redis://localhost:6379
 
 ```bash
 npm install
-cp .env.example .env.local   # compila le variabili
+# compila .env con le variabili sopra
 npm run dev                  # http://localhost:3000
 npm run build:extension-api  # rigenera chrome-extension/api-client.js
 npm run build                # build di produzione
@@ -312,7 +328,7 @@ npm run lint                 # eslint
 npx tsc --noEmit             # typecheck (obbligatorio prima di ogni commit)
 ```
 
-**Setup Supabase**: esegui `supabase-schema.sql` nel SQL Editor (una volta) e aggiungi `SUPABASE_SERVICE_ROLE_KEY` alle env.
+**Setup Supabase**: esegui `supabase/supabase-schema.sql` nel SQL Editor (una volta) e aggiungi `SUPABASE_SERVICE_ROLE_KEY` alle env.
 
 **Lingue**: supporto bilingue IT/EN tramite `LanguageContext.tsx` con persistenza in localStorage (usato in Pricing, Settings, Navbar).
 
