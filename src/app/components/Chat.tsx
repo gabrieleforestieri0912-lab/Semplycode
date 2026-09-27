@@ -21,7 +21,6 @@ import {
   MessageSquare,
   Terminal,
   Brain,
-  Sparkles,
   Trash2,
   User,
   BarChart3,
@@ -971,6 +970,8 @@ export default function Chat() {
       saveToNotes: "Salva nel cassetto",
       emptyStateMain: "Incolla il codice nell'editor e l'analisi partirà automaticamente",
       emptyStateSub: "oppure chiedi qui sotto — l'input parte dal centro",
+      welcomeTitle: "Benvenuto su Semplycode",
+      welcomeSub: "Scegli una modalità e fai la tua prima domanda sul codice.",
       composerPlaceholder: "Chiedi all'AI qualsiasi cosa sul codice...",
       sendMessage: "Invia messaggio",
       attachFile: "Allega file",
@@ -1084,6 +1085,8 @@ export default function Chat() {
       saveToNotes: "Save to drawer",
       emptyStateMain: "Paste code in the editor and analysis will start automatically",
       emptyStateSub: "or ask below — the input starts from the center",
+      welcomeTitle: "Welcome to Semplycode",
+      welcomeSub: "Pick a mode and ask your first question about the code.",
       composerPlaceholder: "Ask the AI anything about the code...",
       sendMessage: "Send message",
       attachFile: "Attach file",
@@ -3192,7 +3195,12 @@ export default function Chat() {
                     transition={{ duration: 0.35, ease: "easeOut" }}
                     className="h-full flex flex-col items-center justify-center text-center px-4"
                   >
-                    <Sparkles size={28} className="mb-4 text-primary" />
+                    <p className="text-lg font-bold text-white">
+                      {t.welcomeTitle}
+                    </p>
+                    <p className="text-[13px] text-gray-500 mt-1 mb-5">
+                      {t.welcomeSub}
+                    </p>
                     <motion.div
                       layoutId="chat-composer"
                       transition={{ type: "spring", stiffness: 320, damping: 30 }}
