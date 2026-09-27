@@ -14,6 +14,7 @@ import EditorWrapper from "./EditorWrapper";
 import Onboarding, { ONBOARDING_KEY } from "./Onboarding";
 import QuotaBadge from "./QuotaBadge";
 import CodeApplyModal from "./playground/CodeApplyModal";
+import ModePicker from "./ModePicker";
 import { buildAnalysisSystemPrompt, REVIEWER_DEPTH_RULES, getAnalysisTypeLabels, getAnalysisTypeDescriptions } from "@/lib/analysisPrompts";
 import { postChat, postChatStream, formatApiError } from "@/lib/playgroundApi";
 import {
@@ -3207,37 +3208,16 @@ export default function Chat() {
                       className="w-full max-w-xl bg-[#0a0c10]/90 border border-emerald-900/30 rounded-2xl p-3 shadow-2xl"
                       data-tour="composer-center"
                     >
-                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" role="tablist" aria-label={uiLang === "en" ? "AI modes" : "Modalità AI"} data-tour="modes">
-                        {(['correction','revision','creation'] as const).map((mode) => {
-                          const active = analysisType === mode;
-                          const label = typeLabels[mode];
-                          const desc = typeDescs[mode];
-                          return (
-                            <button
-                              key={mode}
-                              type="button"
-                              role="tab"
-                              aria-selected={active}
-                              title={desc}
-                              onClick={() => setAnalysisType(mode)}
-                              className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-400 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                        <select
-                          value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
-                          onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
-                          className="bg-[#010409] border border-emerald-900/30 rounded-full px-3 py-1.5 text-[11px] font-bold text-gray-400 focus:outline-none focus:border-primary"
-                          title={uiLang === "en" ? "More analyses" : "Altre analisi"}
-                          aria-label={uiLang === "en" ? "More analysis modes" : "Altre modalità di analisi"}
-                        >
-                          <option value="">{uiLang === "en" ? "More…" : "Altro…"}</option>
-                          {(['full','security','performance','style','debug'] as const).map((k) => (
-                            <option key={k} value={k}>{typeLabels[k]}</option>
-                          ))}
-                        </select>
+                      <div className="flex items-center gap-1.5 flex-wrap mb-2.5" data-tour="modes">
+                        <ModePicker
+                          value={analysisType}
+                          modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                          labels={typeLabels}
+                          descs={typeDescs}
+                          onChange={(m) => setAnalysisType(m)}
+                          ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                          closeLabel={t.close}
+                        />
                       </div>
                       <div className="flex gap-2 items-end">
                         <textarea
@@ -3606,37 +3586,16 @@ export default function Chat() {
 
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
-            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label={uiLang === "en" ? "AI modes" : "Modalità AI"} data-tour="modes">
-              {(['correction','revision','creation'] as const).map((mode) => {
-                const active = analysisType === mode;
-                const label = typeLabels[mode];
-                const desc = typeDescs[mode];
-                return (
-                  <button
-                    key={mode}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    title={desc}
-                    onClick={() => setAnalysisType(mode)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-500 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-              <select
-                value={['correction','revision','creation'].includes(analysisType) ? '' : analysisType}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => { if (e.target.value) setAnalysisType(e.target.value); }}
-                className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
-                title={uiLang === "en" ? "More analyses" : "Altre analisi"}
-                aria-label={uiLang === "en" ? "More analysis modes" : "Altre modalità di analisi"}
-              >
-                <option value="">{uiLang === "en" ? "More…" : "Altro…"}</option>
-                {(['full','security','performance','style','debug'] as const).map((k) => (
-                  <option key={k} value={k}>{typeLabels[k]}</option>
-                ))}
-              </select>
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" data-tour="modes">
+              <ModePicker
+                value={analysisType}
+                modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                labels={typeLabels}
+                descs={typeDescs}
+                onChange={(m) => setAnalysisType(m)}
+                ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                closeLabel={t.close}
+              />
             </div>
             <div className="flex gap-2 items-end">
               <textarea
