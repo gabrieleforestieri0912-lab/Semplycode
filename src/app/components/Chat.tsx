@@ -3208,17 +3208,6 @@ export default function Chat() {
                       data-tour="composer-center"
                     >
                       <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
-                        <div className="flex items-center gap-1.5 flex-wrap px-2.5 pt-2.5" data-tour="modes">
-                          <ModePicker
-                            value={analysisType}
-                            modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
-                            labels={typeLabels}
-                            descs={typeDescs}
-                            onChange={(m) => setAnalysisType(m)}
-                            ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
-                            closeLabel={t.close}
-                          />
-                        </div>
                         <textarea
                           value={chatInput}
                           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -3235,10 +3224,21 @@ export default function Chat() {
                             el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                           }}
                           placeholder={t.composerPlaceholder}
-                          className="w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
+                          className="chat-composer-input w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
                           disabled={isLoading}
                         />
                         <div className="flex items-center gap-1 px-2.5 pb-2.5">
+                          <span data-tour="modes" className="contents">
+                            <ModePicker
+                              value={analysisType}
+                              modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                              labels={typeLabels}
+                              descs={typeDescs}
+                              onChange={(m) => setAnalysisType(m)}
+                              ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                              closeLabel={t.close}
+                            />
+                          </span>
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
@@ -3595,17 +3595,6 @@ export default function Chat() {
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
             <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <div className="flex items-center gap-1.5 flex-wrap px-2.5 pt-2.5" data-tour="modes">
-                <ModePicker
-                  value={analysisType}
-                  modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
-                  labels={typeLabels}
-                  descs={typeDescs}
-                  onChange={(m) => setAnalysisType(m)}
-                  ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
-                  closeLabel={t.close}
-                />
-              </div>
               <textarea
                 value={chatInput}
                 onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -3622,10 +3611,21 @@ export default function Chat() {
                   el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
                 }}
                 placeholder={t.composerPlaceholder}
-                className="w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
+                className="chat-composer-input w-full bg-transparent px-4 pt-2 pb-1 text-sm text-white placeholder:text-gray-500 focus:outline-none resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading}
               />
               <div className="flex items-center gap-1 px-2.5 pb-2.5" data-tour="upload">
+                <span data-tour="modes" className="contents">
+                  <ModePicker
+                    value={analysisType}
+                    modes={['correction','revision','creation','full','security','performance','style','debug'] as const}
+                    labels={typeLabels}
+                    descs={typeDescs}
+                    onChange={(m) => setAnalysisType(m)}
+                    ariaLabel={uiLang === "en" ? "AI modes" : "Modalità AI"}
+                    closeLabel={t.close}
+                  />
+                </span>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
