@@ -60,8 +60,6 @@ import {
   FolderX,
   Pin,
   PinOff,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
@@ -890,16 +888,30 @@ export default function Chat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
-  const { theme, toggleTheme, setThemeMode } = useTheme();
+  const { setThemeMode } = useTheme();
   const { language: uiLang } = useLanguage();
 
-  // La chat è predefinita con tema scuro (solo se l'utente non ha mai scelto un tema).
+  // La chat è sempre scura: forza dark all'ingresso, ripristina il tema precedente all'uscita.
   useEffect(() => {
+    let prev: string | null = null;
     try {
-      if (!localStorage.getItem("theme")) setThemeMode("dark");
+      prev = localStorage.getItem("theme");
     } catch {
       // storage non disponibile
     }
+    setThemeMode("dark");
+    return () => {
+      try {
+        if (prev === "dark" || prev === "light") {
+          setThemeMode(prev);
+        } else {
+          localStorage.removeItem("theme");
+          setThemeMode("light");
+        }
+      } catch {
+        // storage non disponibile
+      }
+    };
   }, [setThemeMode]);
   const typeLabels = getAnalysisTypeLabels(uiLang);
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
@@ -2984,15 +2996,6 @@ export default function Chat() {
             )}
             <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
               <QuotaBadge className="hidden sm:flex" />
-              <button
-                type="button"
-                onClick={toggleTheme}
-                title={theme === "dark" ? t.switchToLight : t.switchToDark}
-                aria-label={t.changeTheme}
-                className="flex items-center justify-center w-8 h-8 rounded-xl border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-colors"
-              >
-                {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-              </button>
               <input
                 ref={fileInputRef}
                 type="file"
