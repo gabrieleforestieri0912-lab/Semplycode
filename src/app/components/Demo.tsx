@@ -44,6 +44,7 @@ import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X } from "lu
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { postChatStream, formatApiError } from "@/lib/playgroundApi";
+import CodeApplyModal from "./playground/CodeApplyModal";
 import { buildAnalysisSystemPrompt, REVIEWER_DEPTH_RULES, getAnalysisTypeLabels, getAnalysisTypeDescriptions } from "@/lib/analysisPrompts";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -124,11 +125,19 @@ function stripThinking(content: string): string {
 
 /** Rendering del report AI identico alla chat (niente font-mono, tipografia prose, code block con header). */
 const DemoAIResponse = ({ content, lang }: { content: string; lang: "it" | "en" }) => {
+  const copyLabel = lang === "en" ? "Copy" : "Copia";
+  const applyLabel = lang === "en" ? "Apply" : "Applica";
+  const renderInlineCode = (children: React.ReactNode) => (
+    <code className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono whitespace-nowrap">
+      {children}
+    </code>
+  );
   return (
-    <div className="relative text-left [&>*:first-child]:mt-0">
+    <div className="relative text-left [&>*:first-child]:mt-0 min-w-0">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          pre: ({ children }) => <>{children}</>,
           h1: ({ ...props }) => (
             <h1 className="text-base font-bold text-white mb-3 mt-1 first:mt-0" {...props} />
           ),
@@ -164,43 +173,60 @@ const DemoAIResponse = ({ content, lang }: { content: string; lang: "it" | "en" 
           a: ({ ...props }) => (
             <a className="text-primary underline underline-offset-2 hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />
           ),
-          code: ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
-            if (inline) {
-              return (
-                <code
-                  className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono"
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
-            }
+          // NOTA react-markdown v10: la prop `inline` non esiste più.
+          // I blocchi hanno className "language-xxx", l'inline no.
+          code: ({ className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
             const match = /language-(\w+)/.exec(className || "");
+            // Inline (es. `trim()`, `email`): pill compatta, mai la card grande.
+            if (!match) {
+              return renderInlineCode(children);
+            }
             const codeLang = match?.[1] || (lang === "en" ? "code" : "codice");
             const raw = Array.isArray(children)
               ? children.join("")
               : String(children ?? "").replace(/\n$/, "");
+            // Blocco fenced ma di una sola riga corta (es. ```trim()```):
+            // anche qui pill compatta invece della card.
+            const singleLine = !raw.includes("\n") && raw.trim().length > 0 && raw.trim().length < 80;
+            if (singleLine) {
+              return renderInlineCode(raw.trim());
+            }
             return (
-              <div className="my-4 w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
-                <div className="flex items-center justify-between px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">
+              <div className="my-4 w-full max-w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
+                <div className="flex items-center justify-between gap-2 px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500 truncate">
                     {codeLang}
                   </span>
-                  <button
-                    type="button"
-                    className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
-                    onClick={() => {
-                      try {
-                        navigator.clipboard.writeText(raw);
-                      } catch {
-                        // clipboard non disponibile
-                      }
-                    }}
-                  >
-                    {lang === "en" ? "Copy" : "Copia"}
-                  </button>
+                  <span className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
+                      onClick={() => {
+                        try {
+                          navigator.clipboard.writeText(raw);
+                        } catch {
+                          // clipboard non disponibile
+                        }
+                      }}
+                    >
+                      {copyLabel}
+                    </button>
+                    <button
+                      type="button"
+                      className="text-[11px] px-2.5 py-1 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+                      onClick={() => {
+                        window.dispatchEvent(
+                          new CustomEvent("semplycode:previewApply", {
+                            detail: { code: raw },
+                          }),
+                        );
+                      }}
+                    >
+                      {applyLabel}
+                    </button>
+                  </span>
                 </div>
-                <pre className="p-4 overflow-x-auto m-0 demo-scroll">
+                <pre className="p-4 overflow-x-auto m-0 max-h-80 demo-scroll">
                   <code className="text-[13px] font-mono leading-relaxed text-gray-200 whitespace-pre">
                     {children}
                   </code>
@@ -497,6 +523,8 @@ const DemoSection = () => {
   const [isZipLoading, setIsZipLoading] = useState(false);
   /** Crediti esauriti: mostra la card con invito a registrarsi / fare upgrade. */
   const [limitCTA, setLimitCTA] = useState<{ message: string; code?: string } | null>(null);
+  /** Anteprima "Applica" come in chat: diff prima di sostituire l'editor. */
+  const [applyModal, setApplyModal] = useState<{ oldCode: string; newCode: string } | null>(null);
   const typeLabels = getAnalysisTypeLabels(uiLang);
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
@@ -905,6 +933,29 @@ const DemoSection = () => {
     performAutoAnalysisRef.current = performAutoAnalysis;
   });
 
+  // "Applica" dai code block (come in chat): apri anteprima diff, poi sostituisci l'editor.
+  useEffect(() => {
+    const onPreview = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const suggested: string | undefined = detail.code;
+      if (!suggested || !suggested.trim()) return;
+      setApplyModal({ oldCode: code, newCode: suggested });
+    };
+    window.addEventListener("semplycode:previewApply", onPreview);
+    return () => window.removeEventListener("semplycode:previewApply", onPreview);
+  }, [code]);
+
+  const confirmApplySuggestion = (suggested: string) => {
+    if (!suggested.trim()) return;
+    programmaticCodeRef.current = true;
+    setUploadedFiles([]);
+    setCode(suggested);
+    setDetectedLang(detectLanguage(suggested) || "javascript");
+    setApplyModal(null);
+    setHasInteracted(true);
+    performAutoAnalysisRef.current?.(suggested);
+  };
+
   /** Applica gli allegati all'editor singolo: li combina e avvia l'analisi. */
   const applyAttachments = (fileData: FileInfo[]) => {
     if (!fileData?.length) return;
@@ -1250,7 +1301,7 @@ const DemoSection = () => {
               const el = e.currentTarget;
               setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
             }}
-            className="flex-1 overflow-y-auto p-4 sm:p-5 pb-52 bg-[#0f172a] max-h-[720px] demo-scroll"
+            className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] min-h-[220px] demo-scroll"
           >
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
@@ -1367,8 +1418,8 @@ const DemoSection = () => {
             )}
           </div>
 
-          {/* Input flottante dentro lo spazio chat: vetro trasparente, non aumenta l'altezza della demo */}
-          <div className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 bg-transparent rounded-b-2xl sm:rounded-b-3xl">
+          {/* Input in flow (non absolute): non copre mai l'ultimo messaggio */}
+          <div className="shrink-0 p-2.5 sm:p-4 bg-[#0f172a] border-t border-emerald-900/20 rounded-b-2xl sm:rounded-b-3xl">
             <input
               ref={fileInputRef}
               type="file"
@@ -1583,6 +1634,14 @@ const DemoSection = () => {
         }
       `}</style>
       </section>
+      {applyModal && (
+        <CodeApplyModal
+          oldCode={applyModal.oldCode}
+          newCode={applyModal.newCode}
+          onApply={confirmApplySuggestion}
+          onClose={() => setApplyModal(null)}
+        />
+      )}
       <div className="flex justify-center mt-6 sm:mt-8">
         <Link
           href="/chat"

@@ -392,6 +392,7 @@ const FormattedAIResponse = ({
     const markdownText = markdownParts.join("");
 
     const mdComponents: Record<string, React.ComponentType<Record<string, unknown>>> = {
+      pre: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
       h1: ({ ...props }) => (
         <h1
           className="text-base font-bold text-white mb-3 mt-1 first:mt-0"
@@ -477,42 +478,66 @@ const FormattedAIResponse = ({
       td: ({ ...props }) => (
         <td className="px-3 py-2 border-b border-emerald-900/20 text-gray-300" {...props} />
       ),
-      code: ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
-        if (inline) {
+      code: ({ className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
+        const match = /language-(\w+)/.exec(className || "");
+        // react-markdown v10: niente più prop `inline`. Inline = senza language-xxx.
+        if (!match) {
           return (
             <code
-              className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono"
+              className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono whitespace-nowrap"
               {...props}
             >
               {children}
             </code>
           );
         }
-        const match = /language-(\w+)/.exec(className || "");
         const lang = match?.[1] || tResp.code;
         const raw = Array.isArray(children)
           ? children.join("")
           : String(children ?? "").replace(/\n$/, "");
+        // Fenced di una sola riga corta: pill compatta invece della card.
+        if (!raw.includes("\n") && raw.trim().length > 0 && raw.trim().length < 80) {
+          return (
+            <code className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono whitespace-nowrap">
+              {raw.trim()}
+            </code>
+          );
+        }
 
         return (
-          <div className="my-4 w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
-            <div className="flex items-center justify-between px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">
+          <div className="my-4 w-full max-w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
+            <div className="flex items-center justify-between gap-2 px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500 truncate">
                 {lang}
               </span>
-              <button
-                type="button"
-                className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
-                onClick={() => {
-                  window.dispatchEvent(
-                    new CustomEvent("semplycode:previewApply", {
-                      detail: { code: raw },
-                    }),
-                  );
-                }}
-              >
-                {tResp.apply}
-              </button>
+              <span className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
+                  onClick={() => {
+                    try {
+                      navigator.clipboard.writeText(raw);
+                    } catch {
+                      // clipboard non disponibile
+                    }
+                  }}
+                >
+                  {uiLang === "en" ? "Copy" : "Copia"}
+                </button>
+                <button
+                  type="button"
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+                  onClick={() => {
+                    window.dispatchEvent(
+                      new CustomEvent("semplycode:previewApply", {
+                        detail: { code: raw },
+                      }),
+                    );
+                  }}
+                >
+                  {tResp.apply}
+                </button>
+              </span>
             </div>
             <pre className="p-4 overflow-x-auto m-0 max-h-80 custom-scrollbar">
               <code className="text-[13px] font-mono leading-relaxed text-gray-200 whitespace-pre">
