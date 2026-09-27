@@ -560,6 +560,18 @@ const DemoSection = () => {
   /** Menù custom delle modalità di analisi (al posto del select nativo invisibile). */
   const [showModeMenu, setShowModeMenu] = useState(false);
   const MODES = ['correction', 'revision', 'creation', 'security', 'performance', 'style', 'debug'] as const;
+  /** Altezza reale dell'input fluttuante: la lista messaggi riserva lo stesso spazio in fondo. */
+  const inputWrapRef = useRef<HTMLDivElement>(null);
+  const [inputH, setInputH] = useState(190);
+  useEffect(() => {
+    const el = inputWrapRef.current;
+    if (!el) return;
+    const update = () => setInputH(Math.ceil(el.getBoundingClientRect().height));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const typeLabels = getAnalysisTypeLabels(uiLang);
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
@@ -1336,6 +1348,7 @@ const DemoSection = () => {
               const el = e.currentTarget;
               setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
             }}
+            style={{ paddingBottom: inputH + 16, scrollPaddingBottom: inputH + 16 }}
             className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] min-h-[220px] demo-scroll"
           >
             {messages.length === 0 && !isLoading && (
@@ -1453,8 +1466,8 @@ const DemoSection = () => {
             )}
           </div>
 
-          {/* Input in flow (non absolute): non copre mai l'ultimo messaggio */}
-          <div className="shrink-0 p-2.5 sm:p-4 bg-[#0f172a] border-t border-emerald-900/20 rounded-b-2xl sm:rounded-b-3xl">
+          {/* Input fluttuante sopra i messaggi: la lista riserva sotto lo spazio misurato (inputH) */}
+          <div ref={inputWrapRef} className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 pt-8 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/85 to-transparent rounded-b-2xl sm:rounded-b-3xl">
             <input
               ref={fileInputRef}
               type="file"
