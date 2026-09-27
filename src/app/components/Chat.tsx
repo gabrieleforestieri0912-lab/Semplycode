@@ -14,7 +14,7 @@ import EditorWrapper from "./EditorWrapper";
 import Onboarding, { ONBOARDING_KEY } from "./Onboarding";
 import QuotaBadge from "./QuotaBadge";
 import CodeApplyModal from "./playground/CodeApplyModal";
-import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS } from "@/lib/analysisPrompts";
+import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS, REVIEWER_DEPTH_RULES } from "@/lib/analysisPrompts";
 import { postChat, postChatStream, formatApiError } from "@/lib/playgroundApi";
 import {
   MessageSquare,
@@ -1653,12 +1653,12 @@ export default function Chat() {
               .catch((err) => console.error("Auto-save failed:", err));
           }
         },
-        (error) => {
+        (error, code) => {
           setIsLoading(false);
           setLoadingStartedAt(null);
           const errMsg = error;
-          if (error.includes("429") || error.includes("limite")) {
-            setLimitModal({ message: errMsg });
+          if (code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error)) {
+            setLimitModal({ message: errMsg, code });
           }
           setMessages([{ role: "assistant", content: `**${errMsg}**` }]);
         },
@@ -1701,7 +1701,7 @@ export default function Chat() {
 
     try {
       const currentCode = activeFile?.content ?? code;
-      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
+      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
 
       postChatStream(
         [
@@ -1754,10 +1754,10 @@ export default function Chat() {
             }
           }
         },
-        (error) => {
+        (error, code) => {
           const errMsg = error;
-          if (error.includes("429") || error.includes("limite")) {
-            setLimitModal({ message: errMsg });
+          if (code === "GUEST_LIMIT" || code === "PLAN_LIMIT" || /esaurito|limite|piano|upgrade|token mensili|token giornalieri/i.test(error)) {
+            setLimitModal({ message: errMsg, code });
           }
           setMessages((prev) => {
             const withError = [...prev];
@@ -3522,7 +3522,7 @@ export default function Chat() {
                   className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm"
                   onClick={() => setLimitModal(null)}
                 >
-                  Passa a Pro
+                  Fai l&apos;upgrade
                 </Link>
               )}
               <button

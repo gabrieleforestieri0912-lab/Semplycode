@@ -33,7 +33,7 @@ export async function postChatStream(
   messages: ChatMessage[],
   onChunk: (content: string) => void,
   onDone: (fullContent: string) => void,
-  onError: (error: string) => void,
+  onError: (error: string, code?: string) => void,
   extra?: { analysisType?: string },
 ): Promise<AbortController> {
   const controller = new AbortController();
@@ -48,7 +48,7 @@ export async function postChatStream(
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      onError(data.error || `Errore ${response.status}`);
+      onError(data.error || `Errore ${response.status}`, data.code);
       return controller;
     }
 

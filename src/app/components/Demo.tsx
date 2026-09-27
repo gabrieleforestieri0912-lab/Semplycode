@@ -44,7 +44,7 @@ import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X } from "lu
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { postChatStream, formatApiError } from "@/lib/playgroundApi";
-import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS } from "@/lib/analysisPrompts";
+import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS, REVIEWER_DEPTH_RULES } from "@/lib/analysisPrompts";
 
 interface Message {
   role: "user" | "assistant";
@@ -395,6 +395,8 @@ const DemoSection = () => {
   const [showGithubComposer, setShowGithubComposer] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
+  /** Crediti esauriti: mostra la card con invito a registrarsi / fare upgrade. */
+  const [limitCTA, setLimitCTA] = useState<{ message: string; code?: string } | null>(null);
   const { user: session } = useSupabaseSession();
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -605,10 +607,21 @@ const DemoSection = () => {
     }
   };
 
+  /** Vero se l'errore è da limite crediti/piano (serve invito a registrarsi o upgrade). */
+  const isLimitError = (text: string, code?: string): boolean =>
+    code === "GUEST_LIMIT" ||
+    code === "PLAN_LIMIT" ||
+    /esaurito|limite|piano|upgrade|token mensili|token giornalieri|crea un account|registrati gratuitamente/i.test(text || "");
+
+  /** Vero se il limite riguarda un ospite (invito a creare account, non upgrade). */
+  const isGuestLimit = (text: string, code?: string): boolean =>
+    code === "GUEST_LIMIT" || /ospite|account gratuito|registrati/i.test(text || "");
+
   const performAutoAnalysis = async (currentCode: string) => {
     if (!currentCode.trim() || currentCode.length < 10) return;
 
     setHasInteracted(true);
+    setLimitCTA(null);
     setIsLoading(true);
     setLoadingStartedAt(Date.now());
     setElapsedSec(0);
@@ -667,11 +680,15 @@ const DemoSection = () => {
           setLoadingStartedAt(null);
           window.dispatchEvent(new Event("semplycode:stats:refresh"));
         },
-        (error) => {
+        (error, code) => {
+          const msg = `**${error}**`;
+          if (isLimitError(error, code)) {
+            setLimitCTA({ message: error, code });
+          }
           setMessages([
             {
               role: "assistant",
-              content: `**${error}**`,
+              content: msg,
             },
           ]);
           setIsLoading(false);
@@ -686,6 +703,9 @@ const DemoSection = () => {
         err?.status === 429
           ? "\n\nCrea un account gratuito su semplycode per 10 analisi al giorno."
           : "";
+      if (err?.status === 429 || isLimitError(msg, err?.code)) {
+        setLimitCTA({ message: `${msg}${extra}`, code: err?.code });
+      }
       setMessages([
         {
           role: "assistant",
@@ -707,6 +727,7 @@ const DemoSection = () => {
     setMessages([...updatedMessages, { role: "assistant", content: "" }]);
     setChatInput("");
     setHasInteracted(true);
+    setLimitCTA(null);
     setIsLoading(true);
     setLoadingStartedAt(Date.now());
     setElapsedSec(0);
@@ -719,7 +740,7 @@ const DemoSection = () => {
         [
           {
             role: "system",
-            content: `Sei un esperto Code Reviewer italiano in modalità ${typeLabel}. Rispondi in italiano in modo chiaro e utile. Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+            content: `Sei un esperto Code Reviewer italiano in modalità ${typeLabel}. Rispondi in italiano in modo chiaro e utile. ${REVIEWER_DEPTH_RULES} Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
           },
           ...updatedMessages,
         ],
@@ -749,13 +770,16 @@ const DemoSection = () => {
           setLoadingStartedAt(null);
           window.dispatchEvent(new Event("semplycode:stats:refresh"));
         },
-        (error) => {
-          const err = error as ErrorWithStatus;
+        (error, code) => {
+          const errText = typeof error === "string" ? error : formatApiError(error as Error);
+          if (isLimitError(errText, code)) {
+            setLimitCTA({ message: errText, code });
+          }
           setMessages((prev) => {
             const withError = [...prev];
             const last = withError[withError.length - 1];
             if (last?.role === "assistant" && !last.content) {
-              withError[withError.length - 1] = { role: "assistant", content: `**${formatApiError(err as Error)}**` };
+              withError[withError.length - 1] = { role: "assistant", content: `**${errText}**` };
             }
             return withError;
           });
@@ -766,7 +790,11 @@ const DemoSection = () => {
       );
     } catch (error) {
       const err = error as ErrorWithStatus;
-      setMessages([...updatedMessages, { role: "assistant", content: `**${formatApiError(err as Error)}**` }]);
+      const errText = formatApiError(err as Error);
+      if (err?.status === 429 || isLimitError(errText, err?.code)) {
+        setLimitCTA({ message: errText, code: err?.code });
+      }
+      setMessages([...updatedMessages, { role: "assistant", content: `**${errText}**` }]);
       setIsLoading(false);
       setLoadingStartedAt(null);
     }
@@ -960,6 +988,7 @@ const DemoSection = () => {
     setUploadedFiles([]);
     setChatInput("");
     setGithubUrl("");
+    setLimitCTA(null);
     setShowGithubComposer(false);
 
     if (session) {
@@ -1021,6 +1050,7 @@ const DemoSection = () => {
                   setCode("");
                   setMessages([]);
                   setUploadedFiles([]);
+                  setLimitCTA(null);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors text-xs font-medium"
                 title="Cancella tutto"
@@ -1185,6 +1215,52 @@ const DemoSection = () => {
                     </div>
                   );
                 })()}
+                {limitCTA && !isLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex-1 min-w-0 rounded-2xl bg-[#061014]/90 border border-amber-500/30 px-5 py-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400 mb-2">
+                        Crediti esauriti
+                      </p>
+                      <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                        {limitCTA.message}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {isGuestLimit(limitCTA.message, limitCTA.code) ? (
+                          <>
+                            <Link
+                              href="/register"
+                              className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
+                            >
+                              Crea account gratuito
+                            </Link>
+                            <Link
+                              href="/#pricing"
+                              className="flex-1 text-center py-2.5 rounded-xl border border-emerald-900/30 text-gray-300 text-sm hover:text-primary hover:border-primary/40 transition-colors"
+                            >
+                              Vedi i piani
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href="/#pricing"
+                              className="flex-1 text-center py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
+                            >
+                              Fai l&apos;upgrade
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => setLimitCTA(null)}
+                              className="flex-1 py-2.5 rounded-xl border border-emerald-900/30 text-gray-400 text-sm hover:text-primary transition-colors"
+                            >
+                              Chiudi
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

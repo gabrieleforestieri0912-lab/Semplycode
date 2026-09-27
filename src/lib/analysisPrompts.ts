@@ -5,22 +5,40 @@ interface BuildAnalysisSystemPromptParams {
   hasErrorContext?: boolean;
 }
 
+/**
+ * Regole di qualità vincolanti per ogni analisi: l'utente deve potersi fidare
+ * del report quando ha un problema reale di codice. Niente superficialità:
+ * ogni affermazione deve avere una prova (riga + frammento di codice).
+ */
+const QUALITY_RULES = `
+Regole di qualità (tassative):
+- Analizza DAVVERO il codice riga per riga: cita sempre riga esatta e frammento di codice per ogni problema ("riga 12: \`totale += ...\`").
+- Classifica ogni problema per gravità: [Critico] blocca o rompe, [Importante] bug probabile o rischio, [Minore] stile/robustezza.
+- MAI inventare errori: se il codice è corretto, scrivi "Nessun errore trovato" e spiega perché regge (casi limite verificati).
+- Ogni fix deve essere verificato mentalmente sul codice dato: niente soluzioni generiche copia-incolla, niente consigli vaghi ("fai attenzione", "potresti migliorare").
+- Spiega il PERCHÉ di ogni errore (causa-effetto), non solo il cosa.
+- Chiudi con "Come verificare": comandi o casi di test concreti per confermare che il fix funziona.
+- Conciso ma completo: niente riempitivo, niente emoji.`;
+
 const BASE_CORRECTION = `
 ## Errori Trovati
-[Se non ci sono errori, scrivere "Nessun errore trovato." Altrimenti, per ogni errore indicare la riga esatta e la soluzione:]
-- [Errore 1] - riga X: [descrizione] -> [come correggerlo]
+[Se non ci sono errori reali, scrivere "Nessun errore trovato." Altrimenti, per ogni errore: gravità ([Critico]/[Importante]/[Minore]), riga esatta, frammento di codice e soluzione:]
+- [Critico] - riga X: \`frammento\` - [descrizione] -> [come correggerlo]
 
 ## Spiegazione degli Errori
-[Breve spiegazione di ciascun errore e perché è problematico]
+[Per ciascun errore: causa-effetto, perché è problematico, in quali casi si manifesta]
 
 ## Codice Corretto (solo fix minimi)
 \`\`\`{{LANG}}
 [Codice con SOLO gli errori corretti, senza ottimizzazioni extra]
-\`\`\``;
+\`\`\`
+
+## Come Verificare
+[Comandi o casi di test concreti per confermare ogni fix]`;
 
 const BASE_REVISION = `
 ## Errori Corretti
-[Elenco errori trovati e fix applicati]
+[Elenco errori trovati con gravità, riga esatta e frammento di codice; se nessuno, scrivere "Nessun errore trovato."]
 
 ## Codice Revisionato e Ottimizzato
 \`\`\`{{LANG}}
@@ -28,41 +46,44 @@ const BASE_REVISION = `
 \`\`\`
 
 ## Miglioramenti Applicati
-1. [Categoria] - [descrizione e beneficio]
+1. [Categoria] - riga X - [descrizione, beneficio misurabile e perché è meglio così]
 
 ## Best Practice Suggerite
-- [consigli per mantenere il codice pulito in {{LANG}}]`;
+- [consigli specifici per QUESTO codice in {{LANG}}, non generici]
+
+## Come Verificare
+[Comandi o casi di test concreti per confermare che tutto funziona]`;
 
 const BASE_CREATION = `
 ## Panoramica Progetto
-[Descrizione breve di cosa costruiremo e stack in {{LANG}}]
+[Descrizione concreta di cosa costruiremo e stack in {{LANG}}, scelte motivate in 1-2 righe]
 
 ## Prerequisiti
-- [tool, versioni, comandi di setup]
+- [tool e versioni esatte, comandi di setup verificabili]
 
 ## Struttura Progetto
 \`\`\`
-[albero cartelle/file]
+[albero cartelle/file reale, non placeholder]
 \`\`\`
 
 ## Passo 1 — [Titolo]
-[Spiegazione + comandi + snippet codice]
+[Obiettivo del passo, comandi + snippet codice completo e funzionante]
 
 ## Passo 2 — [Titolo]
-[Spiegazione + snippet]
+[Come sopra, ogni passo produce qualcosa di verificabile]
 
 ## Passo 3 — [Titolo e successivi fino a progetto funzionante]
 
 ## Codice Completo Finale
 \`\`\`{{LANG}}
-[codice finale minimo funzionante]
+[codice finale minimo ma davvero funzionante, niente TODO o "..."]
 \`\`\`
 
 ## Come Eseguire e Testare
-[comandi run/test]
+[comandi run/test esatti con output atteso]
 
 ## Prossimi Passi / Estensioni
-- [idee per evolvere il progetto]`;
+- [idee concrete con punto di partenza nel codice sopra]`;
 
 const BASE_FULL = `
 ## Errori Trovati
@@ -111,8 +132,10 @@ export function buildAnalysisSystemPrompt({
   needsLineRefs = false,
   hasErrorContext = false,
 }: BuildAnalysisSystemPromptParams): string {
+  const raw = (analysisType || '').toLowerCase().trim();
   const normalized = normalizeAnalysisType(analysisType);
-  const focusRaw = TYPE_FOCUS[normalized] || TYPE_FOCUS.correction;
+  // Il focus specifico (es. Sicurezza, Performance) ha precedenza su quello normalizzato.
+  const focusRaw = TYPE_FOCUS[raw] || TYPE_FOCUS[normalized] || TYPE_FOCUS.correction;
   const focus = focusRaw.replace(/\{\{LANG\}\}/g, lang);
   const lineRule = needsLineRefs
     ? ' Per codici oltre 50 righe, cita SEMPRE le righe con "riga XX".'
@@ -127,9 +150,17 @@ export function buildAnalysisSystemPrompt({
   return `Sei un esperto Code Reviewer e Tutor italiano. Rispondi SEMPRE in italiano.
 ${focus}
 ${normalized === 'creation' ? 'Se il codice fornito è vuoto o parziale, proponi tu il progetto base coerente con la richiesta.' : 'La PRIORITÀ è il codice fornito dall\'utente.'}${errorRule}${lineRule}
+${QUALITY_RULES}
 Usa questa struttura Markdown (solo testo, niente emoji):
 ${structure}`;
 }
+
+/**
+ * Regole di profondità per le domande libere in chat (follow-up sul codice):
+ * risposte concrete e verificabili, mai generiche.
+ */
+export const REVIEWER_DEPTH_RULES =
+  'Sii concreto e approfondito: cita righe e frammenti reali del codice, spiega il perché, proponi fix verificati. MAI risposte generiche o superficiali e MAI errori inventati: se qualcosa non è un problema, dillo chiaramente.';
 
 function normalizeAnalysisType(t: string): string {
   const v = (t || '').toLowerCase().trim();
