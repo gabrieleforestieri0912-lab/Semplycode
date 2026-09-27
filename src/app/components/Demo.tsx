@@ -40,10 +40,11 @@ import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useSupabaseSession } from "@/lib/auth";
-import { Plus, Trash2, Play } from "lucide-react";
+import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { postChatStream, formatApiError } from "@/lib/playgroundApi";
+import { buildAnalysisSystemPrompt, ANALYSIS_TYPE_LABELS, ANALYSIS_TYPE_DESCRIPTIONS } from "@/lib/analysisPrompts";
 
 interface Message {
   role: "user" | "assistant";
@@ -52,9 +53,53 @@ interface Message {
 
 interface FileInfo {
   name: string;
+  /** Percorso relativo quando caricato da cartella/ZIP, altrimenti uguale a name. */
+  path?: string;
   content: string;
   language: string;
 }
+
+const MAX_DEMO_FILES = 50;
+const MAX_DEMO_FILE_SIZE = 100 * 1024;
+const ALLOWED_CODE_EXTENSIONS = [
+  "js",
+  "jsx",
+  "ts",
+  "tsx",
+  "py",
+  "java",
+  "cpp",
+  "c",
+  "go",
+  "rs",
+  "php",
+  "sql",
+  "css",
+  "html",
+  "json",
+];
+
+const detectLanguageFromFilename = (filename: string): string => {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  const map: Record<string, string> = {
+    js: "javascript",
+    jsx: "javascript",
+    ts: "typescript",
+    tsx: "typescript",
+    py: "python",
+    java: "java",
+    cpp: "cpp",
+    c: "c",
+    go: "go",
+    rs: "rust",
+    php: "php",
+    sql: "sql",
+    css: "css",
+    html: "markup",
+    json: "json",
+  };
+  return map[ext] || "javascript";
+};
 
 interface ErrorWithStatus {
   status?: number;
@@ -342,11 +387,21 @@ const DemoSection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
-  const [mode, setMode] = useState<"correction" | "revision" | "creation">("correction");
+  const [analysisType, setAnalysisType] = useState("correction");
   const [hasInteracted, setHasInteracted] = useState(false);
   const [chatInput, setChatInput] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
+  const [githubUrl, setGithubUrl] = useState("");
+  const [showGithubComposer, setShowGithubComposer] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
+  const [isZipLoading, setIsZipLoading] = useState(false);
   const { user: session } = useSupabaseSession();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
+  /** Evita che il setCode programmatico (allegati) riattivi clear/debounce dell'onChange. */
+  const programmaticCodeRef = useRef(false);
 
   // Timer dello stato di elaborazione (come in chat) + autoscroll in fondo.
   useEffect(() => {
@@ -361,10 +416,6 @@ const DemoSection = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, isLoading]);
-
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
-  const [isButtonHovering, setIsButtonHovering] = useState(false);
 
   const detectLanguage = (codeSnippet: string): string => {
     const trimmed = codeSnippet.trim();
@@ -559,21 +610,25 @@ const DemoSection = () => {
     let accumulatedContent = "";
 
     try {
+      const lineCount = currentCode.split("\n").length;
       const systemPrompt =
-        mode === "creation"
-          ? `Sei un tutor italiano in modalità CREAZIONE: guida passo-passo la costruzione del progetto da zero${detectedLang ? ` in ${detectedLang}` : ""}. Prerequisiti, struttura cartelle, ogni passo con comandi e snippet, fino a progetto funzionante.`
-          : mode === "revision"
-            ? `Sei un esperto Senior Developer in modalità REVISIONE: correggi e ottimizza il codice${detectedLang ? ` in ${detectedLang}` : ""} (naming, DRY, leggibilità, performance, sicurezza). Usa Markdown con sezioni Errori, Codice revisionato, Miglioramenti, Best practice.`
-            : `Sei un esperto Senior Developer in modalità CORREZIONE: correggi SOLO errori sintattici/logici/runtime${detectedLang ? ` in ${detectedLang}` : ""}, mantieni la struttura. Usa Markdown con sezioni Errori, Spiegazione, Codice corretto (solo fix minimi).`;
+        buildAnalysisSystemPrompt({
+          analysisType,
+          lang: detectedLang || "javascript",
+          needsLineRefs: lineCount > 50,
+          hasErrorContext: false,
+        }) +
+        "\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.";
+      const typeLabel = ANALYSIS_TYPE_LABELS[analysisType] || analysisType;
       await postChatStream(
         [
           {
             role: "system",
-            content: `${systemPrompt} Rispondi in italiano. Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+            content: systemPrompt,
           },
           {
             role: "user",
-            content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
+            content: `Analizza questo codice (modalità ${typeLabel}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
           },
         ],
         (chunk) => {
@@ -612,7 +667,7 @@ const DemoSection = () => {
           setIsLoading(false);
           setLoadingStartedAt(null);
         },
-        { analysisType: mode },
+        { analysisType },
       );
     } catch (error) {
       const err = error as ErrorWithStatus;
@@ -649,17 +704,12 @@ const DemoSection = () => {
     let accumulatedContent = "";
 
     try {
-      const systemPrompt =
-        mode === "creation"
-          ? `Sei un tutor italiano in modalità CREAZIONE.`
-          : mode === "revision"
-            ? `Sei un esperto Senior Developer in modalità REVISIONE.`
-            : `Sei un esperto Senior Developer in modalità CORREZIONE.`;
+      const typeLabel = ANALYSIS_TYPE_LABELS[analysisType] || analysisType;
       await postChatStream(
         [
           {
             role: "system",
-            content: `${systemPrompt} Rispondi in italiano in modo chiaro e utile. Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+            content: `Sei un esperto Code Reviewer italiano in modalità ${typeLabel}. Rispondi in italiano in modo chiaro e utile. Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
           },
           ...updatedMessages,
         ],
@@ -702,7 +752,7 @@ const DemoSection = () => {
           setIsLoading(false);
           setLoadingStartedAt(null);
         },
-        { analysisType: mode },
+        { analysisType },
       );
     } catch (error) {
       const err = error as ErrorWithStatus;
@@ -712,9 +762,134 @@ const DemoSection = () => {
     }
   };
 
+  const performAutoAnalysisRef = useRef(performAutoAnalysis);
+  useEffect(() => {
+    performAutoAnalysisRef.current = performAutoAnalysis;
+  });
+
+  /** Applica gli allegati all'editor singolo: li combina e avvia l'analisi. */
+  const applyAttachments = (fileData: FileInfo[]) => {
+    if (!fileData?.length) return;
+    const combined = fileData
+      .map((f) => `// ========== ${f.path ?? f.name} (${f.language}) ==========\n${f.content.trim()}`)
+      .join("\n\n");
+    const lang = fileData.length === 1 ? fileData[0].language : detectLanguage(combined) || "javascript";
+    programmaticCodeRef.current = true;
+    setUploadedFiles(fileData);
+    setCode(combined);
+    setDetectedLang(lang);
+    setHasInteracted(true);
+    performAutoAnalysisRef.current?.(combined);
+  };
+
+  const handleCodeFiles = (incomingFiles: File[]) => {
+    const seen = new Set(uploadedFiles.map((f) => f.path ?? f.name));
+    const validFiles: { file: File; displayPath: string }[] = [];
+    const sorted = [...incomingFiles].sort((a, b) =>
+      (a.name || "").localeCompare(b.name || ""),
+    );
+    for (const file of sorted) {
+      if (uploadedFiles.length + validFiles.length >= MAX_DEMO_FILES) break;
+      const displayPath =
+        (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
+      const ext = (displayPath.split(".").pop() || "").toLowerCase();
+      if (!ALLOWED_CODE_EXTENSIONS.includes(ext)) continue;
+      if (file.size > MAX_DEMO_FILE_SIZE) continue;
+      if (seen.has(displayPath)) continue;
+      seen.add(displayPath);
+      validFiles.push({ file, displayPath });
+    }
+    if (validFiles.length === 0) return;
+    Promise.all<FileInfo>(
+      validFiles.map(
+        ({ file, displayPath }) =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e: ProgressEvent<FileReader>) => {
+              const base = displayPath.split("/").pop() || displayPath;
+              resolve({
+                name: base,
+                path: displayPath,
+                content: String(e.target?.result ?? ""),
+                language: detectLanguageFromFilename(displayPath),
+              });
+            };
+            reader.onerror = () => reject(new Error(`Lettura fallita: ${displayPath}`));
+            reader.readAsText(file);
+          }),
+      ),
+    )
+      .then((fileData) => {
+        applyAttachments([...uploadedFiles, ...fileData].slice(0, MAX_DEMO_FILES));
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const removeAttachment = (index: number) => {
+    const next = uploadedFiles.filter((_, i) => i !== index);
+    setUploadedFiles(next);
+    if (next.length === 0) {
+      programmaticCodeRef.current = true;
+      setCode("");
+      setDetectedLang("");
+      setMessages([]);
+      return;
+    }
+    applyAttachments(next);
+  };
+
+  const handleZipUpload = async (file: File) => {
+    if (!file) return;
+    setIsZipLoading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/files/extract-zip", {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      applyAttachments(data.files);
+    } catch (e) {
+      console.error("Errore lettura ZIP.", e);
+    } finally {
+      setIsZipLoading(false);
+    }
+  };
+
+  const importFromGitHub = async () => {
+    if (!githubUrl.trim()) return;
+    setIsGithubLoading(true);
+    try {
+      const res = await fetch("/api/github/fetch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: githubUrl.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      applyAttachments([
+        {
+          name: data.name,
+          content: data.content,
+          language: detectLanguageFromFilename(data.name),
+        },
+      ]);
+      setGithubUrl("");
+      setShowGithubComposer(false);
+    } catch (e) {
+      console.error("Errore import GitHub.", e);
+    } finally {
+      setIsGithubLoading(false);
+    }
+  };
+
   const debouncedAnalysis = useCallback(
-    debounce((nextCode: string) => performAutoAnalysis(nextCode), 1500),
-    [detectedLang],
+    debounce((nextCode: string) => performAutoAnalysisRef.current?.(nextCode), 1500),
+    [],
   );
 
   const handleCodeChange = (value: string) => {
@@ -768,9 +943,14 @@ const DemoSection = () => {
   }, [code, session]);
 
   const handleNewAnalysis = async () => {
+    programmaticCodeRef.current = true;
     setCode("");
     setMessages([]);
     setDetectedLang("");
+    setUploadedFiles([]);
+    setChatInput("");
+    setGithubUrl("");
+    setShowGithubComposer(false);
 
     if (session) {
       try {
@@ -827,8 +1007,10 @@ const DemoSection = () => {
               </button>
               <button
                 onClick={() => {
+                  programmaticCodeRef.current = true;
                   setCode("");
                   setMessages([]);
+                  setUploadedFiles([]);
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 transition-colors text-xs font-medium"
                 title="Cancella tutto"
@@ -855,11 +1037,19 @@ const DemoSection = () => {
             <CodeMirror
               value={code}
               onChange={(val: string) => {
+                // setCode programmatico dagli allegati: salta clear/debounce (già gestiti).
+                if (programmaticCodeRef.current) {
+                  programmaticCodeRef.current = false;
+                  setCode(val);
+                  return;
+                }
+                if (uploadedFiles.length > 0) setUploadedFiles([]);
                 if (val.trim()) {
                   const lang = detectLanguage(val);
                   setDetectedLang(lang);
                 } else {
                   setDetectedLang("");
+                  setMessages([]);
                 }
                 setCode(val);
                 if (val.trim().length > 10) {
@@ -907,28 +1097,11 @@ const DemoSection = () => {
         </motion.div>
 
         <div className="flex flex-col bg-[#f8fafc] backdrop-blur-md border border-[#e2e8f0] rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm relative min-h-[300px] lg:min-h-0">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
-            <div className="flex items-center gap-2.5">
-              <MessageSquare className="text-emerald-600 w-4 h-4" />
-              <span className="text-[11px] font-bold text-[#64748b] font-mono tracking-widest uppercase">
-                Report
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { id: "correction", label: "Correzione" },
-                { id: "revision", label: "Revisione" },
-                { id: "creation", label: "Creazione" },
-              ].map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setMode(m.id as any)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors ${mode === m.id ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-[#64748b] border-[#e2e8f0] hover:border-emerald-200 hover:text-emerald-600"}`}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2.5 px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-[#e2e8f0]">
+            <MessageSquare className="text-emerald-600 w-4 h-4" />
+            <span className="text-[11px] font-bold text-[#64748b] font-mono tracking-widest uppercase">
+              Report
+            </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] custom-scrollbar">
@@ -1000,8 +1173,79 @@ const DemoSection = () => {
             )}
           </div>
 
-          {/* Input chat come nella chat: l'utente può fare domande sul codice */}
+          {/* Input identico alla chat: modalità + Altro, textarea, allegati File/Cartella/ZIP/GitHub */}
           <div className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.go,.rs,.php,.sql,.css,.html,.json"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const selected = Array.from(e.target.files || []);
+                handleCodeFiles(selected);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={folderInputRef}
+              type="file"
+              className="hidden"
+              {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const selected = Array.from(e.target.files || []);
+                handleCodeFiles(selected);
+                e.target.value = "";
+              }}
+            />
+            <input
+              ref={zipInputRef}
+              type="file"
+              accept=".zip"
+              className="hidden"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const f = e.target.files?.[0];
+                if (f) handleZipUpload(f);
+                e.target.value = "";
+              }}
+            />
+            <div className="flex items-center gap-1.5 flex-wrap mb-2" role="tablist" aria-label="Modalità AI">
+              {(['correction', 'revision', 'creation'] as const).map((m) => {
+                const active = analysisType === m;
+                const label = ANALYSIS_TYPE_LABELS[m];
+                const desc = ANALYSIS_TYPE_DESCRIPTIONS[m];
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    title={desc}
+                    onClick={() => { setAnalysisType(m); if (code.trim()) performAutoAnalysisRef.current?.(code); }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-500 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+              <select
+                value={['correction', 'revision', 'creation'].includes(analysisType) ? '' : analysisType}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  if (e.target.value) {
+                    setAnalysisType(e.target.value);
+                    if (code.trim()) performAutoAnalysisRef.current?.(code);
+                  }
+                }}
+                className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
+                title="Altre analisi"
+                aria-label="Altre modalità di analisi"
+              >
+                <option value="">Altro…</option>
+                {(['full', 'security', 'performance', 'style', 'debug'] as const).map((k) => (
+                  <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex gap-2 items-end">
               <textarea
                 value={chatInput}
@@ -1013,6 +1257,11 @@ const DemoSection = () => {
                   }
                 }}
                 rows={1}
+                onInput={(e) => {
+                  const el = e.currentTarget;
+                  el.style.height = "auto";
+                  el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+                }}
                 placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
                 className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
                 disabled={isLoading || !code.trim()}
@@ -1031,22 +1280,101 @@ const DemoSection = () => {
                 )}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-gray-600">
-              Prova la chat: chiedi spiegazioni, fix o miglioramenti sul codice a sinistra.
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
+              >
+                <FileText size={12} />
+                File
+              </button>
+              <button
+                type="button"
+                onClick={() => folderInputRef.current?.click()}
+                title="Carica una cartella o un intero progetto"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
+              >
+                <FolderPlus size={12} />
+                Cartella
+              </button>
+              <button
+                type="button"
+                disabled={isZipLoading}
+                onClick={() => zipInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
+              >
+                <Archive size={12} />
+                {isZipLoading ? "ZIP…" : "ZIP"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowGithubComposer((v) => !v)}
+                aria-expanded={showGithubComposer}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${showGithubComposer ? "border-primary/50 text-primary bg-primary/10" : "border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40"}`}
+              >
+                <Github size={12} />
+                GitHub
+              </button>
+              {uploadedFiles.length > 0 && (
+                <span className="text-[10px] text-primary font-mono ml-1">
+                  {uploadedFiles.length}/{MAX_DEMO_FILES} file
+                </span>
+              )}
+            </div>
+            {showGithubComposer && (
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="url"
+                  value={githubUrl}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGithubUrl(e.target.value)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      importFromGitHub();
+                    }
+                  }}
+                  placeholder="https://github.com/.../blob/main/file.js"
+                  className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  disabled={isGithubLoading || !githubUrl.trim()}
+                  onClick={importFromGitHub}
+                  className="px-3 py-2 text-xs font-semibold bg-primary/20 text-primary rounded-xl hover:bg-primary/30 disabled:opacity-50"
+                >
+                  {isGithubLoading ? "…" : "Importa"}
+                </button>
+              </div>
+            )}
+            {uploadedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {uploadedFiles.map((file, index) => (
+                  <span
+                    key={`${file.path ?? file.name}-${index}`}
+                    title={file.path ?? file.name}
+                    className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#061014] border border-emerald-900/30 text-[11px] text-gray-300"
+                  >
+                    <FileText size={11} className="text-primary/70" />
+                    <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
+                    <button
+                      type="button"
+                      aria-label={`Rimuovi ${file.path ?? file.name}`}
+                      onClick={() => removeAttachment(index)}
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
+                    >
+                      <X size={11} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] text-gray-600 mt-1.5 text-center">
+              Invio con Enter &middot; Shift+Enter per andare a capo &middot; L&apos;AI ha sempre il contesto del codice corrente
             </p>
           </div>
         </div>
       </motion.div>
-      {!isLoading && code.trim() && (
-        <motion.div layout initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }} className="flex justify-center mt-6">
-          <button
-            onClick={() => performAutoAnalysis(code)}
-            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors shadow-md"
-          >
-            Analizza Codice
-          </button>
-        </motion.div>
-      )}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
