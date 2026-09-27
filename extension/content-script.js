@@ -397,65 +397,6 @@ function showFloatButton(rect, text) {
   document.body.appendChild(floatBtn);
 }
 
-function showReviseButton(rect, text) {
-  removeUi();
-
-  floatBtn = document.createElement('button');
-  floatBtn.type = 'button';
-  floatBtn.className = 'semplycode-float-revise';
-  floatBtn.innerHTML = `
-    <span class="semplycode-float-icon" aria-hidden="true">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-    </span>
-    Spiega il codice con Semplycode
-  `;
-  floatBtn.title = 'Spiega il codice selezionato';
-
-  const top = Math.min(rect.bottom + window.scrollY + 8, window.scrollY + window.innerHeight - 48);
-  const left = Math.min(
-    rect.left + window.scrollX + rect.width / 2 - 130,
-    window.scrollX + window.innerWidth - 250,
-  );
-
-  floatBtn.style.top = `${Math.max(8, top)}px`;
-  floatBtn.style.left = `${Math.max(8, left)}px`;
-
-  floatBtn.addEventListener('mousedown', (e) => e.preventDefault());
-
-  floatBtn.addEventListener('click', () => {
-    const payload = text.trim().slice(0, MAX_SELECTION_LEN);
-    if (!chrome.runtime?.id) {
-      floatBtn.remove();
-      return;
-    }
-    try {
-      // "Spiega il codice" → invia come analisi codice (non revisione prosa)
-      chrome.runtime.sendMessage({ action: 'analyze-selection', code: payload }, (response) => {
-        if (chrome.runtime.lastError) {
-          floatBtn.remove();
-          return;
-        }
-        if (response && response.reason === 'not-code') {
-          floatBtn.disabled = false;
-          floatBtn.innerHTML = `<span class="semplycode-warning-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Testo non riconosciuto come codice`;
-          floatBtn.style.borderColor = '#f59e0b';
-          floatBtn.style.color = '#f59e0b';
-          setTimeout(removeUi, 2000);
-          return;
-        }
-        floatBtn.remove();
-      });
-    } catch (e) {
-      floatBtn.remove();
-    }
-    floatBtn.disabled = true;
-    floatBtn.textContent = 'Apertura pannello…';
-    setTimeout(removeUi, 1200);
-  });
-
-  document.body.appendChild(floatBtn);
-}
-
 function onSelectionEnd() {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) {
@@ -487,12 +428,8 @@ function onSelectionEnd() {
     return;
   }
 
-  // Bottone rinominato "Spiega il codice" → mostra solo per vero codice (tag + euristica)
-  if (insideCodeTag) {
-    showReviseButton(rect, text);
-  } else {
-    showFloatButton(rect, text);
-  }
+  // Bottone verde unico per vero codice (tag + euristica): niente più bottone viola.
+  showFloatButton(rect, text);
 }
 
 document.addEventListener('mouseup', () => {

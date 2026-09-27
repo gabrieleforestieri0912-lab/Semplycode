@@ -249,13 +249,13 @@ html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { 
    Solo transform/opacity (GPU-composite).
    ======================================== */
 @keyframes code-float-line {
-  0%,100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(var(--range, -10px)) rotate(0.35deg); }
+  0%,100% { transform: translate(0, 0) rotate(0deg); }
+  50%      { transform: translate(8px, var(--range, -12px)) rotate(0.6deg); }
 }
 
 @keyframes code-line-pulse {
   0%,100% { opacity: var(--op, 0.82); }
-  50%      { opacity: calc(var(--op, 0.82) * 0.78); }
+  50%      { opacity: calc(var(--op, 0.82) * 0.72); }
 }
 
 .code-float-line {
@@ -263,9 +263,21 @@ html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { 
   animation:
     code-float-line var(--dur, 7s) ease-in-out infinite,
     code-line-pulse var(--dur, 7s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
+  animation-delay: var(--delay, 0s), var(--delay, 0s);
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.06));
   will-change: transform, opacity;
+}
+
+/* Entrata scaglionata: i blocchi appaiono in dissolvenza uno dopo l'altro al mount. */
+@keyframes code-float-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.code-float-item {
+  opacity: 0;
+  animation: code-float-enter 0.9s ease forwards;
+  animation-delay: var(--enter-delay, 0s);
 }
 
 @keyframes code-bg-fade-in {
@@ -280,6 +292,7 @@ html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .code-float-line { animation: none; }
+  .code-float-item { animation: none; opacity: 1; }
   html { scroll-behavior: auto; }
 }
 

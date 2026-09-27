@@ -415,7 +415,8 @@ export default function CodeFloatBackground({
             left: `${b.x}%`,
             top: `${b.y}%`,
             transform: "translate(-50%, -50%)",
-          }}
+            ["--enter-delay" as string]: `${Math.min(i * 0.09, 1.4).toFixed(2)}s`,
+          } as React.CSSProperties}
         >
           <div
             className="code-float-line font-mono whitespace-nowrap"

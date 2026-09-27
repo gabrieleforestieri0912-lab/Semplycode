@@ -433,6 +433,31 @@ function roleLabel(role: User['role']) {
 2. **Validation** — normalize email with \`email.trim().toLowerCase()\` before \`regex.test\`
 3. **Seed** — add sample users before the line 54 loop for a visual test`;
 
+/** Pallini verdi dello spray sul bottone "Prova Chat AI": deterministici, niente random a runtime. */
+interface SprayDot {
+  id: number;
+  dx: number;
+  dy: number;
+  size: number;
+  color: string;
+  dur: string;
+  delay: string;
+}
+const SPRAY_COLORS = ["#6ee7b7", "#34d399", "#10b981", "#a7f3d0", "#ffffff", "#2dd4bf"];
+const TRY_CHAT_SPRAY: SprayDot[] = Array.from({ length: 18 }, (_, i) => {
+  const angle = (i / 18) * Math.PI * 2 + (i % 2 === 0 ? 0.12 : -0.09);
+  const dist = 36 + ((i * 37) % 48);
+  return {
+    id: i,
+    dx: Math.round(Math.cos(angle) * dist),
+    dy: Math.round(Math.sin(angle) * dist),
+    size: 3 + ((i * 7) % 5),
+    color: SPRAY_COLORS[i % SPRAY_COLORS.length],
+    dur: `${(0.9 + (i % 5) * 0.13).toFixed(2)}s`,
+    delay: `${((i % 9) * 0.11).toFixed(2)}s`,
+  };
+});
+
 const DemoSection = () => {
   const { user: session } = useSupabaseSession();
   const { language: uiLang } = useLanguage();
@@ -1632,6 +1657,34 @@ const DemoSection = () => {
         .text-shadow-glow {
           text-shadow: 0 0 10px rgba(6, 78, 59, 0.5);
         }
+        /* Spray "Prova Chat AI": i pallini partono dal centro e diffondono verso l'esterno.
+           Parte solo su hover e resta in loop finché il mouse è sopra. */
+        @keyframes chat-spray {
+          0% {
+            transform: translate(-50%, -50%) scale(0.4);
+            opacity: 0;
+          }
+          18% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.2);
+            opacity: 0;
+          }
+        }
+        .spray-dot {
+          opacity: 0;
+          will-change: transform, opacity;
+        }
+        .group:hover .spray-dot {
+          animation: chat-spray var(--spray-dur, 1s) ease-out infinite;
+          animation-delay: var(--spray-delay, 0s);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .group:hover .spray-dot {
+            animation: none;
+          }
+        }
       `}</style>
       </section>
       {applyModal && (
@@ -1650,10 +1703,27 @@ const DemoSection = () => {
           <Sparkles size={16} className="group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300" />
           {t.tryChat}
           <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-          <span className="pointer-events-none absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-md shadow-white/30 group-hover:animate-ping" />
-          <span className="pointer-events-none absolute -bottom-1.5 -left-2 w-2 h-2 rounded-full bg-emerald-200 opacity-0 group-hover:opacity-100 transition-opacity delay-75 shadow-sm group-hover:animate-ping" />
-          <span className="pointer-events-none absolute top-1/2 -right-3.5 w-1.5 h-1.5 rounded-full bg-teal-200 opacity-0 group-hover:opacity-100 transition-opacity delay-100 shadow-sm group-hover:animate-ping" />
-          <span className="pointer-events-none absolute -top-2 left-1/2 w-1.5 h-1.5 rounded-full bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity delay-150 shadow-sm group-hover:animate-ping" />
+          {/* Spray di pallini verdi su hover: diffusione continua finché il mouse resta sopra */}
+          <span aria-hidden className="pointer-events-none absolute inset-0">
+            {TRY_CHAT_SPRAY.map((dot) => (
+              <span
+                key={dot.id}
+                className="spray-dot absolute left-1/2 top-1/2 rounded-full"
+                style={
+                  {
+                    width: dot.size,
+                    height: dot.size,
+                    background: dot.color,
+                    boxShadow: `0 0 8px 1px ${dot.color}`,
+                    "--dx": `${dot.dx}px`,
+                    "--dy": `${dot.dy}px`,
+                    "--spray-dur": dot.dur,
+                    "--spray-delay": dot.delay,
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </span>
         </Link>
       </div>
     </>
