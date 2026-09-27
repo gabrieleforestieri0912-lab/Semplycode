@@ -40,7 +40,7 @@ import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useSupabaseSession } from "@/lib/auth";
-import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X } from "lucide-react";
+import { Plus, Trash2, Play, FileText, FolderPlus, Archive, Github, X, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { postChatStream, formatApiError } from "@/lib/playgroundApi";
@@ -557,6 +557,9 @@ const DemoSection = () => {
   const [limitCTA, setLimitCTA] = useState<{ message: string; code?: string } | null>(null);
   /** Anteprima "Applica" come in chat: diff prima di sostituire l'editor. */
   const [applyModal, setApplyModal] = useState<{ oldCode: string; newCode: string } | null>(null);
+  /** Menù custom delle modalità di analisi (al posto del select nativo invisibile). */
+  const [showModeMenu, setShowModeMenu] = useState(false);
+  const MODES = ['correction', 'revision', 'creation', 'security', 'performance', 'style', 'debug'] as const;
   const typeLabels = getAnalysisTypeLabels(uiLang);
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
@@ -1487,7 +1490,12 @@ const DemoSection = () => {
               }}
             />
             {/* Box stile AI Mode: vetro flottante con profondità 3D, niente bordi verdi in focus */}
-            <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <div
+              className="relative rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setShowModeMenu(false);
+              }}
+            >
               <textarea
                 value={chatInput}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -1508,20 +1516,65 @@ const DemoSection = () => {
                 disabled={isLoading || !code.trim()}
               />
               <div className="flex items-center gap-1 px-2.5 pb-2.5">
-                <select
-                  value={analysisType}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    if (e.target.value) setAnalysisType(e.target.value);
-                  }}
-                  title={t.modeLabel}
-                  aria-label={t.modeLabel}
-                >
-                  {(['correction', 'revision', 'creation', 'security', 'performance', 'style', 'debug'] as const).map((m) => (
-                    <option key={m} value={m} title={typeDescs[m]}>
-                      {typeLabels[m]}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowModeMenu((v) => !v)}
+                    aria-haspopup="menu"
+                    aria-expanded={showModeMenu}
+                    title={typeDescs[analysisType as keyof typeof typeDescs] ?? t.modeLabel}
+                    aria-label={t.modeLabel}
+                    className={`flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full border text-[11px] font-bold transition-colors ${showModeMenu ? "bg-primary/15 border-primary/50 text-emerald-300" : "bg-[#010409]/80 border-emerald-900/30 text-gray-400 hover:text-emerald-300 hover:border-primary/40"}`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    <span className="max-w-[110px] truncate">{typeLabels[analysisType] || analysisType}</span>
+                    <ChevronDown size={13} className={`shrink-0 transition-transform ${showModeMenu ? "rotate-180" : ""}`} />
+                  </button>
+                  {showModeMenu && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={t.close}
+                        onClick={() => setShowModeMenu(false)}
+                        className="fixed inset-0 z-20 cursor-default bg-transparent"
+                      />
+                      <div
+                        role="menu"
+                        aria-label={t.modeLabel}
+                        className="absolute bottom-full left-0 z-30 mb-2 w-64 overflow-hidden rounded-xl border border-emerald-900/40 bg-[#0d1117]/95 backdrop-blur-xl shadow-2xl shadow-black/60"
+                      >
+                        {MODES.map((m) => {
+                          const active = analysisType === m;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              role="menuitemradio"
+                              aria-checked={active}
+                              title={typeDescs[m]}
+                              onClick={() => {
+                                setAnalysisType(m);
+                                setShowModeMenu(false);
+                              }}
+                              className={`flex w-full items-start gap-2.5 px-3.5 py-2.5 text-left transition-colors ${active ? "bg-primary/15" : "hover:bg-emerald-900/20"}`}
+                            >
+                              <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${active ? "bg-emerald-400" : "bg-gray-600"}`} />
+                              <span className="min-w-0 flex-1">
+                                <span className={`flex items-center gap-1.5 text-xs font-bold ${active ? "text-emerald-300" : "text-gray-300"}`}>
+                                  {typeLabels[m]}
+                                  {active && <Check size={12} className="text-emerald-400 shrink-0" />}
+                                </span>
+                                <span className="mt-0.5 block truncate text-[11px] leading-snug text-gray-500">
+                                  {typeDescs[m]}
+                                </span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
