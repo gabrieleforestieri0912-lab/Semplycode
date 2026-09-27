@@ -2257,7 +2257,7 @@ export default function Chat() {
                                               }
                                             }}
                                             className={`group flex items-center justify-between gap-1 p-1.5 rounded-md cursor-pointer text-xs outline-none transition-colors ${currentChatId === chat._id
-                                                ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
+                                                ? "bg-emerald-500/15 text-primary border border-emerald-500/20"
                                                 : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
                                               }`}
                                           >
@@ -2402,7 +2402,7 @@ export default function Chat() {
                                   }
                                 }}
                                 className={`group flex items-center justify-between gap-1.5 p-2.5 rounded-xl cursor-pointer text-[13px] outline-none transition-colors ${currentChatId === chat._id
-                                    ? "bg-emerald-900/30 text-primary border border-emerald-500/20"
+                                    ? "bg-emerald-500/15 text-primary border border-emerald-500/20"
                                     : "text-gray-400 hover:bg-emerald-950/30 hover:text-gray-200"
                                   }`}
                               >
@@ -3574,7 +3574,7 @@ export default function Chat() {
                 type="button"
                 onClick={() => handleAssignChatToProject(moveChatTarget.chatId, null)}
                 className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${!moveChatTarget.currentProjId
-                    ? "bg-emerald-900/30 border-emerald-500/40 text-white font-semibold"
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-semibold"
                     : "bg-[#061014] border-emerald-900/20 text-gray-300 hover:border-emerald-500/30"
                   }`}
               >
@@ -3593,7 +3593,7 @@ export default function Chat() {
                     type="button"
                     onClick={() => handleAssignChatToProject(moveChatTarget.chatId, proj.id)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-xs text-left transition-all ${isCurrent
-                        ? "bg-emerald-900/30 border-emerald-500/40 text-white font-semibold"
+                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-semibold"
                         : "bg-[#061014] border-emerald-900/20 text-gray-300 hover:border-emerald-500/30"
                       }`}
                   >

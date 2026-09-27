@@ -189,6 +189,23 @@ html:not(.dark) .chat-shell [class*="text-red-400"]:not([class*="hover:text-red-
 /* Bordi emerald scuri -> slate chiaro (restano gli accenti emerald-500) */
 html:not(.dark) .chat-shell [class*="border-emerald-900"] { border-color: #e2e8f0 !important; }
 html:not(.dark) .chat-shell [class*="border-emerald-800"] { border-color: #e2e8f0 !important; }
+html:not(.dark) .chat-shell [class*="border-emerald-950"] { border-color: #a7f3d0 !important; }
+
+/* Fondi emerald scuri (code header, thead, chip, pill) -> tinta emerald chiara */
+html:not(.dark) .chat-shell [class*="bg-emerald-950"] { background-color: #ecfdf5 !important; }
+
+/* Verdi acqua troppo chiari su sfondo chiaro -> emerald scuro leggibile */
+html:not(.dark) .chat-shell [class*="text-emerald-400"]:not([class*="hover:text-emerald-400"]) { color: #059669 !important; }
+html:not(.dark) .chat-shell [class*="hover:text-emerald-400"]:hover { color: #059669 !important; }
+html:not(.dark) .chat-shell [class*="hover:text-emerald-300"]:hover { color: #059669 !important; }
+html:not(.dark) .chat-shell [class*="hover:text-red-400"]:hover { color: #dc2626 !important; }
+html:not(.dark) .chat-shell [class*="hover:bg-red-950"]:hover { background-color: rgba(220, 38, 38, 0.08) !important; }
+
+/* Ambra su sfondo chiaro */
+html:not(.dark) .chat-shell [class*="text-amber-400"] { color: #d97706 !important; }
+
+/* Skeleton di caricamento su sfondo chiaro */
+html:not(.dark) .chat-shell .skeleton { background: #e2e8f0 !important; }
 
 /* Hover states in light mode */
 html:not(.dark) .chat-shell [class*="hover:bg-emerald-900"]:hover { background-color: rgba(16, 185, 129, 0.08) !important; }
@@ -305,7 +322,6 @@ html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { 
    ======================================== */
 ::selection {
   background: rgba(16, 185, 129, 0.25);
-  color: #f1f5f9;
 }
 
 /* ========================================
