@@ -890,8 +890,17 @@ export default function Chat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, setThemeMode } = useTheme();
   const { language: uiLang } = useLanguage();
+
+  // La chat è predefinita con tema scuro (solo se l'utente non ha mai scelto un tema).
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("theme")) setThemeMode("dark");
+    } catch {
+      // storage non disponibile
+    }
+  }, [setThemeMode]);
   const typeLabels = getAnalysisTypeLabels(uiLang);
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const t = {

@@ -5,11 +5,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface ThemeContextValue {
   theme: 'dark' | 'light';
   toggleTheme: () => void;
+  setThemeMode: (mode: 'dark' | 'light') => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'light',
   toggleTheme: () => {},
+  setThemeMode: () => {},
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
@@ -24,16 +26,24 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     document.documentElement.classList.toggle('light', initial === 'light');
   }, []);
 
+  const setThemeMode = (mode: 'dark' | 'light') => {
+    setTheme(mode);
+    try {
+      localStorage.setItem('theme', mode);
+    } catch {
+      // storage non disponibile
+    }
+    document.documentElement.classList.toggle('dark', mode === 'dark');
+    document.documentElement.classList.toggle('light', mode === 'light');
+  };
+
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('theme', next);
-    document.documentElement.classList.toggle('dark', next === 'dark');
-    document.documentElement.classList.toggle('light', next === 'light');
+    setThemeMode(next);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   );
