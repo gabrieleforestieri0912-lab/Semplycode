@@ -1189,8 +1189,8 @@ const DemoSection = () => {
             )}
           </div>
 
-          {/* Input flottante dentro lo spazio chat: non aumenta l'altezza della demo */}
-          <div className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/95 backdrop-blur rounded-b-2xl sm:rounded-b-3xl">
+          {/* Input flottante dentro lo spazio chat: vetro trasparente, non aumenta l'altezza della demo */}
+          <div className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 bg-transparent rounded-b-2xl sm:rounded-b-3xl">
             <input
               ref={fileInputRef}
               type="file"
@@ -1225,8 +1225,8 @@ const DemoSection = () => {
                 e.target.value = "";
               }}
             />
-            {/* Box stile AI Mode: rettangolare arrotondato, textarea + toolbar interna */}
-            <div className="rounded-2xl border border-emerald-900/30 bg-[#010409] focus-within:border-emerald-500/60 transition-colors">
+            {/* Box stile AI Mode: vetro flottante con profondità 3D, niente bordi verdi in focus */}
+            <div className="rounded-2xl border border-emerald-900/30 bg-[#0d1117]/60 backdrop-blur-xl ring-1 ring-white/10 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.8),0_2px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.08)]">
               <textarea
                 value={chatInput}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
@@ -1252,22 +1252,15 @@ const DemoSection = () => {
                   onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     if (e.target.value) setAnalysisType(e.target.value);
                   }}
-                  className="bg-[#0a0c10] border border-emerald-900/30 rounded-full pl-3 pr-2 py-1.5 text-[11px] font-bold text-gray-300 focus:outline-none focus:border-primary cursor-pointer max-w-[150px] truncate"
+                  className="bg-white/[0.04] border border-white/10 rounded-full pl-3 pr-2 py-1.5 text-[11px] font-bold text-gray-300 focus:outline-none cursor-pointer max-w-[150px] truncate"
                   title="Modalità di analisi"
                   aria-label="Modalità di analisi"
                 >
-                  <optgroup label="Modalità">
-                    {(['correction', 'revision', 'creation'] as const).map((m) => (
-                      <option key={m} value={m} title={ANALYSIS_TYPE_DESCRIPTIONS[m]}>
-                        {ANALYSIS_TYPE_LABELS[m]}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Altro">
-                    {(['full', 'security', 'performance', 'style', 'debug'] as const).map((k) => (
-                      <option key={k} value={k}>{ANALYSIS_TYPE_LABELS[k]}</option>
-                    ))}
-                  </optgroup>
+                  {(['correction', 'revision', 'creation', 'security', 'performance', 'style', 'debug'] as const).map((m) => (
+                    <option key={m} value={m} title={ANALYSIS_TYPE_DESCRIPTIONS[m]}>
+                      {ANALYSIS_TYPE_LABELS[m]}
+                    </option>
+                  ))}
                 </select>
                 <button
                   type="button"
@@ -1341,7 +1334,7 @@ const DemoSection = () => {
                     }
                   }}
                   placeholder="https://github.com/.../blob/main/file.js"
-                  className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-primary"
+                  className="flex-1 bg-[#010409]/80 backdrop-blur border border-emerald-900/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-600 focus:outline-none"
                 />
                 <button
                   type="button"
