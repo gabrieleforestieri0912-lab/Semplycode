@@ -31,6 +31,10 @@ import {
   Brain,
   Sparkles,
   ArrowRight,
+  Send,
+  Copy,
+  Check,
+  RefreshCw,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
@@ -39,7 +43,7 @@ import { useSupabaseSession } from "@/lib/auth";
 import { Plus, Trash2, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { postChat, formatApiError } from "@/lib/playgroundApi";
+import { postChatStream, formatApiError } from "@/lib/playgroundApi";
 
 interface Message {
   role: "user" | "assistant";
@@ -57,6 +61,195 @@ interface ErrorWithStatus {
   message?: string;
   code?: string;
 }
+
+/** Rimuove il ragionamento interno del modello (<think>...</think>) così non appare mai nei messaggi. */
+function stripThinking(content: string): string {
+  if (!content) return content;
+  let out = content;
+  out = out.replace(/<think>[\s\S]*?<\/think>/gi, "");
+  out = out.replace(/<thinking>[\s\S]*?<\/thinking>/gi, "");
+  const openIdx = out.search(/<think>/i);
+  if (openIdx !== -1) out = out.slice(0, openIdx);
+  const openIdx2 = out.search(/<thinking>/i);
+  if (openIdx2 !== -1) out = out.slice(0, openIdx2);
+  out = out.replace(/<\/?think\s*>/gi, "").replace(/<\/?thinking\s*>/gi, "");
+  return out.trimStart();
+}
+
+/** Rendering del report AI identico alla chat (niente font-mono, tipografia prose, code block con header). */
+const DemoAIResponse = ({ content }: { content: string }) => {
+  return (
+    <div className="relative text-left [&>*:first-child]:mt-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ ...props }) => (
+            <h1 className="text-base font-bold text-white mb-3 mt-1 first:mt-0" {...props} />
+          ),
+          h2: ({ ...props }) => (
+            <h2 className="text-[15px] font-bold text-white mt-6 mb-3 first:mt-0 pt-4 border-t border-emerald-900/30 first:border-t-0 first:pt-0" {...props} />
+          ),
+          h3: ({ ...props }) => (
+            <h3 className="text-sm font-semibold text-primary mt-4 mb-2 first:mt-0" {...props} />
+          ),
+          h4: ({ ...props }) => (
+            <h4 className="text-sm font-medium text-gray-200 mt-3 mb-1.5" {...props} />
+          ),
+          p: ({ ...props }) => (
+            <p className="mb-3 last:mb-0 text-sm leading-relaxed text-gray-300" {...props} />
+          ),
+          ul: ({ ...props }) => (
+            <ul className="my-3 space-y-2 pl-5 list-disc marker:text-primary/70 text-gray-300" {...props} />
+          ),
+          ol: ({ ...props }) => (
+            <ol className="my-3 space-y-2 pl-5 list-decimal text-sm text-gray-300 marker:text-primary/80" {...props} />
+          ),
+          li: ({ children, ...props }: { children?: React.ReactNode }) => (
+            <li className="text-sm leading-relaxed [&>p]:mb-1.5 [&>p]:last:mb-0" {...props}>
+              {children}
+            </li>
+          ),
+          blockquote: ({ ...props }) => (
+            <blockquote className="my-3 pl-3 border-l-2 border-primary/50 text-gray-400 text-sm italic" {...props} />
+          ),
+          strong: ({ ...props }) => (
+            <strong className="font-semibold text-emerald-300" {...props} />
+          ),
+          a: ({ ...props }) => (
+            <a className="text-primary underline underline-offset-2 hover:text-primary/80" target="_blank" rel="noopener noreferrer" {...props} />
+          ),
+          code: ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode }) => {
+            if (inline) {
+              return (
+                <code
+                  className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-emerald-300 text-[13px] font-mono"
+                  {...props}
+                >
+                  {children}
+                </code>
+              );
+            }
+            const match = /language-(\w+)/.exec(className || "");
+            const lang = match?.[1] || "codice";
+            const raw = Array.isArray(children)
+              ? children.join("")
+              : String(children ?? "").replace(/\n$/, "");
+            return (
+              <div className="my-4 w-full rounded-xl overflow-hidden border border-emerald-800/40 bg-[#010409]">
+                <div className="flex items-center justify-between px-3 py-2 bg-emerald-950/60 border-b border-emerald-900/30">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">
+                    {lang}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-[11px] px-2.5 py-1 rounded-md bg-emerald-600/25 text-emerald-300 hover:bg-emerald-600/40 transition-colors"
+                    onClick={() => {
+                      try {
+                        navigator.clipboard.writeText(raw);
+                      } catch {
+                        // clipboard non disponibile
+                      }
+                    }}
+                  >
+                    Copia
+                  </button>
+                </div>
+                <pre className="p-4 overflow-x-auto m-0 custom-scrollbar">
+                  <code className="text-[13px] font-mono leading-relaxed text-gray-200 whitespace-pre">
+                    {children}
+                  </code>
+                </pre>
+              </div>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+};
+
+interface DemoMessageProps {
+  message: Message;
+  isLastAssistant?: boolean;
+  onRegenerate?: () => void;
+}
+
+/** Bolla messaggio identica alla chat: utente a destra, AI a sinistra con avatar e azioni. */
+const DemoMessage = ({ message, isLastAssistant, onRegenerate }: DemoMessageProps) => {
+  const isUser = message.role === "user";
+  const [copied, setCopied] = useState(false);
+  const displayContent = isUser ? message.content : stripThinking(message.content);
+
+  const handleCopy = () => {
+    try {
+      navigator.clipboard.writeText(displayContent);
+    } catch {
+      // clipboard non disponibile
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className={`flex w-full gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}>
+      {!isUser && (
+        <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mt-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/semplycode.png" alt="Semplycode AI" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div
+        className={`${isUser ? "max-w-[85%]" : "flex-1 min-w-0"} rounded-2xl ${isUser
+          ? "bg-primary/20 border border-primary/30 text-gray-100 px-4 py-3"
+          : "bg-[#061014]/90 border border-emerald-900/25 text-gray-300 px-5 py-4"
+          }`}
+      >
+        {!isUser && (
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary/80">
+              Semplycode AI
+            </p>
+          </div>
+        )}
+        {isUser ? (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap wrap-break-word">
+            {message.content}
+          </p>
+        ) : (
+          <>
+            <DemoAIResponse content={displayContent} />
+            {displayContent && (
+              <div className="flex items-center gap-1 mt-3 pt-2 border-t border-emerald-900/15">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-primary rounded-md hover:bg-emerald-900/15 transition-all"
+                  title="Copia risposta"
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? "Copiato" : "Copia"}
+                </button>
+                {isLastAssistant && onRegenerate && (
+                  <button
+                    type="button"
+                    onClick={onRegenerate}
+                    className="flex items-center gap-1 px-2 py-1 text-[10px] text-gray-500 hover:text-emerald-400 rounded-md hover:bg-emerald-900/15 transition-all ml-auto"
+                    title="Rielabora"
+                  >
+                    <RefreshCw size={12} />
+                    Rielabora
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const DEMO_SAMPLE_CODE = `import express, { Request, Response } from 'express';
 import cors from 'cors';
@@ -147,9 +340,27 @@ const DemoSection = () => {
   const [detectedLang, setDetectedLang] = useState("typescript");
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: DEMO_SAMPLE_REPORT }]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const [mode, setMode] = useState<"correction" | "revision" | "creation">("correction");
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [chatInput, setChatInput] = useState("");
   const { user: session } = useSupabaseSession();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Timer dello stato di elaborazione (come in chat) + autoscroll in fondo.
+  useEffect(() => {
+    if (!isLoading || loadingStartedAt === null) return;
+    setElapsedSec(0);
+    const timer = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - (loadingStartedAt as number)) / 1000));
+    }, 500);
+    return () => clearInterval(timer);
+  }, [isLoading, loadingStartedAt]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [messages, isLoading]);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
@@ -338,9 +549,14 @@ const DemoSection = () => {
 
     setHasInteracted(true);
     setIsLoading(true);
+    setLoadingStartedAt(Date.now());
+    setElapsedSec(0);
+    // Placeholder come in chat: lo streaming lo riempie progressivamente.
     setMessages([
-      { role: "assistant", content: "_AI sta analizzando il tuo codice..._" },
+      { role: "assistant", content: "" },
     ]);
+
+    let accumulatedContent = "";
 
     try {
       const systemPrompt =
@@ -349,24 +565,55 @@ const DemoSection = () => {
           : mode === "revision"
             ? `Sei un esperto Senior Developer in modalità REVISIONE: correggi e ottimizza il codice${detectedLang ? ` in ${detectedLang}` : ""} (naming, DRY, leggibilità, performance, sicurezza). Usa Markdown con sezioni Errori, Codice revisionato, Miglioramenti, Best practice.`
             : `Sei un esperto Senior Developer in modalità CORREZIONE: correggi SOLO errori sintattici/logici/runtime${detectedLang ? ` in ${detectedLang}` : ""}, mantieni la struttura. Usa Markdown con sezioni Errori, Spiegazione, Codice corretto (solo fix minimi).`;
-      const data = await postChat([
-        {
-          role: "system",
-          content: `${systemPrompt} Rispondi in italiano.`,
+      await postChatStream(
+        [
+          {
+            role: "system",
+            content: `${systemPrompt} Rispondi in italiano. Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+          },
+          {
+            role: "user",
+            content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
+          },
+        ],
+        (chunk) => {
+          accumulatedContent += chunk;
+          const visible = stripThinking(accumulatedContent);
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, content: visible };
+            }
+            return next;
+          });
         },
-        {
-          role: "user",
-          content: `Analizza questo codice (modalità ${mode}):\n\n\`\`\`${detectedLang || ""}\n${currentCode}\n\`\`\``,
+        (fullContent) => {
+          const cleaned = stripThinking(fullContent);
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, content: cleaned };
+            }
+            return next;
+          });
+          setIsLoading(false);
+          setLoadingStartedAt(null);
+          window.dispatchEvent(new Event("semplycode:stats:refresh"));
         },
-      ]);
-
-      window.dispatchEvent(new Event("semplycode:stats:refresh"));
-      setMessages([
-        {
-          role: "assistant",
-          content: (data.message as { content: string }).content,
+        (error) => {
+          setMessages([
+            {
+              role: "assistant",
+              content: `**${error}**`,
+            },
+          ]);
+          setIsLoading(false);
+          setLoadingStartedAt(null);
         },
-      ]);
+        { analysisType: mode },
+      );
     } catch (error) {
       const err = error as ErrorWithStatus;
       const msg = formatApiError(err as Error);
@@ -380,8 +627,88 @@ const DemoSection = () => {
           content: `**${msg}**${extra}`,
         },
       ]);
-    } finally {
       setIsLoading(false);
+      setLoadingStartedAt(null);
+    }
+  };
+
+  /** Domanda libera dell'utente sul codice corrente — stesso input della chat. */
+  const sendChatMessage = async (userMessage: string) => {
+    if (!userMessage.trim() || isLoading) return;
+    if (!code.trim()) return;
+
+    const newUserMessage: Message = { role: "user", content: userMessage.trim() };
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+    setChatInput("");
+    setHasInteracted(true);
+    setIsLoading(true);
+    setLoadingStartedAt(Date.now());
+    setElapsedSec(0);
+
+    let accumulatedContent = "";
+
+    try {
+      const systemPrompt =
+        mode === "creation"
+          ? `Sei un tutor italiano in modalità CREAZIONE.`
+          : mode === "revision"
+            ? `Sei un esperto Senior Developer in modalità REVISIONE.`
+            : `Sei un esperto Senior Developer in modalità CORREZIONE.`;
+      await postChatStream(
+        [
+          {
+            role: "system",
+            content: `${systemPrompt} Rispondi in italiano in modo chiaro e utile. Il codice corrente${detectedLang ? ` (${detectedLang})` : ""} è:\n\n\`\`\`${detectedLang || ""}\n${code}\n\`\`\`\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.`,
+          },
+          ...updatedMessages,
+        ],
+        (chunk) => {
+          accumulatedContent += chunk;
+          const visible = stripThinking(accumulatedContent);
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, content: visible };
+            }
+            return next;
+          });
+        },
+        (fullContent) => {
+          const cleaned = stripThinking(fullContent);
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, content: cleaned };
+            }
+            return next;
+          });
+          setIsLoading(false);
+          setLoadingStartedAt(null);
+          window.dispatchEvent(new Event("semplycode:stats:refresh"));
+        },
+        (error) => {
+          const err = error as ErrorWithStatus;
+          setMessages((prev) => {
+            const withError = [...prev];
+            const last = withError[withError.length - 1];
+            if (last?.role === "assistant" && !last.content) {
+              withError[withError.length - 1] = { role: "assistant", content: `**${formatApiError(err as Error)}**` };
+            }
+            return withError;
+          });
+          setIsLoading(false);
+          setLoadingStartedAt(null);
+        },
+        { analysisType: mode },
+      );
+    } catch (error) {
+      const err = error as ErrorWithStatus;
+      setMessages([...updatedMessages, { role: "assistant", content: `**${formatApiError(err as Error)}**` }]);
+      setIsLoading(false);
+      setLoadingStartedAt(null);
     }
   };
 
@@ -604,14 +931,14 @@ const DemoSection = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0f172a] max-h-[720px] custom-scrollbar font-mono text-sm">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] custom-scrollbar">
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-200 shadow-inner">
                   <Sparkles className="w-8 h-8 text-emerald-400" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-lg font-bold text-[#475569]">
+                  <p className="text-lg font-bold text-[#e2e8f0]">
                     Inizia la tua Analisi
                   </p>
                   <p className="text-sm text-[#94a3b8] max-w-70 leading-relaxed mx-auto">
@@ -623,76 +950,90 @@ const DemoSection = () => {
               </div>
             )}
 
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className="animate-in fade-in zoom-in-95 duration-700"
-              >
-                <div className="prose prose-sm prose-invert max-w-none text-[#e2e8f0] font-mono">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h3: ({ ...props }) => (
-                        <h3
-                          className="text-emerald-400 font-bold text-lg mb-4 mt-6 first:mt-0 flex items-center gap-2"
-                          {...props}
-                        />
-                      ),
-                      ul: ({ ...props }) => (
-                        <ul className="space-y-2 list-none p-0" {...props} />
-                      ),
-                      li: ({ ...props }) => (
-                        <li
-                          className="flex flex-wrap items-start gap-2.5 before:content-[''] before:w-1.5 before:h-1.5 before:bg-emerald-500/60 before:rounded-full before:mt-2 [&>p]:flex-1 [&>p]:min-w-0 [&>p]:break-words"
-                          {...props}
-                        />
-                      ),
-                      strong: ({ ...props }) => (
-                        <strong className="text-emerald-300 font-bold" {...props} />
-                      ),
-                      code: ({
-                        inline,
-                        className,
-                        children,
-                        ...props
-                      }: {
-                        inline?: boolean;
-                        className?: string;
-                        children?: React.ReactNode;
-                      }) =>
-                        inline ? (
-                          <code
-                            className="bg-emerald-950/70 px-1.5 py-0.5 rounded text-emerald-300 text-xs font-mono inline whitespace-normal break-words align-baseline border border-emerald-800/30"
-                            {...props}
-                          >
-                            {children}
-                          </code>
-                        ) : (
-                          <pre className="my-4 rounded-2xl overflow-hidden border border-emerald-800/40 shadow-lg bg-[#010409]">
-                            <code
-                              className="block bg-[#010409] p-4 text-xs font-mono leading-relaxed whitespace-pre-wrap text-[#e2e8f0]"
-                              {...props}
-                            >
-                              {children}
-                            </code>
-                          </pre>
-                        ),
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            ))}
+            {messages.length > 0 && (
+              <div className="flex flex-col gap-4 pb-2">
+                {messages.map((msg, i) => {
+                  // Placeholder vuoto in attesa del primo chunk di streaming:
+                  // non renderizzare la bolla, mostra solo lo status qui sotto.
+                  if (msg.role === "assistant" && !stripThinking(msg.content).trim()) {
+                    return null;
+                  }
+                  const isLast = i === messages.length - 1;
+                  return (
+                    <DemoMessage
+                      key={`${msg.role}-${i}`}
+                      message={msg}
+                      isLastAssistant={isLast && msg.role === "assistant"}
+                      onRegenerate={
+                        isLast && msg.role === "assistant" && !isLoading
+                          ? () => performAutoAnalysis(code)
+                          : undefined
+                      }
+                    />
+                  );
+                })}
 
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4 opacity-50">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="text-xs font-mono text-[#94a3b8] tracking-tighter">
-                  ELABORAZIONE LOGICA IN CORSO...
-                </span>
+                {(() => {
+                  const lastMsg = messages[messages.length - 1];
+                  const isStreamingContent =
+                    !!lastMsg &&
+                    lastMsg.role === "assistant" &&
+                    stripThinking(lastMsg.content).trim().length > 0;
+                  // Status con timer solo prima che lo streaming produca contenuto (come in chat).
+                  if (!isLoading || isStreamingContent) return null;
+                  return (
+                    <div className="flex justify-start">
+                      <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-[#061014]/90 border border-emerald-900/25">
+                        <Loader2 size={15} className="animate-spin text-primary shrink-0" />
+                        <span className="text-xs text-gray-300">
+                          Analisi del codice in corso…
+                        </span>
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 tabular-nums">
+                          {elapsedSec}s
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div ref={messagesEndRef} />
               </div>
             )}
+          </div>
+
+          {/* Input chat come nella chat: l'utente può fare domande sul codice */}
+          <div className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">
+            <div className="flex gap-2 items-end">
+              <textarea
+                value={chatInput}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setChatInput(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage(chatInput);
+                  }
+                }}
+                rows={1}
+                placeholder="Chiedi all'AI qualsiasi cosa sul codice..."
+                className="flex-1 bg-[#010409] border border-emerald-900/30 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-primary resize-none max-h-[140px] custom-scrollbar"
+                disabled={isLoading || !code.trim()}
+              />
+              <button
+                type="button"
+                onClick={() => sendChatMessage(chatInput)}
+                disabled={!chatInput.trim() || isLoading || !code.trim()}
+                aria-label="Invia messaggio"
+                className="flex items-center justify-center w-11 h-11 shrink-0 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 transition-all disabled:scale-95"
+              >
+                {isLoading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Send size={18} />
+                )}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-gray-600">
+              Prova la chat: chiedi spiegazioni, fix o miglioramenti sul codice a sinistra.
+            </p>
           </div>
         </div>
       </motion.div>
