@@ -50,12 +50,12 @@ export default function Privacy() {
 
           <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">7. I tuoi diritti</h2>
           <p>
-            Hai diritto di: accedere ai tuoi dati, correggerli, cancellarli. Contattaci a info@semplycode.it per qualsiasi richiesta.
+            Hai diritto di: accedere ai tuoi dati, correggerli, cancellarli. Contattaci a gabriele.forestieri0912@gmail.com per qualsiasi richiesta.
           </p>
 
           <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. Contatti</h2>
           <p>
-            Per domande sulla privacy: <strong>info@semplycode.it</strong>
+            Per domande sulla privacy: <strong>gabriele.forestieri0912@gmail.com</strong>
           </p>
         </div>
       </main>

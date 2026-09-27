@@ -65,8 +65,31 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-dvh bg-white flex items-center justify-center px-4 py-12 font-sans relative overflow-x-hidden">
-      <CodeFloatBackground variant="sides" />
+    <div className="min-h-dvh bg-white flex items-center justify-center px-4 py-12 font-sans relative overflow-hidden">
+      {/* Background orbs - uguali a Hero */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 40%, transparent 68%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 right-[-80px] w-[360px] h-[360px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)",
+          }}
+        />
+      </div>
+
+      {/* Background codice fluttuante (decorativo, aria-hidden) - uguale a Hero */}
+      <CodeFloatBackground />
       <Link
         href="/"
         className="fixed top-5 left-5 z-50 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-emerald-400 transition-colors"

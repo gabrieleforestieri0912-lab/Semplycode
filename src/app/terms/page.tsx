@@ -65,7 +65,7 @@ export default function Terms() {
 
           <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">10. Contatti</h2>
           <p>
-            Per domande sui termini: <strong>info@semplycode.it</strong>
+            Per domande sui termini: <strong>gabriele.forestieri0912@gmail.com</strong>
           </p>
         </div>
       </main>

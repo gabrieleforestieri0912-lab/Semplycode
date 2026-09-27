@@ -20,6 +20,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { useSupabaseSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
+import ThemeToggle from "./ThemeToggle";
 
 
 const MotionLink = motion.create(Link);
@@ -358,6 +359,7 @@ const Navbar = () => {
           )}
 
           {/* Hamburger under 1200px */}
+          <ThemeToggle />
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="xl:hidden flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl hover:bg-black/[0.04] transition-colors text-[#475569] hover:text-[#0f172a]"

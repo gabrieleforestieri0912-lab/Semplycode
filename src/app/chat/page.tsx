@@ -6,7 +6,7 @@ import Image from 'next/image';
 const Chat = dynamic(() => import('@/app/components/Chat'), {
   ssr: false,
   loading: () => (
-    <div className="h-screen bg-[#0a0c10] flex items-center justify-center">
+    <div className="h-screen flex items-center justify-center" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       <div className="flex flex-col items-center gap-4">
         <Image
           src="/semplycode.png"

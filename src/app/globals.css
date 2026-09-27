@@ -164,6 +164,44 @@ html.dark nav { border-bottom-color: #1e293b !important; }
 html.dark [class*="from-emerald-500"] { background: #10b981 !important; }
 
 /* ========================================
+   Light mode overrides for dark-first editor (Chat)
+   L'editor è progettato dark-first: qui viene mappato al tema chiaro.
+   Scope .chat-shell: footer e code-window della landing restano
+   intenzionalmente scuri anche in light mode.
+   ======================================== */
+html:not(.dark) .chat-shell { background: #f8fafc !important; color: #0f172a !important; }
+html:not(.dark) .chat-shell [class*="bg-[#0a0c10]"] { background-color: #ffffff !important; }
+html:not(.dark) .chat-shell [class*="bg-[#0d1117]"] { background-color: #ffffff !important; }
+html:not(.dark) .chat-shell [class*="bg-[#010409]"] { background-color: #f8fafc !important; }
+html:not(.dark) .chat-shell [class*="bg-[#061014]"] { background-color: #f1f5f9 !important; }
+
+/* Testi: restano bianchi solo gli elementi che hanno già uno sfondo colorato */
+html:not(.dark) .chat-shell [class*="text-white"]:not([class*="bg-primary"]):not([class*="from-emerald"]):not([class*="bg-emerald"]):not([class*="bg-red"]):not([class*="bg-gradient"]) { color: #0f172a !important; }
+html:not(.dark) .chat-shell [class*="text-gray-100"] { color: #1e293b !important; }
+html:not(.dark) .chat-shell [class*="text-gray-200"] { color: #334155 !important; }
+html:not(.dark) .chat-shell [class*="text-gray-300"] { color: #334155 !important; }
+html:not(.dark) .chat-shell [class*="text-gray-400"] { color: #64748b !important; }
+html:not(.dark) .chat-shell [class*="text-gray-500"] { color: #64748b !important; }
+html:not(.dark) .chat-shell [class*="text-gray-600"] { color: #64748b !important; }
+html:not(.dark) .chat-shell [class*="text-emerald-300"]:not([class*="hover:text-emerald-300"]) { color: #059669 !important; }
+html:not(.dark) .chat-shell [class*="text-red-400"]:not([class*="hover:text-red-400"]) { color: #dc2626 !important; }
+
+/* Bordi emerald scuri -> slate chiaro (restano gli accenti emerald-500) */
+html:not(.dark) .chat-shell [class*="border-emerald-900"] { border-color: #e2e8f0 !important; }
+html:not(.dark) .chat-shell [class*="border-emerald-800"] { border-color: #e2e8f0 !important; }
+
+/* Hover states in light mode */
+html:not(.dark) .chat-shell [class*="hover:bg-emerald-900"]:hover { background-color: rgba(16, 185, 129, 0.08) !important; }
+html:not(.dark) .chat-shell [class*="hover:bg-emerald-950"]:hover { background-color: rgba(16, 185, 129, 0.08) !important; }
+html:not(.dark) .chat-shell [class*="hover:bg-[#0a0c10]"]:hover { background-color: #f1f5f9 !important; }
+html:not(.dark) .chat-shell [class*="hover:text-white"]:hover { color: #0f172a !important; }
+html:not(.dark) .chat-shell [class*="hover:text-gray-300"]:hover { color: #0f172a !important; }
+html:not(.dark) .chat-shell [class*="hover:text-gray-400"]:hover { color: #0f172a !important; }
+
+/* Placeholder più leggibili su sfondo chiaro */
+html:not(.dark) .chat-shell [class*="placeholder:text-gray-600"]::placeholder { color: #94a3b8 !important; }
+
+/* ========================================
    Scrollbars
    ======================================== */
 ::-webkit-scrollbar { width: 8px; height: 8px; }

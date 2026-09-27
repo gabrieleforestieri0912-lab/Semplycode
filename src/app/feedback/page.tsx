@@ -4,6 +4,40 @@ import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Send, CheckCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import Navbar from '@/app/components/Navbar';
+import Footer from '@/app/components/Footer';
+import CodeFloatBackground from '@/app/components/CodeFloatBackground';
+
+function HeroBackground() {
+  return (
+    <>
+      {/* Background orbs - uguali a Hero */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 40%, transparent 68%)",
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-1/4 w-[400px] h-[400px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)",
+          }}
+        />
+        <div
+          className="absolute top-1/2 right-[-80px] w-[360px] h-[360px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 65%)",
+          }}
+        />
+      </div>
+
+      {/* Background codice fluttuante (decorativo, aria-hidden) - uguale a Hero */}
+      <CodeFloatBackground />
+    </>
+  );
+}
 
 interface FormData {
   name: string;
@@ -62,12 +96,15 @@ export default function FeedbackPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full text-center"
-        >
+      <div className="min-h-screen bg-white flex flex-col font-sans">
+        <Navbar />
+        <div className="grow flex items-center justify-center px-4 relative overflow-hidden">
+          <HeroBackground />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative z-10 max-w-md w-full text-center py-12 sm:py-16"
+          >
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-primary" />
           </div>
@@ -82,14 +119,19 @@ export default function FeedbackPage() {
             <ArrowLeft className="w-4 h-4" />
             Torna alla home
           </Link>
-        </motion.div>
+          </motion.div>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white py-12 sm:py-16 px-4 sm:px-6">
-      <div className="max-w-2xl 3xl:max-w-3xl mx-auto">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
+      <Navbar />
+      <div className="grow py-12 sm:py-16 px-4 sm:px-6 relative overflow-hidden">
+        <HeroBackground />
+        <div className="relative z-10 max-w-2xl 3xl:max-w-3xl mx-auto">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-[#64748b] hover:text-primary mb-8 transition-colors text-sm font-medium min-h-[44px]"
@@ -182,7 +224,9 @@ export default function FeedbackPage() {
             Cliccando &quot;Invia&quot; si aprirà il tuo client email con il messaggio già precompilato.
           </p>
         </form>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 }

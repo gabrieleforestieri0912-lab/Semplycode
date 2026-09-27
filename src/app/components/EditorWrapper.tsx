@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 export interface EditorWrapperHandle {
   scrollToLine: (lineNumber: number) => void;
@@ -21,6 +22,7 @@ export default forwardRef<EditorWrapperHandle, EditorWrapperProps>(function Edit
   const [baseExtensions, setBaseExtensions] = useState<unknown[]>([]);
   const [langExtension, setLangExtension] = useState<unknown>(null);
   const [themeObj, setThemeObj] = useState<unknown>(null);
+  const { theme } = useTheme();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorViewRef = React.useRef<any>(null);
 
@@ -186,7 +188,7 @@ export default forwardRef<EditorWrapperHandle, EditorWrapperProps>(function Edit
         }
       }}
       extensions={langExtension ? [langExtension, ...baseExtensions] : baseExtensions}
-      theme={themeObj}
+      theme={theme === "dark" ? themeObj : "light"}
       placeholder="// Scrivi il codice qui..."
       style={{ fontSize: 13, height: "100%" }}
       className="h-full"

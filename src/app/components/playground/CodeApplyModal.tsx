@@ -13,6 +13,7 @@ interface DiffRow {
 interface CodeApplyModalProps {
   oldCode: string;
   newCode: string;
+  filePath?: string;
   onApply: (code: string) => void;
   onClose: () => void;
 }
@@ -39,7 +40,7 @@ function buildDiffLines(oldText: string, newText: string): DiffRow[] {
   return rows;
 }
 
-export default function CodeApplyModal({ oldCode, newCode, onApply, onClose }: CodeApplyModalProps) {
+export default function CodeApplyModal({ oldCode, newCode, filePath, onApply, onClose }: CodeApplyModalProps) {
   const diff = useMemo(() => buildDiffLines(oldCode, newCode), [oldCode, newCode]);
   const changedCount = diff.filter((r) => r.type !== "same").length;
 
@@ -51,6 +52,9 @@ export default function CodeApplyModal({ oldCode, newCode, onApply, onClose }: C
             <h3 className="text-sm font-bold text-white">Anteprima modifiche</h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {changedCount} righe diverse rispetto all&apos;editor
+              {filePath ? (
+                <span className="text-emerald-400/90"> · verrà aggiornato solo: {filePath}</span>
+              ) : null}
             </p>
           </div>
           <button

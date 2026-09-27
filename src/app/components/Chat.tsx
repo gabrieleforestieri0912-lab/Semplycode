@@ -59,10 +59,13 @@ import {
   FolderX,
   Pin,
   PinOff,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { debounce } from "lodash";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTheme } from "@/context/ThemeContext";
 import {
   ChatProject,
   loadProjectsFromStorage,
@@ -79,8 +82,22 @@ import {
   exportCodeOnly,
 } from "@/lib/exportUtils";
 
-const MAX_UPLOAD_FILES = 5;
+const MAX_UPLOAD_FILES = 50;
 const MAX_UPLOAD_FILE_SIZE = 100 * 1024;
+const IGNORED_PATH_SEGMENTS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  ".next",
+  "__pycache__",
+  "vendor",
+  "coverage",
+  ".idea",
+  ".vscode",
+  ".turbo",
+  ".parcel-cache",
+]);
 const ALLOWED_CODE_EXTENSIONS = [
   "js",
   "jsx",
@@ -107,13 +124,34 @@ interface Message {
 
 interface FileInfo {
   name: string;
+  /** Percorso relativo (es. "src/App.tsx") quando caricato da cartella/progetto, altrimenti uguale a name. */
+  path?: string;
   content: string;
   language: string;
+}
+
+interface FileSystemEntryLike {
+  isFile: boolean;
+  isDirectory: boolean;
+  name: string;
+  fullPath?: string;
+  file?: (success: (f: File) => void, error?: (e: Error) => void) => void;
+  createReader?: () => FileSystemDirectoryReaderLike | undefined;
+}
+
+interface FileSystemDirectoryReaderLike {
+  readEntries: (
+    success: (entries: FileSystemEntryLike[]) => void,
+    error?: (e: Error) => void,
+  ) => void;
 }
 
 interface ApplyModalState {
   oldCode: string;
   newCode: string;
+  /** Indice del file attivo al momento della preview; null = nessun file caricato (editor singolo). */
+  fileIndex: number | null;
+  filePath?: string;
 }
 
 interface LimitModalState {
@@ -174,9 +212,98 @@ const buildCombinedCodeFromFiles = (files: FileInfo[]): string =>
   files
     .map(
       (f) =>
-        `// ========== ${f.name} (${f.language}) ==========\n${f.content.trim()}`,
+        `// ========== ${f.path ?? f.name} (${f.language}) ==========\n${f.content.trim()}`,
     )
     .join("\n\n");
+
+const getDisplayPath = (file: File): string =>
+  (file as File & { _relativePath?: string })._relativePath ||
+  (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+  file.name;
+
+const getBasename = (p: string): string => p.split("/").pop() || p;
+
+const shouldIgnorePath = (displayPath: string): boolean => {
+  const segments = displayPath.split("/").slice(0, -1);
+  if (segments.some((s) => IGNORED_PATH_SEGMENTS.has(s))) return true;
+  const base = getBasename(displayPath);
+  if (base === ".DS_Store" || base === "package-lock.json" || base === "yarn.lock") return true;
+  return false;
+};
+
+const isAllowedCodeFile = (filename: string): boolean => {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  return ALLOWED_CODE_EXTENSIONS.includes(ext);
+};
+
+const readEntriesAsync = (reader: FileSystemDirectoryReaderLike): Promise<FileSystemEntryLike[]> =>
+  new Promise((resolve, reject) => {
+    reader.readEntries(resolve, reject);
+  });
+
+const readAllEntries = async (reader: FileSystemDirectoryReaderLike): Promise<FileSystemEntryLike[]> => {
+  const all: FileSystemEntryLike[] = [];
+  for (;;) {
+    const batch = await readEntriesAsync(reader);
+    if (batch.length === 0) break;
+    all.push(...batch);
+  }
+  return all;
+};
+
+const traverseFileSystemEntry = async (entry: FileSystemEntryLike, basePath = ""): Promise<File[]> => {
+  if (entry.isFile) {
+    const file = await new Promise<File>((resolve, reject) => {
+      try {
+        entry.file?.((f) => resolve(f), reject);
+      } catch (e) {
+        reject(e);
+      }
+    });
+    const rel = basePath ? `${basePath}/${entry.name}` : entry.name;
+    (file as File & { _relativePath?: string })._relativePath = (entry.fullPath || `/${rel}`).replace(/^\//, "");
+    return [file];
+  }
+  if (entry.isDirectory) {
+    const reader = entry.createReader?.();
+    if (!reader) return [];
+    const children = await readAllEntries(reader);
+    const nextBase = basePath ? `${basePath}/${entry.name}` : entry.name;
+    const out: File[] = [];
+    for (const child of children) {
+      out.push(...(await traverseFileSystemEntry(child, nextBase)));
+    }
+    return out;
+  }
+  return [];
+};
+
+/** Raccoglie i File anche quando l'utente trascina cartelle / interi progetti. */
+const collectFilesFromDataTransfer = async (dt: DataTransfer): Promise<File[]> => {
+  try {
+    const items = Array.from(dt.items || []);
+    const entries = items
+      .map((it) => {
+        const anyItem = it as DataTransferItem & {
+          webkitGetAsEntry?: () => unknown;
+          getAsEntry?: () => unknown;
+        };
+        const raw = anyItem.webkitGetAsEntry?.call(it) ?? anyItem.getAsEntry?.call(it) ?? null;
+        return raw as FileSystemEntryLike | null;
+      })
+      .filter((e): e is FileSystemEntryLike => !!e && typeof e === "object");
+    if (entries.length > 0 && entries.some((e) => e.isDirectory)) {
+      const out: File[] = [];
+      for (const entry of entries) {
+        out.push(...(await traverseFileSystemEntry(entry)));
+      }
+      if (out.length > 0) return out;
+    }
+  } catch {
+    // fallback sotto
+  }
+  return Array.from(dt.files || []);
+};
 
 const FormattedAIResponse = ({
   content,
@@ -438,27 +565,42 @@ interface ChatMessageProps {
   onRegenerate?: () => void;
   onSave?: () => void;
   highlightedLine?: number | null;
+  userAvatar?: string | null;
+  userName?: string;
 }
 
-const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave, highlightedLine }: ChatMessageProps) => {
+const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave, highlightedLine, userAvatar, userName }: ChatMessageProps) => {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"liked" | "disliked" | null>(null);
+  // Nasconde eventuali residui di ragionamento (<think>) anche nella cronologia caricata.
+  const displayContent = isUser ? message.content : stripThinking(message.content);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
+    navigator.clipboard.writeText(displayContent);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const userInitial = (userName || "U").trim().charAt(0).toUpperCase() || "U";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
+      className={`flex w-full gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}
     >
+      {!isUser && (
+        <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mt-1">
+          <img
+            src="/semplycode.png"
+            alt="Semplycode AI"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
       <div
-        className={`${isUser ? "max-w-[min(100%,42rem)]" : "w-full"} rounded-2xl ${isUser
+        className={`${isUser ? "max-w-[min(100%,42rem)]" : "flex-1 min-w-0"} rounded-2xl ${isUser
             ? "bg-primary/20 border border-primary/30 text-gray-100 px-4 py-3"
             : "bg-[#061014]/90 border border-emerald-900/25 text-gray-300 px-5 py-4"
           }`}
@@ -477,12 +619,12 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
         ) : (
           <>
             <FormattedAIResponse
-              content={message.content}
+              content={displayContent}
               onLineClick={onLineClick}
               enableTyping={enableTyping}
               highlightedLine={highlightedLine}
             />
-            {message.content && (
+            {displayContent && (
               <div className="flex items-center gap-1 mt-3 pt-2 border-t border-emerald-900/15">
                 <button
                   type="button"
@@ -538,6 +680,23 @@ const ChatMessage = ({ message, onLineClick, enableTyping, onRegenerate, onSave,
           </>
         )}
       </div>
+      {isUser && (
+        <div
+          className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-primary/20 border border-primary/30 flex items-center justify-center mt-1"
+          title={userName || "Tu"}
+        >
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={userName || "Tu"}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-xs font-bold text-primary">{userInitial}</span>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -560,6 +719,30 @@ function getLanguageLabel(lang: string): string {
     LANGUAGE_LABELS[lang] ||
     (lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "JavaScript")
   );
+}
+
+/** Rimuove il ragionamento interno del modello (<think>...</think>) così non appare mai in chat. */
+function stripThinking(content: string): string {
+  if (!content) return content;
+  let out = content;
+  // Blocchi completi <think>...</think> (case-insensitive, multiline)
+  out = out.replace(/<think>[\s\S]*?<\/think>/gi, "");
+  out = out.replace(/<thinking>[\s\S]*?<\/thinking>/gi, "");
+  // Tag <think> aperto ma mai chiuso (streaming interrotto): taglia da lì in poi
+  const openIdx = out.search(/<think>/i);
+  if (openIdx !== -1) out = out.slice(0, openIdx);
+  const openIdx2 = out.search(/<thinking>/i);
+  if (openIdx2 !== -1) out = out.slice(0, openIdx2);
+  // Residui tag isolati
+  out = out.replace(/<\/?think\s*>/gi, "").replace(/<\/?thinking\s*>/gi, "");
+  return out.trimStart();
+}
+
+function getProcessingLabel(elapsedSec: number): string {
+  if (elapsedSec < 5) return "Analisi del codice in corso…";
+  if (elapsedSec < 12) return "Ragionamento sul fix…";
+  if (elapsedSec < 25) return "Scrittura della risposta…";
+  return "Rifinitura finale…";
 }
 
 export default function Chat() {
@@ -593,6 +776,8 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [historySearch, setHistorySearch] = useState("");
@@ -614,6 +799,16 @@ export default function Chat() {
     return () => mq.removeEventListener("change", update);
   }, []);
 
+  // Secondaggio elaborazione: parte quando isLoading diventa true, si azzera alla fine.
+  useEffect(() => {
+    if (!isLoading || loadingStartedAt === null) return;
+    setElapsedSec(0);
+    const timer = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - (loadingStartedAt as number)) / 1000));
+    }, 500);
+    return () => clearInterval(timer);
+  }, [isLoading, loadingStartedAt]);
+
   const [insightsTab, setInsightsTab] = useState<"full" | "files">("full");
   const [showGithubComposer, setShowGithubComposer] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<FileInfo[]>([]);
@@ -630,7 +825,9 @@ export default function Chat() {
   const [confirmDeleteChatId, setConfirmDeleteChatId] = useState<string | null>(null);
   const [renameChat, setRenameChat] = useState<RenameState | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
+  const { theme, toggleTheme } = useTheme();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<{ scrollToLine: (line: number) => void; getLineCount: () => number }>(null);
 
@@ -756,21 +953,57 @@ export default function Chat() {
     } catch { }
   }, []);
 
+  // Applica un suggerimento SOLO al file attivo (mai wipe dell'intero editor).
+  // Se non ci sono file caricati, sostituisce il codice singolo.
+  const applySuggestionToActiveFile = (suggested: string) => {
+    if (!suggested || !suggested.trim()) return;
+    if (uploadedFiles.length > 0) {
+      const idx = Math.min(Math.max(activeFileIndex, 0), uploadedFiles.length - 1);
+      const updated = uploadedFiles.map((f, i) =>
+        i === idx ? { ...f, content: suggested } : f,
+      );
+      setUploadedFiles(updated);
+      setCode(buildCombinedCodeFromFiles(updated));
+      setDetectedLang(updated[idx]?.language || detectLanguage(suggested));
+      performAutoAnalysisRef.current?.(suggested, updated[idx]?.language, updated);
+    } else {
+      setCode(suggested);
+      setDetectedLang(detectLanguage(suggested));
+      performAutoAnalysisRef.current?.(suggested);
+    }
+  };
+
+  const applySuggestionToActiveFileRef = useRef(applySuggestionToActiveFile);
+  useEffect(() => {
+    applySuggestionToActiveFileRef.current = applySuggestionToActiveFile;
+  });
+
   useEffect(() => {
     const onPreview = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
       const suggested: string | undefined = detail.code;
-      if (!suggested) return;
-      setApplyModal({ oldCode: code, newCode: suggested });
+      if (!suggested || !suggested.trim()) return;
+      // oldCode = contenuto del file attivo, NON il combined: evita diff sballati
+      // e rende chiaro cosa verrà sostituito.
+      const hasFiles = uploadedFiles.length > 0;
+      const idx = hasFiles
+        ? Math.min(Math.max(activeFileIndex, 0), uploadedFiles.length - 1)
+        : null;
+      const currentActive = hasFiles
+        ? (uploadedFiles[idx as number]?.content ?? code)
+        : code;
+      setApplyModal({
+        oldCode: currentActive,
+        newCode: suggested,
+        fileIndex: idx,
+        filePath: idx !== null ? (uploadedFiles[idx]?.path ?? uploadedFiles[idx]?.name) : undefined,
+      });
     };
     const onApply = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
       const suggested: string | undefined = detail.code;
-      if (!suggested) return;
-      setCode(suggested);
-      setDetectedLang(detectLanguage(suggested));
-      setUploadedFiles([]);
-      performAutoAnalysisRef.current?.(suggested);
+      if (!suggested || !suggested.trim()) return;
+      applySuggestionToActiveFileRef.current?.(suggested);
     };
     window.addEventListener("semplycode:previewApply", onPreview);
     window.addEventListener("semplycode:applySuggestion", onApply);
@@ -778,7 +1011,7 @@ export default function Chat() {
       window.removeEventListener("semplycode:previewApply", onPreview);
       window.removeEventListener("semplycode:applySuggestion", onApply);
     };
-  }, [code]);
+  }, [code, uploadedFiles, activeFileIndex]);
 
   useEffect(() => {
     try {
@@ -1109,53 +1342,66 @@ export default function Chat() {
   };
 
   const handleCodeFiles = (incomingFiles: File[]) => {
-    const validFiles: File[] = [];
+    const seen = new Set(uploadedFiles.map((f) => f.path ?? f.name));
+    const validFiles: { file: File; displayPath: string }[] = [];
 
-    for (const file of incomingFiles) {
+    // Ordina per percorso così le cartelle entrano con struttura stabile e i tab restano ordinati
+    const sorted = [...incomingFiles].sort((a, b) => getDisplayPath(a).localeCompare(getDisplayPath(b)));
+
+    for (const file of sorted) {
       if (uploadedFiles.length + validFiles.length >= MAX_UPLOAD_FILES) break;
 
-      if (file.size > MAX_UPLOAD_FILE_SIZE) {
-        continue;
-      }
+      const displayPath = getDisplayPath(file);
+      if (shouldIgnorePath(displayPath)) continue;
+      if (!isAllowedCodeFile(displayPath)) continue;
+      if (file.size > MAX_UPLOAD_FILE_SIZE) continue;
+      if (seen.has(displayPath)) continue;
+      seen.add(displayPath);
 
-      const ext = file.name.split(".").pop()?.toLowerCase() || "";
-      if (!ALLOWED_CODE_EXTENSIONS.includes(ext)) {
-        continue;
-      }
-
-      validFiles.push(file);
+      validFiles.push({ file, displayPath });
     }
 
     if (validFiles.length === 0) return;
 
     Promise.all<FileInfo>(
       validFiles.map(
-        (file) =>
+        ({ file, displayPath }) =>
           new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e: ProgressEvent<FileReader>) => {
               resolve({
-                name: file.name,
+                name: getBasename(displayPath),
+                path: displayPath,
                 content: String(e.target?.result ?? ""),
-                language: detectLanguageFromFilename(file.name),
+                language: detectLanguageFromFilename(displayPath),
               });
             };
             reader.onerror = () =>
-              reject(new Error(`Lettura fallita: ${file.name}`));
+              reject(new Error(`Lettura fallita: ${displayPath}`));
             reader.readAsText(file);
           }),
       ),
     )
       .then((fileData) => {
-        const merged = [...uploadedFiles, ...fileData].slice(
-          0,
-          MAX_UPLOAD_FILES,
-        );
+        const merged = [...uploadedFiles, ...fileData]
+          .sort((a, b) => (a.path ?? a.name).localeCompare(b.path ?? b.name))
+          .slice(0, MAX_UPLOAD_FILES);
         applyFilesToEditor(merged, { autoAnalyze: true });
       })
       .catch((err) => {
         console.error(err);
       });
+  };
+
+  /** Drop che supporta anche cartelle / interi progetti trascinati nell'editor. */
+  const handleDropFiles = async (dt: DataTransfer) => {
+    try {
+      const files = await collectFilesFromDataTransfer(dt);
+      if (files.length > 0) handleCodeFiles(files);
+    } catch (e) {
+      console.error("Drop cartella fallito:", e);
+      handleCodeFiles(Array.from(dt.files || []));
+    }
   };
 
   const removeUploadedFile = (index: number) => {
@@ -1317,6 +1563,8 @@ export default function Chat() {
     }
 
     setIsLoading(true);
+    setLoadingStartedAt(Date.now());
+    setElapsedSec(0);
     setMessages([{ role: "assistant", content: "" }]);
 
     const lang = langOverride || detectedLang;
@@ -1331,12 +1579,14 @@ export default function Chat() {
         ? `\n\nMessaggio / stack trace dell'utente:\n\`\`\`\n${errorContext.trim()}\n\`\`\``
         : "";
 
-    const systemPrompt = buildAnalysisSystemPrompt({
-      analysisType,
-      lang,
-      needsLineRefs,
-      hasErrorContext: Boolean(errorContext.trim()),
-    });
+    const systemPrompt =
+      buildAnalysisSystemPrompt({
+        analysisType,
+        lang,
+        needsLineRefs,
+        hasErrorContext: Boolean(errorContext.trim()),
+      }) +
+      "\nNon mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale.";
 
     let accumulatedContent = "";
 
@@ -1351,17 +1601,29 @@ export default function Chat() {
         ],
         (chunk) => {
           accumulatedContent += chunk;
+          const visible = stripThinking(accumulatedContent);
           setMessages((prev) => {
             const next = [...prev];
             const last = next[next.length - 1];
             if (last?.role === "assistant") {
-              next[next.length - 1] = { ...last, content: accumulatedContent, _streamed: true };
+              next[next.length - 1] = { ...last, content: visible, _streamed: true };
             }
             return next;
           });
         },
         (fullContent) => {
+          const cleaned = stripThinking(fullContent);
+          // Sostituisce il contenuto con la versione pulita (senza <think>)
+          setMessages((prev) => {
+            const next = [...prev];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = { ...last, content: cleaned, _streamed: true };
+            }
+            return next;
+          });
           setIsLoading(false);
+          setLoadingStartedAt(null);
           window.dispatchEvent(new Event("semplycode:stats:refresh"));
 
           if (user?.email && code.trim()) {
@@ -1381,7 +1643,7 @@ export default function Chat() {
                       code.slice(0, 500) +
                       (code.length > 500 ? "...[codice troncato]" : ""),
                   },
-                  { role: "assistant", content: fullContent },
+                  { role: "assistant", content: cleaned },
                 ],
                 language: detectedLang,
               }),
@@ -1392,6 +1654,7 @@ export default function Chat() {
         },
         (error) => {
           setIsLoading(false);
+          setLoadingStartedAt(null);
           const errMsg = error;
           if (error.includes("429") || error.includes("limite")) {
             setLimitModal({ message: errMsg });
@@ -1414,6 +1677,7 @@ export default function Chat() {
         },
       ]);
       setIsLoading(false);
+      setLoadingStartedAt(null);
     }
   };
 
@@ -1425,6 +1689,8 @@ export default function Chat() {
     setMessages(updatedMessages);
     setChatInput("");
     setIsLoading(true);
+    setLoadingStartedAt(Date.now());
+    setElapsedSec(0);
 
     const placeholderMessage: Message = { role: "assistant", content: "" };
     const messagesWithPlaceholder = [...updatedMessages, placeholderMessage];
@@ -1434,7 +1700,7 @@ export default function Chat() {
 
     try {
       const currentCode = activeFile?.content ?? code;
-      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
+      const systemPrompt = `Sei un esperto Code Reviewer italiano. Rispondi in italiano in modo chiaro e utile. Non mostrare mai il tuo ragionamento interno e non usare tag <think>: restituisci solo la risposta finale. Il codice corrente è:\n\n\`\`\`${activeFile?.language || detectedLang}\n${currentCode}\n\`\`\`${errorContext.trim() ? `\n\nContesto errore:\n${errorContext.trim()}` : ""}`;
 
       postChatStream(
         [
@@ -1443,19 +1709,22 @@ export default function Chat() {
         ],
         (chunk) => {
           accumulatedContent += chunk;
+          const visible = stripThinking(accumulatedContent);
           setMessages((prev) => {
             const next = [...prev];
             const last = next[next.length - 1];
             if (last?.role === "assistant") {
-              next[next.length - 1] = { ...last, content: accumulatedContent, _streamed: true };
+              next[next.length - 1] = { ...last, content: visible, _streamed: true };
             }
             return next;
           });
         },
         async (fullContent) => {
-          const finalMessages = [...updatedMessages, { role: "assistant" as const, content: fullContent, _streamed: true }];
+          const cleaned = stripThinking(fullContent);
+          const finalMessages = [...updatedMessages, { role: "assistant" as const, content: cleaned, _streamed: true }];
           setMessages(finalMessages);
           setIsLoading(false);
+          setLoadingStartedAt(null);
           window.dispatchEvent(new Event("semplycode:stats:refresh"));
 
           if (user?.email) {
@@ -1498,6 +1767,7 @@ export default function Chat() {
             return withError;
           });
           setIsLoading(false);
+          setLoadingStartedAt(null);
         },
       );
     } catch (err) {
@@ -1507,6 +1777,7 @@ export default function Chat() {
       }
       setMessages([...updatedMessages, { role: "assistant", content: `**${formatApiError(error as Error)}**` }]);
       setIsLoading(false);
+      setLoadingStartedAt(null);
     }
   };
 
@@ -1669,7 +1940,7 @@ export default function Chat() {
   const activeFile = uploadedFiles[activeFileIndex] ?? null;
 
   return (
-    <div className="flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans">
+    <div className="chat-shell flex h-screen supports-[height:100dvh]:h-[100dvh] bg-[#0a0c10] text-gray-300 overflow-hidden font-sans">
       <AnimatePresence>
         {isDesktop && isSidebarExpanded && !isSidebarPinned && (
           <motion.div
@@ -2394,12 +2665,32 @@ export default function Chat() {
             )}
             <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
               <QuotaBadge className="hidden sm:flex" />
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={theme === "dark" ? "Passa al tema chiaro" : "Passa al tema scuro"}
+                aria-label="Cambia tema"
+                className="flex items-center justify-center w-8 h-8 rounded-xl border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-colors"
+              >
+                {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 className="hidden"
                 accept=".js,.jsx,.ts,.tsx,.py,.java,.cpp,.c,.go,.rs,.php,.sql,.css,.html,.json"
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  const selected = Array.from(e.target.files || []);
+                  handleCodeFiles(selected);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={folderInputRef}
+                type="file"
+                className="hidden"
+                {...({ webkitdirectory: "", directory: "" } as Record<string, string>)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
                   const selected = Array.from(e.target.files || []);
                   handleCodeFiles(selected);
@@ -2417,9 +2708,10 @@ export default function Chat() {
             <div className="flex items-center border-b border-emerald-900/20 bg-[#0d1117]/60 overflow-x-auto custom-scrollbar shrink-0" role="tablist" aria-label="File aperti">
               {uploadedFiles.map((file, i) => (
                 <div
-                  key={`${file.name}-${i}`}
+                  key={`${file.path ?? file.name}-${i}`}
                   role="tab"
                   aria-selected={activeFileIndex === i}
+                  title={file.path ?? file.name}
                   onClick={() => selectFileTab(i)}
                   className={`group flex items-center gap-2 px-3 py-2 text-[11px] font-mono whitespace-nowrap border-r border-emerald-900/20 transition-colors cursor-pointer ${activeFileIndex === i
                       ? "bg-[#010409] text-primary border-t-2 border-t-emerald-400"
@@ -2427,10 +2719,10 @@ export default function Chat() {
                     }`}
                 >
                   <FileText size={12} className="shrink-0 text-primary/70" />
-                  <span className="max-w-[140px] truncate">{file.name}</span>
+                  <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                   <button
                     type="button"
-                    aria-label={`Chiudi ${file.name}`}
+                    aria-label={`Chiudi ${file.path ?? file.name}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeUploadedFile(i);
@@ -2678,6 +2970,15 @@ export default function Chat() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => folderInputRef.current?.click()}
+                          title="Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all"
+                        >
+                          <FolderPlus size={13} />
+                          Cartella
+                        </button>
+                        <button
+                          type="button"
                           disabled={isZipLoading}
                           onClick={() => zipInputRef.current?.click()}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-400 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
@@ -2729,14 +3030,15 @@ export default function Chat() {
                         <div className="flex flex-wrap gap-1.5 mt-2.5">
                           {uploadedFiles.map((file, index) => (
                             <span
-                              key={`${file.name}-${index}`}
+                              key={`${file.path ?? file.name}-${index}`}
+                              title={file.path ?? file.name}
                               className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#061014] border border-emerald-900/30 text-[11px] text-gray-300"
                             >
                               <FileText size={11} className="text-primary/70" />
-                              <span className="max-w-[140px] truncate">{file.name}</span>
+                              <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                               <button
                                 type="button"
-                                aria-label={`Rimuovi ${file.name}`}
+                                aria-label={`Rimuovi ${file.path ?? file.name}`}
                                 onClick={() => removeUploadedFile(index)}
                                 className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
                               >
@@ -2788,19 +3090,38 @@ export default function Chat() {
                             : undefined
                         }
                         highlightedLine={highlightedLine}
+                        userAvatar={user?.image || null}
+                        userName={
+                          [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+                          user?.email?.split("@")[0] ||
+                          "Tu"
+                        }
                       />
                     ))}
-                    {isLoading && (
-                      <div className="flex justify-start">
-                        <div className="rounded-2xl px-4 py-3 bg-[#061014]/90 border border-emerald-900/25">
-                          <div className="flex gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:0ms]" />
-                            <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:150ms]" />
-                            <span className="w-2 h-2 rounded-full bg-primary/60 animate-bounce [animation-delay:300ms]" />
+                    {(() => {
+                      const lastMsg = messages[messages.length - 1];
+                      const isStreamingContent =
+                        !!lastMsg &&
+                        lastMsg.role === "assistant" &&
+                        stripThinking(lastMsg.content).trim().length > 0;
+                      // I puntini/status si vedono SOLO prima che il messaggio inizi a costruirsi.
+                      // Una volta che lo streaming ha prodotto contenuto, li nascondiamo
+                      // (il cursore di digitazione nel messaggio basta).
+                      if (!isLoading || isStreamingContent) return null;
+                      return (
+                        <div className="flex justify-start">
+                          <div className="flex items-center gap-2.5 rounded-2xl px-4 py-3 bg-[#061014]/90 border border-emerald-900/25">
+                            <Loader2 size={15} className="animate-spin text-primary shrink-0" />
+                            <span className="text-xs text-gray-300">
+                              {getProcessingLabel(elapsedSec)}
+                            </span>
+                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20 tabular-nums">
+                              {elapsedSec}s
+                            </span>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     <div ref={messagesEndRef} />
                   </div>
                 )}
@@ -2811,7 +3132,7 @@ export default function Chat() {
                   onDrop={(e: DragEvent) => {
                     e.preventDefault();
                     setIsDraggingFiles(false);
-                    handleCodeFiles(Array.from(e.dataTransfer.files));
+                    void handleDropFiles(e.dataTransfer);
                   }}
                   onDragOver={(e: DragEvent) => {
                     e.preventDefault();
@@ -2828,21 +3149,32 @@ export default function Chat() {
                     className="mx-auto mb-3 text-primary opacity-80"
                   />
                   <p className="text-sm font-semibold text-white mb-1">
-                    Trascina i file di codice qui
+                    Trascina file, cartelle o interi progetti qui
                   </p>
                   <p className="text-xs text-gray-500 mb-4">
-                    L&apos;AI li leggerà e avvierà l&apos;analisi automaticamente
+                    L&apos;AI li leggerà e avvierà l&apos;analisi automaticamente — ogni file si apre come tab in CodeMirror
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#061014] border border-emerald-900/30 rounded-xl text-xs font-medium text-gray-300 hover:text-primary hover:border-primary/40 transition-colors"
-                  >
-                    <FileText size={14} />
-                    Scegli dal computer
-                  </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#061014] border border-emerald-900/30 rounded-xl text-xs font-medium text-gray-300 hover:text-primary hover:border-primary/40 transition-colors"
+                    >
+                      <FileText size={14} />
+                      Scegli file dal computer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => folderInputRef.current?.click()}
+                      title="Carica una cartella o un intero progetto"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#061014] border border-emerald-900/30 rounded-xl text-xs font-medium text-gray-300 hover:text-primary hover:border-primary/40 transition-colors"
+                    >
+                      <FolderPlus size={14} />
+                      Scegli cartella / progetto
+                    </button>
+                  </div>
                   <p className="text-[10px] text-gray-600 mt-3">
-                    Max {MAX_UPLOAD_FILES} file &middot; 100KB ciascuno &middot; JS, TS, Python,
+                    Max {MAX_UPLOAD_FILES} file &middot; 100KB ciascuno &middot; cartelle e progetti supportati (node_modules, .git esclusi) &middot; JS, TS, Python,
                     Java, Go, Rust&hellip;
                   </p>
                   <input
@@ -2925,7 +3257,8 @@ export default function Chat() {
                     <div className="space-y-2">
                       {uploadedFiles.map((file, index) => (
                         <div
-                          key={`${file.name}-${index}`}
+                          key={`${file.path ?? file.name}-${index}`}
+                          title={file.path ?? file.name}
                           className="flex items-center justify-between gap-3 p-3 bg-[#0a0c10]/80 border border-emerald-900/20 rounded-xl"
                         >
                           <div className="flex items-center gap-2 min-w-0">
@@ -2935,7 +3268,7 @@ export default function Chat() {
                             />
                             <div className="min-w-0">
                               <p className="text-sm text-white truncate">
-                                {file.name}
+                                {file.path ?? file.name}
                               </p>
                               <p className="text-[10px] text-gray-500">
                                 {file.language}
@@ -3042,6 +3375,15 @@ export default function Chat() {
               </button>
               <button
                 type="button"
+                onClick={() => folderInputRef.current?.click()}
+                title="Carica una cartella o un intero progetto: i file si aprono come tab in CodeMirror"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all"
+              >
+                <FolderPlus size={12} />
+                Cartella
+              </button>
+              <button
+                type="button"
                 disabled={isZipLoading}
                 onClick={() => zipInputRef.current?.click()}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-emerald-900/30 text-gray-500 hover:text-primary hover:border-primary/40 transition-all disabled:opacity-50"
@@ -3093,14 +3435,15 @@ export default function Chat() {
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {uploadedFiles.map((file, index) => (
                   <span
-                    key={`${file.name}-${index}`}
+                    key={`${file.path ?? file.name}-${index}`}
+                    title={file.path ?? file.name}
                     className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-[#061014] border border-emerald-900/30 text-[11px] text-gray-300"
                   >
                     <FileText size={11} className="text-primary/70" />
-                    <span className="max-w-[140px] truncate">{file.name}</span>
+                    <span className="max-w-[200px] truncate">{file.path ?? file.name}</span>
                     <button
                       type="button"
-                      aria-label={`Rimuovi ${file.name}`}
+                      aria-label={`Rimuovi ${file.path ?? file.name}`}
                       onClick={() => removeUploadedFile(index)}
                       className="w-5 h-5 rounded-full flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-950/40 transition-colors"
                     >
@@ -3128,13 +3471,30 @@ export default function Chat() {
         <CodeApplyModal
           oldCode={applyModal.oldCode}
           newCode={applyModal.newCode}
+          filePath={applyModal.filePath}
           onClose={() => setApplyModal(null)}
           onApply={(newCode: string) => {
-            setCode(newCode);
-            setDetectedLang(detectLanguage(newCode));
-            setUploadedFiles([]);
-            setApplyModal(null);
-            performAutoAnalysisRef.current?.(newCode);
+            if (!newCode.trim()) {
+              setApplyModal(null);
+              return;
+            }
+            // Applica solo al file attivo: preserva gli altri file/upload.
+            if (applyModal.fileIndex !== null && uploadedFiles.length > 0) {
+              const idx = Math.min(Math.max(applyModal.fileIndex, 0), uploadedFiles.length - 1);
+              const updated = uploadedFiles.map((f, i) =>
+                i === idx ? { ...f, content: newCode } : f,
+              );
+              setUploadedFiles(updated);
+              setCode(buildCombinedCodeFromFiles(updated));
+              setDetectedLang(updated[idx]?.language || detectLanguage(newCode));
+              setApplyModal(null);
+              performAutoAnalysisRef.current?.(newCode, updated[idx]?.language, updated);
+            } else {
+              setCode(newCode);
+              setDetectedLang(detectLanguage(newCode));
+              setApplyModal(null);
+              performAutoAnalysisRef.current?.(newCode);
+            }
           }}
         />
       )}
