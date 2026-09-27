@@ -396,7 +396,8 @@ const DemoSection = () => {
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [isZipLoading, setIsZipLoading] = useState(false);
   const { user: session } = useSupabaseSession();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
@@ -413,9 +414,18 @@ const DemoSection = () => {
     return () => clearInterval(timer);
   }, [isLoading, loadingStartedAt]);
 
+  // Autoscroll fluido: segue il fondo solo se l'utente è già in fondo.
+  // Durante lo streaming salta istantaneo (niente code di animazioni smooth),
+  // a fine risposta scorre morbido una volta sola.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages, isLoading]);
+    const container = messagesScrollRef.current;
+    if (!container || !isNearBottom) return;
+    if (isLoading) {
+      container.scrollTop = container.scrollHeight;
+    } else {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, isLoading, isNearBottom]);
 
   const detectLanguage = (codeSnippet: string): string => {
     const trimmed = codeSnippet.trim();
@@ -1104,7 +1114,14 @@ const DemoSection = () => {
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] custom-scrollbar">
+          <div
+            ref={messagesScrollRef}
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
+            }}
+            className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] custom-scrollbar"
+          >
             {messages.length === 0 && !isLoading && (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-5">
                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center border border-emerald-200 shadow-inner">
@@ -1168,7 +1185,6 @@ const DemoSection = () => {
                     </div>
                   );
                 })()}
-                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
@@ -1221,7 +1237,7 @@ const DemoSection = () => {
                     role="tab"
                     aria-selected={active}
                     title={desc}
-                    onClick={() => { setAnalysisType(m); if (code.trim()) performAutoAnalysisRef.current?.(code); }}
+                    onClick={() => setAnalysisType(m)}
                     className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${active ? 'bg-emerald-500 text-white shadow' : 'text-gray-500 hover:text-emerald-300 hover:bg-emerald-900/30 border border-emerald-900/30'}`}
                   >
                     {label}
@@ -1231,10 +1247,7 @@ const DemoSection = () => {
               <select
                 value={['correction', 'revision', 'creation'].includes(analysisType) ? '' : analysisType}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                  if (e.target.value) {
-                    setAnalysisType(e.target.value);
-                    if (code.trim()) performAutoAnalysisRef.current?.(code);
-                  }
+                  if (e.target.value) setAnalysisType(e.target.value);
                 }}
                 className="bg-[#010409] border border-emerald-900/30 rounded-full px-2.5 py-1 text-[11px] font-bold text-gray-500 focus:outline-none focus:border-primary"
                 title="Altre analisi"
