@@ -2303,7 +2303,7 @@ export default function Chat() {
           width: isDesktop ? (isSidebarPinned || isSidebarExpanded ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED) : SIDEBAR_WIDTH,
           x: isDesktop ? 0 : isMobileSidebarOpen ? 0 : "-100%",
         }}
-        transition={{ type: "tween", duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ type: "tween", duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
         className="fixed md:relative h-full shrink-0 md:overflow-visible z-30 md:z-50"
       >
         <motion.div
@@ -2315,7 +2315,7 @@ export default function Chat() {
                 : SIDEBAR_COLLAPSED
               : SIDEBAR_WIDTH,
           }}
-          transition={{ type: "tween", duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ type: "tween", duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
           onMouseEnter={() => {
             if (isDesktop && !isSidebarPinned) setIsSidebarExpanded(true);
           }}
@@ -2858,7 +2858,7 @@ export default function Chat() {
                       setIsProfileOpen(next);
                       if (next && isDesktop) setIsSidebarExpanded(true);
                     }}
-                    className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0 ${showSidebarLabels ? "gap-2.5 p-2" : "justify-center p-1.5"}`}
+                    className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 transition-colors min-w-0 ${showSidebarLabels ? "gap-2.5 p-2" : "justify-start py-1.5 pl-4 pr-0"}`}
                   >
                     <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-primary flex items-center justify-center ring-2 ring-emerald-900/40">
                       {user.image ? (
@@ -2936,7 +2936,7 @@ export default function Chat() {
               ) : (
                 <Link
                   href="/login"
-                  className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors ${showSidebarLabels ? "gap-2.5 p-2" : "justify-center p-1.5"}`}
+                  className={`w-full flex items-center rounded-xl hover:bg-emerald-900/20 text-gray-500 transition-colors ${showSidebarLabels ? "gap-2.5 p-2" : "justify-start py-1.5 pl-4 pr-0"}`}
                 >
                   <User size={18} className="shrink-0" />
                   <span
