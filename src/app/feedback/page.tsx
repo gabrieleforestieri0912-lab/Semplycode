@@ -57,7 +57,8 @@ export default function FeedbackPage() {
   const t = {
     it: {
       thanks: 'Grazie per il tuo feedback!',
-      thanksBody: "Il tuo messaggio è stato preparato nel client email. Inviacelo per completare l'invio.",
+      thanksBody: "Il tuo messaggio è stato ricevuto. Ti risponderemo al più presto all'indirizzo email indicato.",
+      thanksMailto: "Il tuo messaggio è stato preparato nel client email. Inviacelo per completare l'invio.",
       backHome: 'Torna alla home',
       goBack: 'Torna indietro',
       title: 'Invia un Feedback',
@@ -68,14 +69,15 @@ export default function FeedbackPage() {
       category: 'Categoria',
       message: 'Il tuo messaggio',
       messagePh: 'Descrivi il tuo feedback, suggerimento o problema...',
-      sending: 'Preparazione invio...',
+      sending: 'Invio in corso...',
       send: 'Invia Feedback',
-      footnote: 'Cliccando "Invia" si aprirà il tuo client email con il messaggio già precompilato.',
+      footnote: "Cliccando “Invia” il messaggio viene spedito direttamente al team Semplycode.",
       categories: ['Feedback generale', 'Segnalazione bug', 'Richiesta funzionalità', 'Richiesta supporto', 'Altro'] as string[],
     },
     en: {
       thanks: 'Thanks for your feedback!',
-      thanksBody: 'Your message has been prepared in your email client. Send it to complete the submission.',
+      thanksBody: 'Your message has been received. We will reply soon to the email address you provided.',
+      thanksMailto: 'Your message has been prepared in your email client. Send it to complete the submission.',
       backHome: 'Back to home',
       goBack: 'Go back',
       title: 'Send Feedback',
@@ -86,9 +88,9 @@ export default function FeedbackPage() {
       category: 'Category',
       message: 'Your message',
       messagePh: 'Describe your feedback, suggestion or issue...',
-      sending: 'Preparing...',
+      sending: 'Sending...',
       send: 'Send Feedback',
-      footnote: 'Clicking "Send" will open your email client with the message already pre-filled.',
+      footnote: 'Clicking "Send" delivers the message directly to the Semplycode team.',
       categories: ['General feedback', 'Bug report', 'Feature request', 'Support request', 'Other'] as string[],
     },
   }[language];
@@ -100,6 +102,8 @@ export default function FeedbackPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viaMailto, setViaMailto] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const categories: Category[] = [
     { value: 'general', label: t.categories[0] },
@@ -114,10 +118,7 @@ export default function FeedbackPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const openMailtoFallback = () => {
     const subject = encodeURIComponent(`[Semplycode] Feedback - ${formData.category}`);
     const body = encodeURIComponent(
       `Nome: ${formData.name}\n` +
@@ -125,13 +126,43 @@ export default function FeedbackPage() {
       `Categoria: ${formData.category}\n\n` +
       `Messaggio:\n${formData.message}`
     );
-
     window.location.href = `mailto:gabriele.forestieri0912@gmail.com?subject=${subject}&body=${body}`;
+  };
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          category: formData.category,
+          message: formData.message,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.ok) {
+        setViaMailto(false);
+        setSubmitted(true);
+      } else if (res.status === 429) {
+        setSendError(data.error || 'Troppi tentativi. Riprova più tardi.');
+      } else {
+        // Servizio email non disponibile: ripiega sul client email.
+        openMailtoFallback();
+        setViaMailto(true);
+        setSubmitted(true);
+      }
+    } catch {
+      openMailtoFallback();
+      setViaMailto(true);
       setSubmitted(true);
-    }, 800);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -150,7 +181,7 @@ export default function FeedbackPage() {
           </div>
           <h1 className="text-3xl font-bold text-[#0f172a] mb-3">{t.thanks}</h1>
           <p className="text-[#64748b] mb-8">
-            {t.thanksBody}
+            {viaMailto ? t.thanksMailto : t.thanksBody}
           </p>
           <Link
             href="/"
@@ -259,6 +290,12 @@ export default function FeedbackPage() {
               </>
             )}
           </button>
+
+          {sendError && (
+            <p role="alert" className="text-sm text-center text-red-600">
+              {sendError}
+            </p>
+          )}
 
           <p className="text-xs text-center text-[#64748b]">
             {t.footnote}
