@@ -14,6 +14,14 @@ const organizationSchema = {
   },
   description:
     "Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
+  slogan: "Smetti di combattere con il codice. Inizia a capirlo.",
+  knowsAbout: [
+    "Code Review",
+    "Debugging",
+    "Static Code Analysis",
+    "Artificial Intelligence",
+    "Software Development",
+  ],
 };
 
 const websiteSchema = {

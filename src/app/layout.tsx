@@ -28,14 +28,27 @@ const jetMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://semplycode.vercel.app"),
   title: {
-    default: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
+    default: "Semplycode | Correttore e Debug Codice AI in Italiano",
     template: "%s | Semplycode",
   },
   description:
-    "Semplycode scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale. In italiano, 20+ linguaggi, piano gratuito con 10 analisi al giorno.",
+    "Semplycode è il correttore e revisore di codice AI in italiano: trova bug, spiega gli errori riga per riga e propone fix in 20+ linguaggi. Analisi gratis, senza installazione.",
+  keywords: [
+    "semplycode",
+    "correttore codice AI",
+    "debug codice online",
+    "revisione codice",
+    "code reviewer AI italiano",
+    "trovare bug codice",
+    "spiegazione errori codice",
+    "analizzatore codice",
+    "AI per programmatori",
+    "code review automatica",
+  ],
   authors: [{ name: "Semplycode" }],
   creator: "Semplycode",
   publisher: "Semplycode",
+  category: "technology",
   robots: {
     index: true,
     follow: true,
@@ -52,9 +65,9 @@ export const metadata: Metadata = {
     locale: "it_IT",
     url: "https://semplycode.vercel.app",
     siteName: "Semplycode",
-    title: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
+    title: "Semplycode | Correttore e Debug Codice AI in Italiano",
     description:
-      "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
+      "Trova bug, spiega gli errori riga per riga e propone fix in 20+ linguaggi. Analisi gratis, senza installazione.",
     images: [
       {
         url: "/og-image.png",
@@ -66,9 +79,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Semplycode | Smetti di combattere con il codice. Inizia a capirlo.",
+    title: "Semplycode | Correttore e Debug Codice AI in Italiano",
     description:
-      "Scompone la logica complessa, trova i bug istantaneamente e ti insegna a scrivere codice migliore con spiegazioni AI in tempo reale.",
+      "Trova bug, spiega gli errori riga per riga e propone fix in 20+ linguaggi. Analisi gratis, senza installazione.",
     images: ["/og-image.png"],
     creator: "@semplycode",
   },
@@ -76,10 +89,16 @@ export const metadata: Metadata = {
     canonical: "https://semplycode.vercel.app",
   },
   icons: {
-    icon: "/semplycode.png",
-    apple: "/semplycode.png",
-    shortcut: "/semplycode.png",
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/semplycode.png", sizes: "1254x1254", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/favicon-48x48.png",
   },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -98,17 +117,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link
           rel="icon"
           type="image/png"
-          href="/semplycode.png"
+          href="/favicon-32x32.png"
           sizes="32x32"
         />
         <link
           rel="icon"
           type="image/png"
-          href="/semplycode.png"
+          href="/favicon-16x16.png"
           sizes="16x16"
         />
-        <link rel="shortcut icon" href="/semplycode.png" />
-        <link rel="apple-touch-icon" href="/semplycode.png" />
+        <link rel="shortcut icon" href="/favicon-48x48.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
