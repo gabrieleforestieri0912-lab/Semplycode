@@ -28,9 +28,9 @@ const BASE_CORRECTION = `
 ## Spiegazione degli Errori
 [Per ciascun errore: causa-effetto, perché è problematico, in quali casi si manifesta]
 
-## Codice Corretto (solo fix minimi)
+## Codice Corretto (FILE COMPLETO, mai frammenti)
 \`\`\`{{LANG}}
-[Codice con SOLO gli errori corretti, senza ottimizzazioni extra]
+[Restituisci SEMPRE l'INTERO codice/file completo con SOLO gli errori corretti, senza ottimizzazioni extra. MAI solo la funzione fixata: il blocco deve poter sostituire 1:1 il codice originale senza perdere righe]
 \`\`\`
 
 ## Come Verificare
@@ -40,9 +40,9 @@ const BASE_REVISION = `
 ## Errori Corretti
 [Elenco errori trovati con gravità, riga esatta e frammento di codice; se nessuno, scrivere "Nessun errore trovato."]
 
-## Codice Revisionato e Ottimizzato
+## Codice Revisionato e Ottimizzato (FILE COMPLETO, mai frammenti)
 \`\`\`{{LANG}}
-[Codice ripulito: naming, DRY, leggibilità, performance, gestione errori]
+[Restituisci SEMPRE INTERO file completo revisionato (naming, DRY, leggibilita, performance, gestione errori). MAI solo frammenti: deve sostituire 1:1 originaleà, performance, gestione errori]
 \`\`\`
 
 ## Miglioramenti Applicati
@@ -99,7 +99,7 @@ const BASE_FULL = `
 
 ## Codice Corretto
 \`\`\`{{LANG}}
-[Codice con tutti gli errori corretti]
+[Restituisci SEMPRE INTERO file completo corretto. MAI solo frammenti]
 \`\`\``;
 
 const TYPE_FOCUS: Record<string, string> = {
@@ -151,6 +151,7 @@ export function buildAnalysisSystemPrompt({
 ${focus}
 ${normalized === 'creation' ? 'Se il codice fornito è vuoto o parziale, proponi tu il progetto base coerente con la richiesta.' : 'La PRIORITÀ è il codice fornito dall\'utente.'}${errorRule}${lineRule}
 ${QUALITY_RULES}
+REGOLA APPLICAZIONE PATCH (tassativa): ogni blocco di codice corretto deve contenere SEMPRE l'INTERO file/codice completo aggiornato, MAI solo il frammento fixato. Solo così il pulsante "Applica" può sostituire 1:1 senza cancellare righe.
 Usa questa struttura Markdown (solo testo, niente emoji):
 ${structure}`;
 }

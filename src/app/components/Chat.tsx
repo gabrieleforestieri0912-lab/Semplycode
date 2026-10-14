@@ -17,6 +17,7 @@ import CodeApplyModal from "./playground/CodeApplyModal";
 import ModePicker from "./ModePicker";
 import { buildAnalysisSystemPrompt, REVIEWER_DEPTH_RULES, getAnalysisTypeLabels, getAnalysisTypeDescriptions } from "@/lib/analysisPrompts";
 import { postChat, postChatStream, formatApiError } from "@/lib/playgroundApi";
+import { mergeSuggestion } from "@/lib/codeMerge";
 import {
   MessageSquare,
   Terminal,
@@ -325,7 +326,9 @@ const FormattedAIResponse = ({
       return;
     }
 
-    if (!enableTyping) {
+    // Lo streaming anima già il messaggio: l'effetto typing ridondante
+    // causava re-render Markdown a ogni tick + salti di scroll. Mostra subito.
+    if (!enableTyping || content.length > 200) {
       setDisplayedContent(content);
       setIsTyping(false);
       return;
@@ -1278,23 +1281,44 @@ export default function Chat() {
     } catch { /* storage non disponibile: non mostrare */ }
   }, []);
 
-  // Applica un suggerimento SOLO al file attivo (mai wipe dell'intero editor).
-  // Se non ci sono file caricati, sostituisce il codice singolo.
+  // Applica un suggerimento con merge intelligente: mai wipe del resto del file.
+  // I frammenti AI vengono patchati sul blocco omonimo; solo i file completi
+  // sostituiscono 1:1. Se non ci sono file caricati, vale lo stesso sull'editor singolo.
   const applySuggestionToActiveFile = (suggested: string) => {
     if (!suggested || !suggested.trim()) return;
     if (uploadedFiles.length > 0) {
       const idx = Math.min(Math.max(activeFileIndex, 0), uploadedFiles.length - 1);
+      const current = uploadedFiles[idx]?.content ?? "";
+      const result = mergeSuggestion(current, suggested);
+      // Se è solo un frammento senza ancoraggio, NON cancellare: apri la modale
+      // così l'utente decide (il previewApply sotto fa lo stesso).
+      if (!result.safe) {
+        setApplyModal({
+          oldCode: current,
+          newCode: suggested,
+          fileIndex: idx,
+          filePath: uploadedFiles[idx]?.path ?? uploadedFiles[idx]?.name,
+        });
+        return;
+      }
+      const finalCode = result.merged;
       const updated = uploadedFiles.map((f, i) =>
-        i === idx ? { ...f, content: suggested } : f,
+        i === idx ? { ...f, content: finalCode } : f,
       );
       setUploadedFiles(updated);
       setCode(buildCombinedCodeFromFiles(updated));
-      setDetectedLang(updated[idx]?.language || detectLanguage(suggested));
-      performAutoAnalysisRef.current?.(suggested, updated[idx]?.language, updated);
+      setDetectedLang(updated[idx]?.language || detectLanguage(finalCode));
+      performAutoAnalysisRef.current?.(finalCode, updated[idx]?.language, updated);
     } else {
-      setCode(suggested);
-      setDetectedLang(detectLanguage(suggested));
-      performAutoAnalysisRef.current?.(suggested);
+      const result = mergeSuggestion(code, suggested);
+      if (!result.safe) {
+        setApplyModal({ oldCode: code, newCode: suggested, fileIndex: null });
+        return;
+      }
+      const finalCode = result.merged;
+      setCode(finalCode);
+      setDetectedLang(detectLanguage(finalCode));
+      performAutoAnalysisRef.current?.(finalCode);
     }
   };
 
@@ -2122,6 +2146,12 @@ export default function Chat() {
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  /** Sticky follow: una volta che l'utente scrolla in alto durante lo streaming,
+   *  resta disattivato finché non torna in fondo. Evita lo "yank" che impediva
+   *  di leggere i messaggi sopra. */
+  const stickRef = useRef(true);
+  const rafRef = useRef<number>(0);
+  const lastMsgLenRef = useRef(0);
 
   useEffect(() => {
     const container = messagesContainerRef.current;
@@ -2129,17 +2159,51 @@ export default function Chat() {
     const handleScroll = () => {
       const threshold = 200;
       const near = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+      stickRef.current = near;
       setIsNearBottom(near);
     };
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (isNearBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = false) => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    if (smooth) {
+      try {
+        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      } catch {
+        container.scrollTop = container.scrollHeight;
+      }
+    } else {
+      container.scrollTop = container.scrollHeight;
     }
-  }, [messages, isLoading, isNearBottom]);
+  };
+
+  useEffect(() => {
+    if (!stickRef.current) return;
+    // Durante lo streaming scroll istantaneo via rAF (niente code di animazioni
+    // smooth che bloccavano lo scroll verso l'alto). Smooth solo a fine risposta.
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (!stickRef.current) return;
+      scrollToBottom(!isLoading);
+    });
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [messages, isLoading]);
+
+  // All'invio di un nuovo messaggio utente, riattiva il follow e vai in fondo.
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last?.role === "user" && messages.length !== lastMsgLenRef.current) {
+      lastMsgLenRef.current = messages.length;
+      stickRef.current = true;
+      setIsNearBottom(true);
+      requestAnimationFrame(() => scrollToBottom(false));
+    } else {
+      lastMsgLenRef.current = messages.length;
+    }
+  }, [messages]);
 
   useEffect(() => {
     try {
@@ -3098,7 +3162,7 @@ export default function Chat() {
 
         <section
           aria-hidden={activeMobilePanel !== "insights"}
-          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-12`}
+          className={`flex-1 flex flex-col border-r border-emerald-900/30 bg-[#0d1117]/30 md:flex relative ${activeMobilePanel === "insights" ? "flex" : "hidden md:flex"} md:mt-0 mt-12`}
         >
           <div className="h-12 border-b border-emerald-900/20 flex items-center justify-between px-3 sm:px-6 bg-[#0d1117]/50 md:flex shrink-0">
             <div className="flex items-center gap-4">
@@ -3591,6 +3655,22 @@ export default function Chat() {
               </div>
             )}
           </div>
+
+          {!isNearBottom && messages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                stickRef.current = true;
+                setIsNearBottom(true);
+                scrollToBottom(true);
+              }}
+              className="absolute bottom-36 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold shadow-lg hover:bg-emerald-500 transition-colors"
+              aria-label="Vai in fondo"
+            >
+              <ChevronDown size={14} />
+              {uiLang === "en" ? "Bottom" : "Vai in fondo"}
+            </button>
+          )}
 
           {messages.length === 0 && !isLoading ? null : (
           <motion.div layoutId="chat-composer" data-tour="composer-bottom" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 320, damping: 30 }} className="p-2.5 sm:p-4 border-t border-emerald-900/20 bg-[#0a0c10]/80">

@@ -575,6 +575,10 @@ const DemoSection = () => {
   const typeDescs = getAnalysisTypeDescriptions(uiLang);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [isNearBottom, setIsNearBottom] = useState(true);
+  /** Sticky follow: se l'utente scrolla in alto durante la generazione,
+   *  l'autoscroll si ferma finché non torna in fondo (niente più "yank"). */
+  const stickRef = useRef(true);
+  const rafRef = useRef<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
   const zipInputRef = useRef<HTMLInputElement>(null);
@@ -591,18 +595,40 @@ const DemoSection = () => {
     return () => clearInterval(timer);
   }, [isLoading, loadingStartedAt]);
 
-  // Autoscroll fluido: segue il fondo solo se l'utente è già in fondo.
-  // Durante lo streaming salta istantaneo (niente code di animazioni smooth),
+  const scrollDemoToBottom = (smooth = false) => {
+    const container = messagesScrollRef.current;
+    if (!container) return;
+    if (smooth) {
+      try {
+        container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      } catch {
+        container.scrollTop = container.scrollHeight;
+      }
+    } else {
+      container.scrollTop = container.scrollHeight;
+    }
+  };
+
+  const handleDemoScroll = () => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const near = el.scrollHeight - el.scrollTop - el.clientHeight < 200;
+    stickRef.current = near;
+    setIsNearBottom(near);
+  };
+
+  // Autoscroll: segue il fondo solo se l'utente non ha scrollato in alto.
+  // Durante lo streaming salta istantaneo via rAF (niente code smooth),
   // a fine risposta scorre morbido una volta sola.
   useEffect(() => {
-    const container = messagesScrollRef.current;
-    if (!container || !isNearBottom) return;
-    if (isLoading) {
-      container.scrollTop = container.scrollHeight;
-    } else {
-      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
-    }
-  }, [messages, isLoading, isNearBottom]);
+    if (!stickRef.current) return;
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      if (!stickRef.current) return;
+      scrollDemoToBottom(!isLoading);
+    });
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [messages, isLoading]);
 
   const detectLanguage = (codeSnippet: string): string => {
     const trimmed = codeSnippet.trim();
@@ -1343,10 +1369,7 @@ const DemoSection = () => {
 
           <div
             ref={messagesScrollRef}
-            onScroll={(e) => {
-              const el = e.currentTarget;
-              setIsNearBottom(el.scrollHeight - el.scrollTop - el.clientHeight < 200);
-            }}
+            onScroll={handleDemoScroll}
             style={{ paddingBottom: inputH + 16, scrollPaddingBottom: inputH + 16 }}
             className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#0f172a] max-h-[720px] min-h-[220px] demo-scroll"
           >
@@ -1464,6 +1487,22 @@ const DemoSection = () => {
               </div>
             )}
           </div>
+
+          {!isNearBottom && messages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                stickRef.current = true;
+                setIsNearBottom(true);
+                scrollDemoToBottom(true);
+              }}
+              className="absolute z-20 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold shadow-lg hover:bg-emerald-500 transition-colors"
+              style={{ bottom: inputH + 24 }}
+              aria-label={uiLang === "en" ? "Scroll to bottom" : "Vai in fondo"}
+            >
+              ↓ {uiLang === "en" ? "Bottom" : "Vai in fondo"}
+            </button>
+          )}
 
           {/* Input fluttuante sopra i messaggi: la lista riserva sotto lo spazio misurato (inputH) */}
           <div ref={inputWrapRef} className="absolute bottom-0 inset-x-0 z-10 p-2.5 sm:p-4 pt-8 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/85 to-transparent rounded-b-2xl sm:rounded-b-3xl">

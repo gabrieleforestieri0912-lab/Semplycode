@@ -65,19 +65,40 @@ export async function postChatStream(
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullContent = '';
+    // Buffer per linee SSE spezzate a metà tra due read(): senza buffer
+    // il JSON troncato falliva il parse e il pezzo andava perso (buchi
+    // nel messaggio generato).
+    let buffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n').filter(Boolean);
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      // L'ultima riga potrebbe essere incompleta: tienila nel buffer.
+      buffer = lines.pop() ?? '';
 
-      for (const line of lines) {
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
         if (!line.startsWith('data: ')) continue;
+        const payload = line.slice(6).trim();
+        if (payload === '[DONE]') continue;
         try {
-          const parsed = JSON.parse(line.slice(6));
+          const parsed = JSON.parse(payload);
           if (parsed.done) {
+            // Svuota eventuale coda rimasta prima di chiudere.
+            if (buffer.trim().startsWith('data: ')) {
+              try {
+                const tail = JSON.parse(buffer.trim().slice(6));
+                if (tail.content) {
+                  fullContent += tail.content;
+                  onChunk(tail.content);
+                }
+              } catch {}
+              buffer = '';
+            }
             onDone(fullContent);
             return controller;
           }
@@ -85,8 +106,24 @@ export async function postChatStream(
             fullContent += parsed.content;
             onChunk(parsed.content);
           }
+          if (parsed.error) {
+            onError(parsed.error, parsed.code);
+            return controller;
+          }
         } catch {}
       }
+    }
+
+    // Flush finale: una riga rimasta nel buffer senza newline conclusiva.
+    const tail = buffer.trim();
+    if (tail.startsWith('data: ')) {
+      try {
+        const parsed = JSON.parse(tail.slice(6).trim());
+        if (parsed.content) {
+          fullContent += parsed.content;
+          onChunk(parsed.content);
+        }
+      } catch {}
     }
 
     onDone(fullContent);
