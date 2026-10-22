@@ -34,6 +34,7 @@ const WhyChoose = () => {
           accent: "#fb7185",
         },
       ],
+      calloutTools: "Le AI generiche",
       calloutA: "scrivono codice al posto tuo.",
       calloutB: "ti insegna a farlo.",
       calloutC: "La differenza tra un developer che usa AI e uno che la",
@@ -66,6 +67,7 @@ const WhyChoose = () => {
           accent: "#fb7185",
         },
       ],
+      calloutTools: "Generic AI tools",
       calloutA: "write code for you.",
       calloutB: "teaches you to do it.",
       calloutC: "The difference between a developer who uses AI and one who",
@@ -166,7 +168,7 @@ const WhyChoose = () => {
             }}
           >
             <p className="text-base sm:text-lg 3xl:text-xl font-medium mb-2" style={{ color: "#475569" }}>
-              <span style={{ color: "#0f172a", fontWeight: 600 }}>Copilot, ChatGPT, Claude</span>{" "}
+              <span style={{ color: "#0f172a", fontWeight: 600 }}>{t.calloutTools}</span>{" "}
               <span style={{ color: "#475569" }}>{t.calloutA}</span>
             </p>
             <p className="text-lg xs:text-xl sm:text-2xl 3xl:text-3xl font-bold" style={{ color: "#0f172a" }}>
